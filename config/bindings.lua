@@ -118,6 +118,31 @@ local keys = {
    -- file manager --
    { key = 'e', mods = mod.SUPER, action = act.SendString('yy\n') },
 
+   -- paste image from clipboard as file path (for Claude Code) --
+   {
+      key = 'v',
+      mods = 'ALT|SHIFT',
+      action = wezterm.action_callback(function(window, pane)
+         local success, stdout, _ = wezterm.run_child_process({
+            'powershell.exe', '-NoProfile', '-Command',
+            [[
+               Add-Type -AssemblyName System.Windows.Forms
+               Add-Type -AssemblyName System.Drawing
+               $img = [System.Windows.Forms.Clipboard]::GetImage()
+               if ($img) {
+                  $path = $env:TEMP + "\claude-paste-" + (Get-Date -Format "yyyyMMddHHmmss") + ".png"
+                  $img.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+                  Write-Output $path
+               }
+            ]]
+         })
+         if success and stdout and #stdout > 0 then
+            local path = stdout:gsub('[\r\n]+$', '')
+            pane:send_text(path)
+         end
+      end),
+   },
+
    -- background controls --
    {
       key = [[/]],
