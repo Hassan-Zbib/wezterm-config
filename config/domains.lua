@@ -12,32 +12,25 @@ local options = {
 }
 
 if platform.is_win then
-   options.ssh_domains = {
-      {
-         name = 'ssh:wsl',
-         remote_address = 'localhost',
-         multiplexing = 'None',
-         default_prog = { 'fish', '-l' },
-         assume_shell = 'Posix',
-      },
-   }
-
+   -- Simple WSL domain - uses default WSL user
    options.wsl_domains = {
       {
-         name = 'wsl:ubuntu-fish',
+         name = 'WSL:Ubuntu',
          distribution = 'Ubuntu',
-         username = 'kevin',
-         default_cwd = '/home/kevin',
-         default_prog = { 'fish', '-l' },
-      },
-      {
-         name = 'wsl:ubuntu-bash',
-         distribution = 'Ubuntu',
-         username = 'kevin',
-         default_cwd = '/home/kevin',
+         -- Omitting username/default_cwd lets WezTerm use WSL defaults
          default_prog = { 'bash', '-l' },
       },
    }
+
+   -- Add SSH domains here if you need to connect to remote servers
+   -- Example:
+   -- options.ssh_domains = {
+   --    {
+   --       name = 'my-server',
+   --       remote_address = 'server.example.com',
+   --       username = 'your-username',
+   --    },
+   -- }
 end
 
 return options
