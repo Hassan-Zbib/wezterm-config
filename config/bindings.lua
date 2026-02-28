@@ -195,6 +195,7 @@ local keys = {
    { key = 'd',        mods = mod.SUPER, action = act.ScrollByLine(5) },
    { key = 'PageUp',   mods = 'NONE',    action = act.ScrollByPage(-0.75) },
    { key = 'PageDown', mods = 'NONE',    action = act.ScrollByPage(0.75) },
+   { key = 'End',      mods = 'NONE',    action = act.ScrollToBottom },
 
    -- key-tables --
    -- resizes fonts
