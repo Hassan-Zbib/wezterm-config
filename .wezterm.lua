@@ -38,6 +38,7 @@ local config = Config:init()
 
 agent_deck.apply_to_config(config, {
    right_status = { enabled = false },
+   notifications = { enabled = false },
 })
 
 return config
