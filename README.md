@@ -124,6 +124,23 @@ git clone https://github.com/Hassan-Zbib/wezterm-config.git C:\Users\YOUR-USERNA
 | <kbd>Alt</kbd>+<kbd>u</kbd> | Scroll Up (5 lines) |
 | <kbd>Alt</kbd>+<kbd>d</kbd> | Scroll Down (5 lines) |
 | <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Scroll Page |
+| <kbd>End</kbd> | Scroll to Bottom |
+
+### 📁 File Manager (yazi)
+| Keys | Action |
+| ---- | ------ |
+| <kbd>Alt</kbd>+<kbd>e</kbd> | Open yazi in current pane |
+
+**Inside yazi:**
+| Keys | Action | Keys | Action |
+| ---- | ------ | ---- | ------ |
+| <kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>k</kbd> / <kbd>j</kbd> | Navigate | <kbd>Enter</kbd> | Open file/folder |
+| <kbd>←</kbd> or <kbd>h</kbd> | Go up a folder | <kbd>→</kbd> or <kbd>l</kbd> | Enter folder |
+| <kbd>Space</kbd> | Select file | <kbd>y</kbd> | Copy selected |
+| <kbd>x</kbd> | Cut selected | <kbd>p</kbd> | Paste |
+| <kbd>d</kbd> | Move to trash | <kbd>D</kbd> | Delete permanently |
+| <kbd>/</kbd> | Search | <kbd>.</kbd> | Toggle hidden files |
+| <kbd>q</kbd> | Quit | <kbd>~</kbd> | Go to home directory |
 
 ### ⚙️ Advanced Modes
 **Leader Key:** <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Space</kbd>, then:

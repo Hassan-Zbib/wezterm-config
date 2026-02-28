@@ -115,6 +115,9 @@ local keys = {
       end)
    },
 
+   -- file manager --
+   { key = 'e', mods = mod.SUPER, action = act.SendString('yazi\n') },
+
    -- background controls --
    {
       key = [[/]],
