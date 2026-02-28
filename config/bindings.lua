@@ -16,7 +16,19 @@ end
 -- stylua: ignore
 local keys = {
    -- misc/useful --
-   { key = 'F1', mods = 'NONE', action = 'ActivateCopyMode' },
+   {
+      key = 'F1',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, pane)
+         local home = wezterm.home_dir:gsub('\\', '/')
+         local drive = home:sub(1, 1):lower()
+         local unix_home = '/' .. drive .. home:sub(3)
+         local script = unix_home .. '/Desktop/GitHub/wezterm-config/scripts/cheatsheet.sh'
+         window:perform_action(act.SpawnCommandInNewTab({
+            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', script },
+         }), pane)
+      end),
+   },
    { key = 'F2', mods = 'NONE', action = act.ActivateCommandPalette },
    { key = 'F3', mods = 'NONE', action = act.ShowLauncher },
    { key = 'F4', mods = 'NONE', action = act.ShowLauncherArgs({ flags = 'FUZZY|TABS' }) },
@@ -25,6 +37,7 @@ local keys = {
       mods = 'NONE',
       action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
    },
+   { key = 'F8', mods = 'NONE', action = 'ActivateCopyMode' },
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },

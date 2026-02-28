@@ -111,12 +111,18 @@ M.setup = function(opts)
       local ok, agent_deck = pcall(wezterm.plugin.require, 'https://github.com/Eric162/wezterm-agent-deck')
       if ok then
          local counts = agent_deck.count_agents_by_status()
-         if counts.working and counts.working > 0 then
-            working_text = '● ' .. counts.working
+         local working = (counts.working or 0)
+         local waiting = (counts.waiting or 0)
+         local idle    = (counts.idle or 0)
+         if working > 0 then
+            working_text = working .. ' working'
             has_agents = true
          end
-         if counts.waiting and counts.waiting > 0 then
-            waiting_text = '◔ ' .. counts.waiting
+         local waiting_parts = {}
+         if waiting > 0 then table.insert(waiting_parts, waiting .. ' waiting') end
+         if idle > 0    then table.insert(waiting_parts, idle .. ' idle') end
+         if #waiting_parts > 0 then
+            waiting_text = table.concat(waiting_parts, ' · ')
             has_agents = true
          end
       end

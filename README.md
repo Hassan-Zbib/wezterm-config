@@ -1,351 +1,302 @@
-<h2 align="center">My WezTerm Config</h2>
+# WezTerm Config — Windows Setup
 
-<p align="center">
-  <a href="https://github.com/Hassan-Zbib/wezterm-config">
-    <img alt="Private Repo" src="https://img.shields.io/badge/repo-private-red?style=for-the-badge&logo=github&labelColor=302D41">
-  </a>
-</p>
+A modular WezTerm configuration for Windows, built on top of [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config).
 
-![screenshot](./.github/screenshots/wezterm.gif)
-
-> **Note:** This is a customized fork of [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
+Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startup panel.
 
 ---
 
-## 🪟 Full Setup Guide (Windows)
+## Features
 
-### Step 1 — Install Requirements
-
-| Tool | Purpose | Install |
-| ---- | ------- | ------- |
-| **WezTerm Nightly** | Terminal emulator | [Download](https://github.com/wezterm/wezterm/releases/tag/nightly) |
-| **PowerShell 7** | Shell for Claude Code | [Download](https://github.com/PowerShell/PowerShell/releases/latest) |
-| **Git for Windows** | Git Bash shell | [Download](https://git-scm.com/download/win) |
-| **JetBrainsMono Nerd Font** | Required font for icons | [Download](https://www.nerdfonts.com/font-downloads) |
-| **Starship** | Cross-shell prompt | See below |
-| **yazi** | TUI file manager | See below |
-
-**Install Starship:**
-```sh
-winget install Starship.Starship
-```
-
-**Install yazi:**
-```sh
-winget install sxyazi.yazi
-```
+- **Background image carousel** (16 included) — toggle to solid dark background with `Alt+b`
+- **Powerline Starship prompt** — git status, language versions, command duration
+- **System info panel** on shell startup — uptime, CPU, memory, network
+- **AI agent status bar** — live Claude Code working/waiting/idle indicator
+- **Kitty keyboard protocol** — Shift+Enter for multi-line input
+- **Yazi file manager** integrated with auto-cd on quit
+- **WSL support** — open WSL tabs alongside Git Bash
+- **Tab bar at bottom** with active key-table indicator in left status
 
 ---
 
-### Step 2 — Clone This Repo
+## Prerequisites
 
-Clone to any directory you prefer. The path you choose will be used in all config files.
+Install all of the following before cloning.
 
-```sh
-git clone https://github.com/Hassan-Zbib/wezterm-config.git C:\path\to\your\wezterm-config
-```
+| Tool | Install |
+|------|---------|
+| [WezTerm Nightly](https://wezfurlong.org/wezterm/nightlies.html) | Download `.exe` installer from site |
+| [PowerShell 7](https://github.com/PowerShell/PowerShell) | `winget install Microsoft.PowerShell` |
+| [Git for Windows](https://gitforwindows.org/) | `winget install Git.Git` |
+| [JetBrainsMono Nerd Font](https://www.nerdfonts.com/) | `winget install DEVCOM.JetBrainsMonoNerdFont` |
+| [Starship](https://starship.rs/) | `winget install Starship.Starship` |
+| [Yazi](https://yazi-rs.github.io/) | `winget install sxyazi.yazi` |
 
-> Example: `C:\Users\YOUR-USERNAME\Desktop\GitHub\wezterm-config`
-
----
-
-### Step 3 — Set Up `.wezterm.lua`
-
-Create `C:\Users\YOUR-USERNAME\.wezterm.lua` and set the repo path:
-
-```lua
-local wezterm = require('wezterm')
-
--- *** SET THIS TO WHERE YOU CLONED THE REPO ***
-local config_path = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
-
-package.path = package.path .. ';' .. config_path .. '/?.lua'
-package.path = package.path .. ';' .. config_path .. '/?/init.lua'
-
-local Config = require('config')
-local agent_deck = wezterm.plugin.require('https://github.com/Eric162/wezterm-agent-deck')
-
-require('utils.backdrops')
-   :set_images_dir(config_path .. '/backdrops/')
-   :set_images()
-   :random()
-
-require('events.left-status').setup()
-require('events.right-status').setup()
-require('events.tab-title').setup({ hide_active_tab_unseen = false, unseen_icon = 'numbered_box' })
-require('events.new-tab-button').setup()
-require('events.gui-startup').setup()
-require('events.window-title').setup()
-
-local config = Config:init()
-   :append(require('config.appearance'))
-   :append(require('config.bindings'))
-   :append(require('config.domains'))
-   :append(require('config.fonts'))
-   :append(require('config.general'))
-   :append(require('config.launch')).options
-
-agent_deck.apply_to_config(config, {
-   right_status = { enabled = false },
-   notifications = { enabled = false },
-})
-
-return config
-```
+> PowerShell 7 is required for the system info panel (it queries Windows APIs). Git for Windows provides the Git Bash shell used as the default.
 
 ---
 
-### Step 4 — Set Up Git Bash (`~/.bashrc`)
+## Setup
 
-Create `C:\Users\YOUR-USERNAME\.bashrc` and set the repo path:
+### 1. Clone the repository
 
 ```bash
-# ============================================================
-# Git Bash Configuration
-# ============================================================
-
-# ---- WezTerm Shell Integration ----
-# Tracks current directory so WezTerm tab title updates automatically
-__urlencode() {
-    local string="$1"
-    local encoded=""
-    local i char
-    for ((i=0; i<${#string}; i++)); do
-        char="${string:$i:1}"
-        case "$char" in
-            [a-zA-Z0-9.~_/-]) encoded+="$char" ;;
-            *) printf -v hex '%02X' "'$char"; encoded+="%$hex" ;;
-        esac
-    done
-    echo "$encoded"
-}
-
-__wezterm_set_cwd() {
-    printf '\033]7;file://localhost%s\033\\' "$(__urlencode "$PWD")"
-}
-
-# ---- Starship Prompt ----
-# *** SET THIS TO WHERE YOU CLONED THE REPO ***
-export STARSHIP_CONFIG="$HOME/Desktop/GitHub/wezterm-config/starship.toml"
-eval "$(starship init bash)"
-
-# Append WezTerm cwd tracking after starship sets up PROMPT_COMMAND
-PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_set_cwd"
-
-# ---- Yazi File Manager with Auto-cd ----
-# Use 'yy' instead of 'yazi' to auto-cd when you quit
-function yy() {
-    local tmp
-    tmp="$(mktemp)"
-    yazi "$@" --cwd-file="$tmp"
-    if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        builtin cd -- "$cwd"
-    fi
-    rm -f -- "$tmp"
-}
+git clone https://github.com/Hassan-Zbib/wezterm-config ~/Desktop/GitHub/wezterm-config
 ```
 
----
+> If you clone to a different location, update `WEZTERM_CONFIG_DIR` in the next two steps.
 
-### Step 5 — Verify
+### 2. Copy the home files
 
-Restart WezTerm. You should see:
-- Starship prompt with git branch and icons
-- Tab title updating as you navigate directories
-- `yy` command available for file browsing with auto-cd
+```bash
+cp ~/Desktop/GitHub/wezterm-config/home/.wezterm.lua ~/.wezterm.lua
+cp ~/Desktop/GitHub/wezterm-config/home/.bashrc ~/.bashrc
+```
 
----
+Both files have a single path variable at the top — **only change it if you cloned to a different location**:
 
-### Changing the Repo Path (New Device)
-
-If you clone the repo to a different location, update **two files**:
-
-1. **`.wezterm.lua`** — change `config_path`:
-   ```lua
-   local config_path = wezterm.home_dir .. '/your/new/path/wezterm-config'
-   ```
-
-2. **`.bashrc`** — change `STARSHIP_CONFIG`:
-   ```bash
-   export STARSHIP_CONFIG="$HOME/your/new/path/wezterm-config/starship.toml"
-   ```
-
----
-
-### Configuration Files
-
-| File | Purpose |
-| ---- | ------- |
-| `.wezterm.lua` | Entry point — set your repo path here |
-| `starship.toml` | Starship prompt configuration |
-| `config/appearance.lua` | Colors, opacity, cursor, tab bar |
-| `config/fonts.lua` | Font family and size |
-| `config/bindings.lua` | All keyboard shortcuts |
-| `config/launch.lua` | Default shell and launch menu |
-| `config/domains.lua` | WSL domain settings |
-| `config/general.lua` | Scrollback, behavior settings |
-| `backdrops/` | Background wallpaper images |
-
----
-
-## ⌨️ Keyboard Shortcuts Cheat Sheet
-
-> **Key Reference:**
-> - `Alt` = `SUPER` in original config
-> - `Alt+Ctrl` = `SUPER_REV` in original config
-> - `Leader` = `Alt+Ctrl+Space`
-
-### 🎯 Quick Actions
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>F1</kbd> | Copy Mode | <kbd>F11</kbd> | Fullscreen |
-| <kbd>F2</kbd> | Command Palette | <kbd>F12</kbd> | Debug Overlay |
-| <kbd>F3</kbd> | Launcher Menu | <kbd>Alt</kbd>+<kbd>f</kbd> | Search |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> | Copy | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>u</kbd> | Open URL |
-| <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd> | Paste | Right-click | Copy selection / Paste |
-
-### ✏️ Cursor Movement
-| Keys | Action |
-| ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>←</kbd> | Jump to Line Start |
-| <kbd>Alt</kbd>+<kbd>→</kbd> | Jump to Line End |
-| <kbd>Alt</kbd>+<kbd>Backspace</kbd> | Clear Line *(Git Bash only)* |
-
-### 📑 Tabs
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>t</kbd> | New Tab | <kbd>Alt</kbd>+<kbd>[</kbd> | Previous Tab |
-| <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>t</kbd> | New Tab (WSL) | <kbd>Alt</kbd>+<kbd>]</kbd> | Next Tab |
-| <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>w</kbd> | Close Tab | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>[</kbd> | Move Tab Left |
-| <kbd>Alt</kbd>+<kbd>0</kbd> | Rename Tab | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>]</kbd> | Move Tab Right |
-| <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>0</kbd> | Undo Rename | <kbd>Alt</kbd>+<kbd>9</kbd> | Toggle Tab Bar |
-
-### 🪟 Panes
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>\\</kbd> | Split Vertical | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>k</kbd> | Focus Up |
-| <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>\\</kbd> | Split Horizontal | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>j</kbd> | Focus Down |
-| <kbd>Alt</kbd>+<kbd>w</kbd> | Close Pane | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>h</kbd> | Focus Left |
-| <kbd>Alt</kbd>+<kbd>Enter</kbd> | Zoom Pane | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>l</kbd> | Focus Right |
-| | | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>p</kbd> | Swap Panes |
-
-### 🖼️ Background Images
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>/</kbd> | Random Image | <kbd>Alt</kbd>+<kbd>,</kbd> | Previous Image |
-| <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>/</kbd> | Browse Images | <kbd>Alt</kbd>+<kbd>.</kbd> | Next Image |
-| <kbd>Alt</kbd>+<kbd>b</kbd> | Toggle Background | | |
-
-### 🔤 Font & Window
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>=</kbd> | Grow Window | <kbd>Alt</kbd>+<kbd>n</kbd> | New Window |
-| <kbd>Alt</kbd>+<kbd>-</kbd> | Shrink Window | <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Enter</kbd> | Maximize |
-
-### 📜 Scrolling
-| Keys | Action |
-| ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>u</kbd> | Scroll Up (5 lines) |
-| <kbd>Alt</kbd>+<kbd>d</kbd> | Scroll Down (5 lines) |
-| <kbd>Page Up</kbd> / <kbd>Page Down</kbd> | Scroll Page |
-| <kbd>End</kbd> | Scroll to Bottom |
-
-### 📁 File Manager (yazi)
-| Keys | Action |
-| ---- | ------ |
-| <kbd>Alt</kbd>+<kbd>e</kbd> | Open yazi in current pane (auto-cd on quit) |
-
-**Inside yazi:**
-| Keys | Action | Keys | Action |
-| ---- | ------ | ---- | ------ |
-| <kbd>↑</kbd> / <kbd>↓</kbd> or <kbd>k</kbd> / <kbd>j</kbd> | Navigate | <kbd>Enter</kbd> | Open file/folder |
-| <kbd>←</kbd> or <kbd>h</kbd> | Go up a folder | <kbd>→</kbd> or <kbd>l</kbd> | Enter folder |
-| <kbd>Space</kbd> | Select file | <kbd>y</kbd> | Copy selected |
-| <kbd>x</kbd> | Cut selected | <kbd>p</kbd> | Paste |
-| <kbd>d</kbd> | Move to trash | <kbd>D</kbd> | Delete permanently |
-| <kbd>/</kbd> | Search | <kbd>.</kbd> | Toggle hidden files |
-| <kbd>q</kbd> | Quit + cd to current dir | <kbd>~</kbd> | Go to home |
-
-### ⚙️ Advanced Modes
-**Leader Key:** <kbd>Alt</kbd>+<kbd>Ctrl</kbd>+<kbd>Space</kbd>, then:
-- <kbd>f</kbd> → Font Resize Mode (<kbd>k</kbd>/<kbd>j</kbd> to resize, <kbd>r</kbd> to reset, <kbd>Esc</kbd> to exit)
-- <kbd>p</kbd> → Pane Resize Mode (<kbd>h</kbd>/<kbd>j</kbd>/<kbd>k</kbd>/<kbd>l</kbd> to resize, <kbd>Esc</kbd> to exit)
-
----
-
-## 🎨 Customization
-
-### Change Background Opacity
-Edit `config/appearance.lua`:
+**`~/.wezterm.lua`**
 ```lua
-window_background_opacity = 0.85  -- 0.0 = fully transparent, 1.0 = opaque
+local WEZTERM_CONFIG_DIR = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
 ```
 
-### Add Background Images
-Drop image files into the `backdrops/` folder (jpg, png, gif supported).
+**`~/.bashrc`**
+```bash
+WEZTERM_CONFIG_DIR="$HOME/Desktop/GitHub/wezterm-config"
+```
 
-### Change Default Shell
-Edit `config/launch.lua`:
+### 3. Restart WezTerm
+
+WezTerm auto-loads `~/.wezterm.lua` on startup. Open a new tab to see the system info panel appear.
+
+---
+
+## Repository Structure
+
+```
+wezterm-config/
+├── home/
+│   ├── .wezterm.lua        # Entry point — copy to ~/
+│   └── .bashrc             # Git Bash config — copy to ~/
+│
+├── config/
+│   ├── appearance.lua      # Opacity, tab bar, cursor, window frame
+│   ├── bindings.lua        # All keyboard & mouse shortcuts
+│   ├── domains.lua         # WSL domain definitions
+│   ├── fonts.lua           # Font family and size
+│   ├── general.lua         # Scrollback, kitty keyboard, hyperlinks
+│   └── launch.lua          # Default shell (Git Bash)
+│
+├── events/
+│   ├── gui-startup.lua     # Window position on startup
+│   ├── left-status.lua     # Leader key / key-table indicator
+│   ├── right-status.lua    # Agent status, clock, battery
+│   ├── tab-title.lua       # Tab title formatting
+│   ├── new-tab-button.lua  # Custom new-tab button
+│   └── window-title.lua    # Window title (active pane name)
+│
+├── utils/
+│   ├── backdrops.lua       # Background image manager
+│   ├── cells.lua           # Status bar segment builder
+│   ├── gpu-adapter.lua     # GPU auto-selection for WebGPU
+│   ├── math.lua            # Math helpers
+│   ├── opts-validator.lua  # Config validation
+│   └── platform.lua        # OS detection
+│
+├── colors/
+│   └── custom.lua          # Catppuccin Macchiato color overrides
+│
+├── backdrops/              # Background wallpaper images
+│
+├── scripts/
+│   ├── cheatsheet.sh       # F1 keyboard shortcut reference (opens in new tab)
+│   └── sysinfo.sh          # Startup system info panel
+│
+└── starship.toml           # Starship prompt configuration
+```
+
+---
+
+## Keyboard Shortcuts
+
+> **Windows key mapping:** `Super` = `Alt` · `Super+Rev` = `Alt+Ctrl`
+
+### Quick Actions
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `F1` | Cheat Sheet | `F11` | Fullscreen |
+| `F2` | Command Palette | `F12` | Debug Overlay |
+| `F3` | Launcher Menu | `F8` | Copy Mode |
+| `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
+| `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
+| `Right-click` | Copy / Paste | `Alt+Shift+V` | Paste image as file path |
+
+### Cursor Movement
+
+| Key | Action |
+|-----|--------|
+| `Alt+←` | Jump to line start |
+| `Alt+→` | Jump to line end |
+| `Shift+Enter` | New line without submitting |
+| `Alt+Backspace` | Clear line (Git Bash only) |
+
+### Tabs
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Alt+t` | New Tab (Git Bash) | `Alt+[` | Previous Tab |
+| `Alt+Ctrl+t` | New Tab (WSL) | `Alt+]` | Next Tab |
+| `Alt+Ctrl+w` | Close Tab | `Alt+Ctrl+[` | Move Tab Left |
+| `Alt+0` | Rename Tab | `Alt+Ctrl+]` | Move Tab Right |
+| `Alt+Ctrl+0` | Undo Rename | `Alt+9` | Toggle Tab Bar |
+
+### Panes
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Alt+\` | Split Vertical | `Alt+Ctrl+k` | Focus Up |
+| `Alt+Ctrl+\` | Split Horizontal | `Alt+Ctrl+j` | Focus Down |
+| `Alt+w` | Close Pane | `Alt+Ctrl+h` | Focus Left |
+| `Alt+Enter` | Zoom Pane | `Alt+Ctrl+l` | Focus Right |
+| `Alt+Ctrl+p` | Swap Panes | | |
+
+### Scrolling
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Alt+u` | Scroll Up 5 lines | `Alt+d` | Scroll Down 5 lines |
+| `Page Up` | Scroll Page Up | `Page Down` | Scroll Page Down |
+| `End` | Scroll to Bottom | | |
+
+### Background Images
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Alt+/` | Random Image | `Alt+,` | Previous Image |
+| `Alt+Ctrl+/` | Browse & Select | `Alt+.` | Next Image |
+| `Alt+b` | Toggle Background On/Off | | |
+
+### Font & Window
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Alt+=` | Grow Window | `Alt+n` | New Window |
+| `Alt+-` | Shrink Window | `Alt+Ctrl+Enter` | Maximize |
+
+### File Manager (yazi)
+
+| Key | Action |
+|-----|--------|
+| `Alt+e` | Open yazi (auto-cd to selected directory on quit) |
+
+Inside yazi: `h` `j` `k` `l` navigate · `Space` select · `y` copy · `p` paste · `/` search · `q` quit
+
+### Advanced Modes
+
+**Leader key:** `Alt+Ctrl+Space`, then press:
+
+| Key | Mode |
+|-----|------|
+| `f` | **Font Resize** — `k`/`j` to resize, `r` to reset, `Esc` to exit |
+| `p` | **Pane Resize** — `h`/`j`/`k`/`l` to resize, `Esc` to exit |
+
+---
+
+## Startup System Info Panel
+
+When opening a new WezTerm pane, a system info panel is displayed:
+
+```
+  +──────────────────────────────────────
+  |  user      Hasan@DESKTOP
+  |  uptime    5h, 30m
+  |  term      WezTerm
+  |  shell     bash 5.2.21
+  |  cpu       12%
+  |  memory    8.2G / 16.1G
+  |  swap      0.5G / 8.0G
+  |  network   192.168.1.100/24
+  +──────────────────────────────────────
+```
+
+- Only appears in **WezTerm** (gated on `$WEZTERM_PANE`)
+- Data is fetched via a single PowerShell call (requires PowerShell 7)
+- **AWS row** only appears when `AWS_PROFILE` or `AWS_REGION` is set
+
+---
+
+## Status Bar
+
+**Left status** — shows the active key-table name or a leader key indicator when pressed. Shows `F1:help` hint otherwise.
+
+**Right status** — powered by [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck):
+- AI agent activity counts (working / waiting / idle)
+- 12-hour clock
+- Battery level
+
+---
+
+## Starship Prompt
+
+The prompt uses the Catppuccin Macchiato powerline preset, showing:
+
+- OS icon + username
+- Current directory
+- Git branch + status
+- Active language versions (Node, Python, Rust, Go, etc.)
+- Command duration (for commands that take a while)
+
+Config lives at `starship.toml` in the repo root. `STARSHIP_CONFIG` is set automatically by `.bashrc`.
+
+---
+
+## Customization
+
+### Repo location
+
+Both `~/.wezterm.lua` and `~/.bashrc` have a single `WEZTERM_CONFIG_DIR` variable at the top. Change it if you clone to a different path.
+
+### Window opacity
+
+In `config/appearance.lua`:
 ```lua
-options.default_prog = { 'pwsh', '-NoLogo' }         -- PowerShell 7
-options.default_prog = { 'wsl.exe', '-d', 'Ubuntu' } -- WSL Ubuntu
+window_background_opacity = 0.85  -- slight depth effect; 1.0 = fully opaque
 ```
 
-### Customize Starship Prompt
-Edit `starship.toml` in the root of this repo. Full reference: https://starship.rs/config/
+### Background images
 
-### Modify Colors
-Edit `colors/custom.lua` to change the color scheme.
+Add `.jpg`, `.png`, or `.gif` files to the `backdrops/` folder. They are auto-loaded on next WezTerm start. Use `Alt+/` to cycle randomly or `Alt+Ctrl+/` to browse.
 
----
+### Default shell
 
-## 🔧 Features
+In `config/launch.lua`:
+```lua
+-- Git Bash (default)
+options.default_prog = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login' }
 
-### Agent Status Bar
-Shows Claude Code / AI agent status in the right status bar:
-- 🟢 `N working` — agent is processing
-- 🟡 `N waiting` — agent needs input
-- `N idle` — agent is ready
+-- PowerShell 7
+options.default_prog = { 'pwsh.exe', '-NoLogo' }
+```
 
-Powered by [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck).
+### Font
 
-### Background Image Selector
-- Cycle through wallpapers with keybindings
-- Fuzzy search for a specific image (Alt+Ctrl+/)
-- Toggle background off for focus mode (Alt+b)
+In `config/fonts.lua`:
+```lua
+font = wezterm.font({ family = 'JetBrainsMono Nerd Font', weight = 'Bold' })
+font_size = 11.0
+```
 
-### Starship Prompt
-Cross-shell prompt showing:
-- Current directory (truncated)
-- Git branch and status (modified, staged, ahead/behind)
-- Active language version (Node, Python, Rust, Go)
-- Command duration for slow commands (>2s)
+### WSL
 
-Config file: `starship.toml`
-
-### WezTerm Shell Integration
-Tab title automatically updates to show your current working directory as you navigate.
-
-### GPU Adapter Selector
-Automatically selects the best GPU + Graphics API:
-- **Windows:** DirectX 12 > Vulkan > OpenGL
-- Uses discrete GPU when available
+In `config/domains.lua`, update the distribution name to match your installed WSL distro (run `wsl -l` to list available distros).
 
 ---
 
-## 📚 References
+## Credits
 
-Original config by: [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
-
-- https://wezfurlong.org/wezterm/
-- https://starship.rs/
-- https://yazi-rs.github.io/
-- https://github.com/catppuccin/wezterm
-
----
-
-## 📝 License
-
-MIT License - See [LICENSE](./LICENSE) file
-
-Original copyright © 2023 Kevin Silvester
+- Base config: [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
+- Theme: [Catppuccin](https://github.com/catppuccin/catppuccin)
+- Agent status bar: [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck)
+- Prompt: [Starship](https://starship.rs/)
+- File manager: [Yazi](https://yazi-rs.github.io/)
