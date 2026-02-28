@@ -10,6 +10,7 @@ return {
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Gl', 'Other'),
    underline_thickness = '1.5pt',
+   warn_about_missing_glyphs = false,
 
    -- cursor
    animation_fps = 120,
