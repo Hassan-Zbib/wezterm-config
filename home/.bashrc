@@ -27,7 +27,7 @@ __wezterm_set_cwd() {
 }
 
 # ---- Skip heavy init when running inside Claude Code ----
-if [[ -z "$CLAUDE_CODE" ]]; then
+if [[ -z "$CLAUDECODE" ]]; then
    # ---- System Info Panel (WezTerm only, shown once at shell startup) ----
    [[ -n "$WEZTERM_PANE" ]] && "$WEZTERM_CONFIG_DIR/scripts/sysinfo.sh"
 
