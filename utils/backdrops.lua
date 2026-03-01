@@ -17,6 +17,8 @@ local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 ---@field images_dir string directory of background images. Default is `wezterm.config_dir .. '/backdrops/'`
 ---@field focus_color string background color when in focus mode. Default is `colors.custom.background`
 ---@field focus_on boolean focus mode on or off
+---@field auto_rotate_enabled boolean whether auto-rotation is active
+---@field auto_rotate_interval number auto-rotation interval in seconds
 local BackDrops = {}
 BackDrops.__index = BackDrops
 
@@ -29,6 +31,8 @@ function BackDrops:init()
       images_dir = wezterm.config_dir .. '/backdrops/',
       focus_color = colors.background,
       focus_on = false,
+      auto_rotate_enabled = false,
+      auto_rotate_interval = 60,
    }
    local backdrops = setmetatable(inital, self)
    return backdrops
@@ -211,6 +215,7 @@ function BackDrops:set_img(window, idx)
 end
 
 ---Toggle the focus mode
+---When leaving focus mode, starts auto-rotation. When entering, stops it.
 ---@param window any WezTerm `Window` see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 function BackDrops:toggle_focus(window)
    local background_opts
@@ -218,12 +223,61 @@ function BackDrops:toggle_focus(window)
    if self.focus_on then
       background_opts = self:_create_opts()
       self.focus_on = false
+      self:start_auto_rotate(self.auto_rotate_interval)
    else
       background_opts = self:_create_focus_opts()
       self.focus_on = true
+      self:stop_auto_rotate()
    end
 
    self:_set_opt(window, background_opts)
+end
+
+---Schedule the next auto-rotation tick
+---@private
+function BackDrops:_schedule_rotate()
+   if not self.auto_rotate_enabled then
+      return
+   end
+
+   wezterm.time.call_after(self.auto_rotate_interval, function()
+      if not self.auto_rotate_enabled or self.focus_on then
+         self:_schedule_rotate()
+         return
+      end
+
+      -- cycle forward through the list
+      if self.current_idx == #self.images then
+         self.current_idx = 1
+      else
+         self.current_idx = self.current_idx + 1
+      end
+
+      -- apply to all open windows
+      local gui = wezterm.gui
+      if gui then
+         for _, window in ipairs(gui.gui_windows()) do
+            self:_set_opt(window, self:_create_opts())
+         end
+      end
+
+      self:_schedule_rotate()
+   end)
+end
+
+---Start auto-rotating backdrops at the given interval
+---@param seconds? number rotation interval in seconds (default: 60)
+function BackDrops:start_auto_rotate(seconds)
+   self.auto_rotate_interval = seconds or 60
+   self.auto_rotate_enabled = true
+   self:_schedule_rotate()
+   return self
+end
+
+---Stop auto-rotating backdrops
+function BackDrops:stop_auto_rotate()
+   self.auto_rotate_enabled = false
+   return self
 end
 
 return BackDrops:init()
