@@ -39,4 +39,16 @@ agent_deck.apply_to_config(config, {
    notifications = { enabled = false },
 })
 
+-- Toggle agent deck notifications (F6)
+table.insert(config.keys, {
+   key = 'F6',
+   mods = 'NONE',
+   action = wezterm.action_callback(function(window, _pane)
+      local cfg = agent_deck.get_config()
+      cfg.notifications.enabled = not cfg.notifications.enabled
+      local status = cfg.notifications.enabled and 'ON' or 'OFF'
+      window:toast_notification('Agent Deck', 'Notifications ' .. status, nil, 3000)
+   end),
+})
+
 return config
