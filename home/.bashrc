@@ -26,18 +26,21 @@ __wezterm_set_cwd() {
     printf '\033]7;file://localhost%s\033\\' "$(__urlencode "$PWD")"
 }
 
-# ---- System Info Panel (WezTerm only, shown once at shell startup) ----
-[[ -n "$WEZTERM_PANE" ]] && "$WEZTERM_CONFIG_DIR/scripts/sysinfo.sh"
+# ---- Skip heavy init when running inside Claude Code ----
+if [[ -z "$CLAUDE_CODE" ]]; then
+   # ---- System Info Panel (WezTerm only, shown once at shell startup) ----
+   [[ -n "$WEZTERM_PANE" ]] && "$WEZTERM_CONFIG_DIR/scripts/sysinfo.sh"
 
-# ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
-bind '"\e[13;2u": "\n"'
+   # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
+   bind '"\e[13;2u": "\n"'
 
-# ---- Starship Prompt ----
-export STARSHIP_CONFIG="$WEZTERM_CONFIG_DIR/starship.toml"
-eval "$(starship init bash)"
+   # ---- Starship Prompt ----
+   export STARSHIP_CONFIG="$WEZTERM_CONFIG_DIR/starship.toml"
+   eval "$(starship init bash)"
 
-# Append WezTerm cwd tracking after starship sets up PROMPT_COMMAND
-PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_set_cwd"
+   # Append WezTerm cwd tracking after starship sets up PROMPT_COMMAND
+   PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_set_cwd"
+fi
 
 # ---- Yazi File Manager with Auto-cd ----
 # Use 'yy' instead of 'yazi' to auto-cd when you quit
