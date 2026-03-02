@@ -60,6 +60,8 @@ local colors = {
    separator     = { fg = '#74c7ec', bg = 'rgba(0, 0, 0, 0.4)' },
    agent_working = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
    agent_waiting = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
+   notif_on      = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
+   notif_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
 }
 
 local cells = Cells:new()
@@ -68,6 +70,9 @@ cells
    :add_segment('agent_working', '', colors.agent_working, attr(attr.intensity('Bold')))
    :add_segment('agent_waiting', '', colors.agent_waiting, attr(attr.intensity('Bold')))
    :add_segment('agent_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('notif_on', nf.md_bell .. ' ON', colors.notif_on, attr(attr.intensity('Bold')))
+   :add_segment('notif_off', nf.md_bell_off .. ' OFF', colors.notif_off)
+   :add_segment('notif_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('date_icon', ICON_DATE .. '  ', colors.date, attr(attr.intensity('Bold')))
    :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
    :add_segment('separator', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -134,12 +139,27 @@ M.setup = function(opts)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
 
+      -- Notification toggle indicator
+      local notif_enabled = false
+      if ok then
+         local agent_cfg = agent_deck.get_config()
+         if agent_cfg and agent_cfg.notifications then
+            notif_enabled = agent_cfg.notifications.enabled
+         end
+      end
+
       local segments = {}
       if has_agents then
          if working_text ~= '' then table.insert(segments, 'agent_working') end
          if waiting_text ~= '' then table.insert(segments, 'agent_waiting') end
          table.insert(segments, 'agent_sep')
       end
+      if notif_enabled then
+         table.insert(segments, 'notif_on')
+      else
+         table.insert(segments, 'notif_off')
+      end
+      table.insert(segments, 'notif_sep')
       table.insert(segments, 'date_icon')
       table.insert(segments, 'date_text')
       table.insert(segments, 'separator')

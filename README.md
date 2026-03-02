@@ -127,7 +127,8 @@ wezterm-config/
 |-----|--------|-----|--------|
 | `F1` | Cheat Sheet | `F11` | Fullscreen |
 | `F2` | Command Palette | `F12` | Debug Overlay |
-| `F3` | Launcher Menu | `F8` | Copy Mode |
+| `F3` | Launcher Menu | `F6` | Toggle Agent Notifications |
+| `F4` | Fuzzy Tabs | `F8` | Copy Mode |
 | `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
 | `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
 | `Right-click` | Copy / Paste | `Alt+Shift+V` | Paste image as file path |
