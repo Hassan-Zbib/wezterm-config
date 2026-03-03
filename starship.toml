@@ -19,6 +19,9 @@ $java\
 $kotlin\
 $haskell\
 $python\
+$aws\
+$kubernetes\
+$terraform\
 [](fg:green)\
 $cmd_duration\
 $line_break\
@@ -124,6 +127,22 @@ format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
 symbol = ""
 style = "bg:green"
 format = '[[ $symbol( $version)(\(#$virtualenv\)) ](fg:crust bg:green)]($style)'
+
+[aws]
+symbol = ""
+style = "bg:green"
+format = '[[ $symbol( $profile)( ($region)) ](fg:crust bg:green)]($style)'
+
+[kubernetes]
+symbol = "󰇣"
+disabled = false
+style = "bg:green"
+format = '[[ $symbol( $context)(:$namespace) ](fg:crust bg:green)]($style)'
+
+[terraform]
+symbol = "󱢢"
+style = "bg:green"
+format = '[[ $symbol( $version)( $workspace) ](fg:crust bg:green)]($style)'
 
 [docker_context]
 symbol = ""

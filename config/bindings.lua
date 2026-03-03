@@ -1,6 +1,8 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
+local sessions = require('utils.sessions')
+local ssh_hosts = require('utils.ssh-hosts')
 local act = wezterm.action
 
 local mod = {}
@@ -37,7 +39,48 @@ local keys = {
       mods = 'NONE',
       action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
    },
+   {
+      key = 'F7',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, pane)
+         window:perform_action(act.InputSelector({
+            title = 'SSH Hosts',
+            choices = ssh_hosts.choices(),
+            fuzzy = true,
+            fuzzy_description = 'Connect to SSH Host: ',
+            action = wezterm.action_callback(function(inner_window, inner_pane, id)
+               if id then
+                  ssh_hosts.connect(inner_pane, id)
+               end
+            end),
+         }), pane)
+      end),
+   },
    { key = 'F8', mods = 'NONE', action = 'ActivateCopyMode' },
+   {
+      key = 'F9',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, pane)
+         sessions.save(window, pane)
+      end),
+   },
+   {
+      key = 'F10',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, pane)
+         window:perform_action(act.InputSelector({
+            title = 'Restore Session',
+            choices = sessions.choices(),
+            fuzzy = true,
+            fuzzy_description = 'Select Session: ',
+            action = wezterm.action_callback(function(inner_window, inner_pane, id)
+               if id then
+                  sessions.restore(inner_window, inner_pane, id)
+               end
+            end),
+         }), pane)
+      end),
+   },
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
@@ -221,10 +264,10 @@ local keys = {
    { key = 'w',     mods = mod.SUPER,     action = act.CloseCurrentPane({ confirm = false }) },
 
    -- panes: navigation
-   { key = 'k',     mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Up') },
-   { key = 'j',     mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Down') },
-   { key = 'h',     mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Left') },
-   { key = 'l',     mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Right') },
+   { key = 'UpArrow',    mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Up') },
+   { key = 'DownArrow',  mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Down') },
+   { key = 'LeftArrow',  mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Left') },
+   { key = 'RightArrow', mods = mod.SUPER_REV, action = act.ActivatePaneDirection('Right') },
    {
       key = 'p',
       mods = mod.SUPER_REV,

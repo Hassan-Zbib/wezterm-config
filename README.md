@@ -14,6 +14,8 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **AI agent status bar** — live Claude Code working/waiting/idle indicator
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
+- **Session persistence** — save and restore workspace layouts (F9/F10)
+- **SSH host selector** — fuzzy-search `~/.ssh/config` hosts (F7)
 - **WSL support** — open WSL tabs alongside Git Bash
 - **Tab bar at bottom** with active key-table indicator in left status
 
@@ -101,7 +103,9 @@ wezterm-config/
 │   ├── gpu-adapter.lua     # GPU auto-selection for WebGPU
 │   ├── math.lua            # Math helpers
 │   ├── opts-validator.lua  # Config validation
-│   └── platform.lua        # OS detection
+│   ├── platform.lua        # OS detection
+│   ├── sessions.lua        # Session save/restore
+│   └── ssh-hosts.lua       # SSH config parser + selector
 │
 ├── colors/
 │   └── custom.lua          # Catppuccin Macchiato color overrides
@@ -128,7 +132,9 @@ wezterm-config/
 | `F1` | Cheat Sheet | `F11` | Fullscreen |
 | `F2` | Command Palette | `F12` | Debug Overlay |
 | `F3` | Launcher Menu | `F6` | Toggle Agent Notifications |
-| `F4` | Fuzzy Tabs | `F8` | Copy Mode |
+| `F4` | Fuzzy Tabs | `F7` | SSH Host Selector |
+| `F5` | Fuzzy Workspaces | `F8` | Copy Mode |
+| `F9` | Save Session | `F10` | Restore Session |
 | `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
 | `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
 | `Right-click` | Copy / Paste | `Alt+Shift+V` | Paste image as file path |
@@ -156,10 +162,10 @@ wezterm-config/
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `Alt+\` | Split Vertical | `Alt+Ctrl+k` | Focus Up |
-| `Alt+Ctrl+\` | Split Horizontal | `Alt+Ctrl+j` | Focus Down |
-| `Alt+w` | Close Pane | `Alt+Ctrl+h` | Focus Left |
-| `Alt+Enter` | Zoom Pane | `Alt+Ctrl+l` | Focus Right |
+| `Alt+\` | Split Vertical | `Alt+Ctrl+↑` | Focus Up |
+| `Alt+Ctrl+\` | Split Horizontal | `Alt+Ctrl+↓` | Focus Down |
+| `Alt+w` | Close Pane | `Alt+Ctrl+←` | Focus Left |
+| `Alt+Enter` | Zoom Pane | `Alt+Ctrl+→` | Focus Right |
 | `Alt+Ctrl+p` | Swap Panes | | |
 
 ### Scrolling
@@ -246,6 +252,9 @@ The prompt uses the Catppuccin Macchiato powerline preset, showing:
 - Current directory
 - Git branch + status
 - Active language versions (Node, Python, Rust, Go, etc.)
+- AWS profile + region (when active)
+- Kubernetes context + namespace (when active)
+- Terraform version + workspace (when in a TF directory)
 - Command duration (for commands that take a while)
 
 Config lives at `starship.toml` in the repo root. `STARSHIP_CONFIG` is set automatically by `.bashrc`.
