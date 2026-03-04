@@ -61,13 +61,15 @@ function M.choices()
          detail = host.user .. '@' .. host.alias
       end
 
+      local ids = { 'name' }
       if detail ~= '' then
          cells:add_segment('detail', ' ' .. detail, nil, { Cells.attr.intensity('Half') })
+         table.insert(ids, 'detail')
       end
 
       table.insert(choices, {
          id = host.alias,
-         label = wezterm.format(cells:render({ 'name', 'detail' })),
+         label = wezterm.format(cells:render(ids)),
       })
    end
 

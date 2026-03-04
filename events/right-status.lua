@@ -1,6 +1,8 @@
 local wezterm = require('wezterm')
 local umath = require('utils.math')
 local Cells = require('utils.cells')
+local backdrops = require('utils.backdrops')
+local platform = require('utils.platform')
 local OptsValidator = require('utils.opts-validator')
 
 ---@alias Event.RightStatusOptions { date_format?: string }
@@ -24,6 +26,7 @@ local M = {}
 
 local ICON_SEPARATOR = nf.oct_dash
 local ICON_DATE = nf.fa_calendar
+local ICON_RAM = nf.md_memory
 
 ---@type string[]
 local discharging_icons = {
@@ -62,6 +65,9 @@ local colors = {
    agent_waiting = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
    notif_on      = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
    notif_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
+   focus_on      = { fg = '#cba6f7', bg = 'rgba(0, 0, 0, 0.4)' },
+   focus_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
+   ram           = { fg = '#94e2d5', bg = 'rgba(0, 0, 0, 0.4)' },
 }
 
 local cells = Cells:new()
@@ -73,9 +79,15 @@ cells
    :add_segment('notif_on', nf.md_bell .. ' ON', colors.notif_on, attr(attr.intensity('Bold')))
    :add_segment('notif_off', nf.md_bell_off .. ' OFF', colors.notif_off)
    :add_segment('notif_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('focus_on', nf.md_eye .. ' ON', colors.focus_on, attr(attr.intensity('Bold')))
+   :add_segment('focus_off', nf.md_eye_off .. ' OFF', colors.focus_off)
+   :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('date_icon', ICON_DATE .. '  ', colors.date, attr(attr.intensity('Bold')))
    :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
    :add_segment('separator', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('ram_icon', ICON_RAM .. '  ', colors.ram)
+   :add_segment('ram_text', '', colors.ram, attr(attr.intensity('Bold')))
+   :add_segment('ram_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('battery_icon', '', colors.battery)
    :add_segment('battery_text', '', colors.battery, attr(attr.intensity('Bold')))
 
@@ -96,6 +108,49 @@ local function battery_info()
    end
 
    return charge, icon .. ' '
+end
+
+local ram_cache = { value = '', last_check = 0 }
+local RAM_CACHE_TTL = 5
+
+---@return string RAM usage percentage string e.g. "62%"
+local function get_ram_usage()
+   local now = os.time()
+   if now - ram_cache.last_check < RAM_CACHE_TTL then
+      return ram_cache.value
+   end
+   ram_cache.last_check = now
+
+   if platform.is_win then
+      local ok, stdout = wezterm.run_child_process({
+         'wmic',
+         'OS',
+         'get',
+         'FreePhysicalMemory,TotalVisibleMemorySize',
+         '/Value',
+      })
+      if ok and stdout then
+         local total = stdout:match('TotalVisibleMemorySize=(%d+)')
+         local free = stdout:match('FreePhysicalMemory=(%d+)')
+         if total and free then
+            total = tonumber(total)
+            free = tonumber(free)
+            local pct = math.floor(((total - free) / total) * 100 + 0.5)
+            ram_cache.value = pct .. '%'
+         end
+      end
+   else
+      local ok, stdout = wezterm.run_child_process({ 'free', '-m' })
+      if ok and stdout then
+         local total, used = stdout:match('Mem:%s+(%d+)%s+(%d+)')
+         if total and used then
+            local pct = math.floor((tonumber(used) / tonumber(total)) * 100 + 0.5)
+            ram_cache.value = pct .. '%'
+         end
+      end
+   end
+
+   return ram_cache.value
 end
 
 ---@param opts? Event.RightStatusOptions Default: {date_format = '%a %I:%M %p'}
@@ -132,10 +187,14 @@ M.setup = function(opts)
          end
       end
 
+      -- RAM usage
+      local ram_text = get_ram_usage()
+
       cells
          :update_segment_text('agent_working', working_text)
          :update_segment_text('agent_waiting', waiting_text)
          :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
+         :update_segment_text('ram_text', ram_text)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
 
@@ -160,9 +219,18 @@ M.setup = function(opts)
          table.insert(segments, 'notif_off')
       end
       table.insert(segments, 'notif_sep')
+      if backdrops.focus_on then
+         table.insert(segments, 'focus_on')
+      else
+         table.insert(segments, 'focus_off')
+      end
+      table.insert(segments, 'focus_sep')
       table.insert(segments, 'date_icon')
       table.insert(segments, 'date_text')
       table.insert(segments, 'separator')
+      table.insert(segments, 'ram_icon')
+      table.insert(segments, 'ram_text')
+      table.insert(segments, 'ram_sep')
       table.insert(segments, 'battery_icon')
       table.insert(segments, 'battery_text')
 

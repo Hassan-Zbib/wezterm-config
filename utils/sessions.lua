@@ -193,7 +193,7 @@ function M.restore(window, pane, name)
       if tab_idx == 1 then
          tab_pane = pane
          if root_cwd then
-            pane:send_text('cd ' .. wezterm.shell_quote_arg(root_cwd) .. ' && clear\n')
+            pane:send_text("cd '" .. root_cwd:gsub("'", "'\\''") .. "' && clear\n")
          end
       else
          local spawn_args = {}

@@ -1,21 +1,23 @@
 -- ============================================================================
--- WezTerm Entry Point
--- ============================================================================
---
--- SETUP: Change the line below to match where you cloned the repo.
-local WEZTERM_CONFIG_DIR = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
+-- WezTerm Configuration
+-- References: C:\Users\Hasan\Desktop\GitHub\wezterm-config
+-- Repo: https://github.com/KevinSilvester/wezterm-config
 -- ============================================================================
 
 local wezterm = require('wezterm')
 
-package.path = package.path .. ';' .. WEZTERM_CONFIG_DIR .. '/?.lua'
-package.path = package.path .. ';' .. WEZTERM_CONFIG_DIR .. '/?/init.lua'
+-- Add the wezterm-config repo to Lua's package path
+local config_path = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
+package.path = package.path .. ';' .. config_path .. '/?.lua'
+package.path = package.path .. ';' .. config_path .. '/?/init.lua'
 
+-- Load and return the config from the repo
 local Config = require('config')
 local agent_deck = wezterm.plugin.require('https://github.com/Eric162/wezterm-agent-deck')
 
 require('utils.backdrops')
-   :set_images_dir(WEZTERM_CONFIG_DIR .. '/backdrops/')
+   -- :set_focus('#000000')
+   :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/wezterm-config/backdrops/')
    :set_images()
    :random()
 

@@ -19,6 +19,7 @@ local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 ---@field focus_on boolean focus mode on or off
 ---@field auto_rotate_enabled boolean whether auto-rotation is active
 ---@field auto_rotate_interval number auto-rotation interval in seconds
+---@field _rotate_generation number generation counter to invalidate stale timer chains
 local BackDrops = {}
 BackDrops.__index = BackDrops
 
@@ -33,6 +34,7 @@ function BackDrops:init()
       focus_on = false,
       auto_rotate_enabled = false,
       auto_rotate_interval = 60,
+      _rotate_generation = 0,
    }
    local backdrops = setmetatable(inital, self)
    return backdrops
@@ -235,14 +237,17 @@ end
 
 ---Schedule the next auto-rotation tick
 ---@private
-function BackDrops:_schedule_rotate()
-   if not self.auto_rotate_enabled then
-      return
-   end
-
+---@param gen number generation counter to detect stale timer chains
+function BackDrops:_schedule_rotate(gen)
    wezterm.time.call_after(self.auto_rotate_interval, function()
+      -- stale chain from a previous start/stop cycle — let it die
+      if gen ~= self._rotate_generation then
+         return
+      end
+
+      -- skip rotation while paused or focused, but keep the chain alive
       if not self.auto_rotate_enabled or self.focus_on then
-         self:_schedule_rotate()
+         self:_schedule_rotate(gen)
          return
       end
 
@@ -261,7 +266,7 @@ function BackDrops:_schedule_rotate()
          end
       end
 
-      self:_schedule_rotate()
+      self:_schedule_rotate(gen)
    end)
 end
 
@@ -270,13 +275,15 @@ end
 function BackDrops:start_auto_rotate(seconds)
    self.auto_rotate_interval = seconds or 60
    self.auto_rotate_enabled = true
-   self:_schedule_rotate()
+   self._rotate_generation = self._rotate_generation + 1
+   self:_schedule_rotate(self._rotate_generation)
    return self
 end
 
 ---Stop auto-rotating backdrops
 function BackDrops:stop_auto_rotate()
    self.auto_rotate_enabled = false
+   self._rotate_generation = self._rotate_generation + 1
    return self
 end
 
