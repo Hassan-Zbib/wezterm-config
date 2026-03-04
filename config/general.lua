@@ -1,5 +1,8 @@
+local wezterm = require('wezterm')
+
 return {
    -- behaviours
+   default_cwd = wezterm.home_dir .. '/Desktop/GitHub',
    automatically_reload_config = true,
    exit_behavior = 'CloseOnCleanExit', -- if the shell program exited with a successful status
    exit_behavior_messaging = 'Verbose',

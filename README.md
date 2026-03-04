@@ -18,6 +18,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **SSH host selector** — fuzzy-search `~/.ssh/config` hosts (F7)
 - **WSL support** — open WSL tabs alongside Git Bash
 - **Tab bar at bottom** with active key-table indicator in left status
+- **CLI toolbox** — lazygit, eza, btop, glow, and UniGetUI pre-configured with aliases
 
 ---
 
@@ -35,6 +36,18 @@ Install all of the following before cloning.
 | [Yazi](https://yazi-rs.github.io/) | `winget install sxyazi.yazi` |
 
 > PowerShell 7 is required for the system info panel (it queries Windows APIs). Git for Windows provides the Git Bash shell used as the default.
+
+### Optional CLI Tools
+
+These tools are pre-configured with aliases in `.bashrc`. Install whichever you want:
+
+| Tool | Install | Alias | Description |
+|------|---------|-------|-------------|
+| [Lazygit](https://github.com/jesseduffield/lazygit) | `winget install JesseDuffield.lazygit` | `lg` | Terminal UI for Git |
+| [eza](https://github.com/eza-community/eza) | `winget install eza-community.eza` | `ls`, `ll`, `lt` | Modern `ls` with icons and tree view |
+| [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop` | Interactive system monitor (CPU, RAM, disk, network) |
+| [Glow](https://github.com/charmbracelet/glow) | `winget install charmbracelet.glow` | `glow` | Render Markdown files in the terminal |
+| [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install MartiCliment.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
 
 ---
 
@@ -86,7 +99,7 @@ wezterm-config/
 │   ├── bindings.lua        # All keyboard & mouse shortcuts
 │   ├── domains.lua         # WSL domain definitions
 │   ├── fonts.lua           # Font family and size
-│   ├── general.lua         # Scrollback, kitty keyboard, hyperlinks
+│   ├── general.lua         # Scrollback, kitty keyboard, hyperlinks, default cwd
 │   └── launch.lua          # Default shell (Git Bash)
 │
 ├── events/
@@ -124,6 +137,8 @@ wezterm-config/
 ## Keyboard Shortcuts
 
 > **Windows key mapping:** `Super` = `Alt` · `Super+Rev` = `Alt+Ctrl`
+
+Press `F1` to open the full cheat sheet inside WezTerm.
 
 ### Quick Actions
 
@@ -205,8 +220,39 @@ Inside yazi: `h` `j` `k` `l` navigate · `Space` select · `y` copy · `p` paste
 
 | Key | Mode |
 |-----|------|
-| `f` | **Font Resize** — `k`/`j` to resize, `r` to reset, `Esc` to exit |
-| `p` | **Pane Resize** — `h`/`j`/`k`/`l` to resize, `Esc` to exit |
+| `f` | **Font Resize** — `↑`/`↓` to resize, `r` to reset, `Esc` to exit |
+| `p` | **Pane Resize** — `↑`/`↓`/`←`/`→` to resize, `Esc` to exit |
+
+---
+
+## CLI Tools & Aliases
+
+The `.bashrc` configures the following aliases:
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `ls` | `eza --icons` | List files with icons |
+| `ll` | `eza --icons -la` | Long list with hidden files |
+| `lt` | `eza --icons --tree --level=2` | Tree view (2 levels) |
+| `lg` | `lazygit` | Terminal UI for Git |
+| `btop` | `btop4win` | Interactive system monitor |
+| `pkgs` | UniGetUI | GUI package manager |
+| `glow` | `glow` | Markdown viewer/browser |
+| `yy` | yazi with auto-cd | File manager (cd to dir on quit) |
+
+### Lazygit Quick Reference
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `Space` | Stage/unstage file | `c` | Commit |
+| `P` | Push | `p` | Pull |
+| `Enter` | Expand file / view diff | `[ / ]` | Switch panels |
+| `/` | Filter list | `?` | Keybindings help |
+| `x` | Open actions menu | `+` | Next screen mode |
+| `s` | Stash changes | `S` | View stash entries |
+| `n` | New branch | `r` | Rebase options |
+| `M` | Merge into current | `z` | Undo (via reflog) |
+| `q` | Quit | | |
 
 ---
 
@@ -267,6 +313,13 @@ Config lives at `starship.toml` in the repo root. `STARSHIP_CONFIG` is set autom
 
 Both `~/.wezterm.lua` and `~/.bashrc` have a single `WEZTERM_CONFIG_DIR` variable at the top. Change it if you clone to a different path.
 
+### Default working directory
+
+New windows and tabs open in `~/Desktop/GitHub` by default. Change in `config/general.lua`:
+```lua
+default_cwd = wezterm.home_dir .. '/Desktop/GitHub'
+```
+
 ### Window opacity
 
 In `config/appearance.lua`:
@@ -310,3 +363,8 @@ In `config/domains.lua`, update the distribution name to match your installed WS
 - Agent status bar: [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck)
 - Prompt: [Starship](https://starship.rs/)
 - File manager: [Yazi](https://yazi-rs.github.io/)
+- Git TUI: [Lazygit](https://github.com/jesseduffield/lazygit)
+- Modern ls: [eza](https://github.com/eza-community/eza)
+- System monitor: [btop4win](https://github.com/aristocratos/btop4win)
+- Markdown viewer: [Glow](https://github.com/charmbracelet/glow)
+- Package manager GUI: [UniGetUI](https://github.com/marticliment/UniGetUI)

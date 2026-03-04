@@ -53,3 +53,11 @@ function yy() {
     fi
     rm -f -- "$tmp"
 }
+
+# ---- Aliases ----
+alias lg='lazygit'
+alias pkgs='"/c/Users/Hasan/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
+alias ls='eza --icons'
+alias ll='eza --icons -la'
+alias lt='eza --icons --tree --level=2'
+alias btop='btop4win'
