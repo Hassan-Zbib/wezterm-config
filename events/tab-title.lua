@@ -225,11 +225,24 @@ function Tab:set_info(event_opts, tab, max_width)
       inset = inset + 2
    end
 
+   -- show pane indicator when tab has multiple panes
+   local pane_count = #tab.panes
+   local pane_suffix = ''
+   if pane_count > 1 then
+      for i, p in ipairs(tab.panes) do
+         if p.is_active then
+            pane_suffix = ' [' .. i .. '/' .. pane_count .. ']'
+            break
+         end
+      end
+      inset = inset + #pane_suffix
+   end
+
    if self.title_locked then
-      self.title = create_title('', self.locked_title, max_width, inset)
+      self.title = create_title('', self.locked_title, max_width, inset) .. pane_suffix
       return
    end
-   self.title = create_title(process_name, tab.active_pane.title, max_width, inset)
+   self.title = create_title(process_name, tab.active_pane.title, max_width, inset) .. pane_suffix
 end
 
 function Tab:create_cells()

@@ -60,13 +60,9 @@ return {
       font = wezterm.font({ family = 'JetBrainsMono Nerd Font', weight = 'Bold' }),
       font_size = 11.0,
    },
-   -- inactive_pane_hsb = {
-   --    saturation = 0.9,
-   --    brightness = 0.65,
-   -- },
    inactive_pane_hsb = {
-      saturation = 1,
-      brightness = 1,
+      saturation = 0.85,
+      brightness = 0.6,
    },
 
    visual_bell = {
