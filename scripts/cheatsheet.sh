@@ -167,6 +167,9 @@ sec_row "lt"             "Tree view (2 levels)"
 sec_blank
 sec_header "📊 btop (System Monitor)"
 sec_row "btop"           "Open system monitor"
+sec_blank
+sec_header "🖥️  Fastfetch (System Info)"
+sec_row "fastfetch"      "Show system info panel"
 COL_LEFT=("${_SEC[@]}")
 
 start_section; sec_header "⚙️  Advanced Modes"

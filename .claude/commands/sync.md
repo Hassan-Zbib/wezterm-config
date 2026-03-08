@@ -6,6 +6,7 @@ The sync direction is determined automatically — whichever copy was modified m
 
 - `home/.wezterm.lua` ↔ `~/.wezterm.lua`
 - `home/.bashrc` ↔ `~/.bashrc`
+- `fastfetch.jsonc` ↔ `~/.config/fastfetch/config.jsonc`
 
 ## Steps
 
@@ -17,6 +18,7 @@ The sync direction is determined automatically — whichever copy was modified m
 
 ## Notes
 
-- These files have a `WEZTERM_CONFIG_DIR` variable at the top — never modify it during sync
+- The home files have a `WEZTERM_CONFIG_DIR` variable at the top — never modify it during sync
 - Use `cp` to copy, not move
 - If the destination file doesn't exist yet, copy from whichever side has it
+- For `fastfetch.jsonc`, create `~/.config/fastfetch/` if it doesn't exist before copying

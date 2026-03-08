@@ -29,7 +29,7 @@ __wezterm_set_cwd() {
 # ---- Skip heavy init when running inside Claude Code ----
 if [[ -z "$CLAUDECODE" ]]; then
    # ---- System Info Panel (WezTerm only, shown once at shell startup) ----
-   [[ -n "$WEZTERM_PANE" ]] && "$WEZTERM_CONFIG_DIR/scripts/sysinfo.sh"
+   [[ -n "$WEZTERM_PANE" ]] && fastfetch --config "$WEZTERM_CONFIG_DIR/fastfetch.jsonc"
 
    # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
    bind '"\e[13;2u": "\n"'
@@ -61,3 +61,4 @@ alias ls='eza --icons'
 alias ll='eza --icons -la'
 alias lt='eza --icons --tree --level=2'
 alias btop='btop4win'
+alias cls='clear'

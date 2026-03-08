@@ -251,12 +251,12 @@ local keys = {
    {
       key = [[\]],
       mods = mod.SUPER,
-      action = act.SplitVertical({ domain = 'CurrentPaneDomain' }),
+      action = act.SplitPane({ direction = 'Down', size = { Percent = 40 } }),
    },
    {
       key = [[\]],
       mods = mod.SUPER_REV,
-      action = act.SplitHorizontal({ domain = 'CurrentPaneDomain' }),
+      action = act.SplitPane({ direction = 'Right', size = { Percent = 40 } }),
    },
 
    -- panes: zoom+close pane

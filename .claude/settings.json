@@ -10,7 +10,17 @@
       "Bash(git pull*)",
       "Bash(stat *)",
       "Bash(cp *)",
-      "Bash(diff *)"
+      "Bash(diff *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(stat *&&*)",
+      "Bash(stat *&& *)",
+      "Bash(diff *&&*)",
+      "Bash(diff *&& *)",
+      "Bash(cp *&&*)",
+      "Bash(cp *&& *)",
+      "Bash(mkdir *&&*)",
+      "Bash(mkdir *&& *)"
     ]
   }
 }

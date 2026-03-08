@@ -10,7 +10,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 
 - **Background image carousel** (16 included) — toggle to solid dark background with `Alt+b`
 - **Powerline Starship prompt** — git status, language versions, command duration
-- **System info panel** on shell startup — uptime, CPU, memory, network
+- **Fastfetch system info** on shell startup — categorized with bordered labels, Catppuccin colors
 - **AI agent status bar** — live Claude Code working/waiting/idle indicator
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
@@ -34,8 +34,9 @@ Install all of the following before cloning.
 | [JetBrainsMono Nerd Font](https://www.nerdfonts.com/) | `winget install DEVCOM.JetBrainsMonoNerdFont` |
 | [Starship](https://starship.rs/) | `winget install Starship.Starship` |
 | [Yazi](https://yazi-rs.github.io/) | `winget install sxyazi.yazi` |
+| [Fastfetch](https://github.com/fastfetch-cli/fastfetch) | `winget install Fastfetch-cli.Fastfetch` |
 
-> PowerShell 7 is required for the system info panel (it queries Windows APIs). Git for Windows provides the Git Bash shell used as the default.
+> Git for Windows provides the Git Bash shell used as the default.
 
 ### Optional CLI Tools
 
@@ -66,6 +67,8 @@ git clone https://github.com/Hassan-Zbib/wezterm-config ~/Desktop/GitHub/wezterm
 ```bash
 cp ~/Desktop/GitHub/wezterm-config/home/.wezterm.lua ~/.wezterm.lua
 cp ~/Desktop/GitHub/wezterm-config/home/.bashrc ~/.bashrc
+mkdir -p ~/.config/fastfetch
+cp ~/Desktop/GitHub/wezterm-config/fastfetch.jsonc ~/.config/fastfetch/config.jsonc
 ```
 
 Both files have a single path variable at the top — **only change it if you cloned to a different location**:
@@ -126,10 +129,10 @@ wezterm-config/
 ├── backdrops/              # Background wallpaper images
 │
 ├── scripts/
-│   ├── cheatsheet.sh       # F1 keyboard shortcut reference (opens in new tab)
-│   └── sysinfo.sh          # Startup system info panel
+│   └── cheatsheet.sh       # F1 keyboard shortcut reference (opens in new tab)
 │
-└── starship.toml           # Starship prompt configuration
+├── fastfetch.jsonc          # Fastfetch config — copy to ~/.config/fastfetch/config.jsonc
+└── starship.toml            # Starship prompt configuration
 ```
 
 ---
@@ -258,24 +261,38 @@ The `.bashrc` configures the following aliases:
 
 ## Startup System Info Panel
 
-When opening a new WezTerm pane, a system info panel is displayed:
+When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fastfetch) displays a categorized system info panel:
 
 ```
-  +──────────────────────────────────────
-  |  user      Hasan@DESKTOP
-  |  uptime    5h, 30m
-  |  term      WezTerm
-  |  shell     bash 5.2.21
-  |  cpu       12%
-  |  memory    8.2G / 16.1G
-  |  swap      0.5G / 8.0G
-  |  network   192.168.1.100/24
-  +──────────────────────────────────────
+╭───────────────╮
+│ 󰀄 user     │  Hasan@LAPTOP
+├───────────────┤
+│ 󰍲 os       │  Windows 11 Home x86_64
+│ 󰌢 host     │  ROG Zephyrus G15
+│ 󰒓 kernel   │  WIN32_NT 10.0.26200
+│ 󰅐 uptime   │  2 days, 10 hours
+│ 󰃯 date     │  2026-03-08 03:25
+├───────────────┤
+│ 󰆍 term     │  WezTerm
+│ 󱆃 shell    │  bash 5.2.37
+│ 󰍹 display  │  1920x1080, 165 Hz
+├───────────────┤
+│ 󰻠 cpu      │  AMD Ryzen 9 5900HS
+│ 󰍛 gpu      │  NVIDIA RTX 3070
+│ 󰑭 memory   │  9.7 / 15.4 GiB (63%)
+│ 󰓡 swap     │  0.5 / 8.0 GiB (6%)
+│ 󰋊 disk     │  534 / 930 GiB (57%)
+│ 󰈀 network  │  192.168.18.5/24
+├───────────────┤
+│ 󰡨 docker   │  29.2.1
+│ 󰸏 aws      │  2.34.2
+╰───────────────╯
 ```
 
 - Only appears in **WezTerm** (gated on `$WEZTERM_PANE`)
-- Data is fetched via a single PowerShell call (requires PowerShell 7)
-- **AWS row** only appears when `AWS_PROFILE` or `AWS_REGION` is set
+- Themed with **Catppuccin Macchiato** colors and bordered label boxes
+- Built-in Artix logo with categorized modules (System, Environment, Hardware, Tools)
+- Config lives at `fastfetch.jsonc` — synced to `~/.config/fastfetch/config.jsonc`
 
 ---
 
@@ -361,6 +378,7 @@ In `config/domains.lua`, update the distribution name to match your installed WS
 - Base config: [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
 - Theme: [Catppuccin](https://github.com/catppuccin/catppuccin)
 - Agent status bar: [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck)
+- System info: [Fastfetch](https://github.com/fastfetch-cli/fastfetch)
 - Prompt: [Starship](https://starship.rs/)
 - File manager: [Yazi](https://yazi-rs.github.io/)
 - Git TUI: [Lazygit](https://github.com/jesseduffield/lazygit)
