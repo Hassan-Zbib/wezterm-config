@@ -1,13 +1,14 @@
 {
    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
    "logo": {
-      "source": "artix_small",
+      "type": "file",
+      "source": "~/Desktop/GitHub/wezterm-config/fastfetch-logo.txt",
       "color": {
          "1": "38;2;138;173;244",
          "2": "38;2;110;115;141"
       },
       "padding": {
-         "top": 1,
+         "top": 3,
          "left": 2
       }
    },
