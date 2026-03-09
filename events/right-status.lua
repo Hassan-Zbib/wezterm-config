@@ -67,6 +67,8 @@ local colors = {
    notif_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_on      = { fg = '#cba6f7', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
+   autosave_on   = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
+   autosave_off  = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    ram           = { fg = '#94e2d5', bg = 'rgba(0, 0, 0, 0.4)' },
 }
 
@@ -82,6 +84,9 @@ cells
    :add_segment('focus_on', nf.md_eye .. ' ON', colors.focus_on, attr(attr.intensity('Bold')))
    :add_segment('focus_off', nf.md_eye_off .. ' OFF', colors.focus_off)
    :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('autosave_on', nf.md_content_save .. ' ON', colors.autosave_on, attr(attr.intensity('Bold')))
+   :add_segment('autosave_off', nf.md_content_save_off .. ' OFF', colors.autosave_off)
+   :add_segment('autosave_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('date_icon', ICON_DATE .. '  ', colors.date, attr(attr.intensity('Bold')))
    :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
    :add_segment('separator', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -225,6 +230,16 @@ M.setup = function(opts)
          table.insert(segments, 'focus_off')
       end
       table.insert(segments, 'focus_sep')
+
+      -- Auto-save indicator (reads global set in entry point)
+      local autosave = _G.session_auto_save
+      if autosave and autosave.enabled then
+         table.insert(segments, 'autosave_on')
+      else
+         table.insert(segments, 'autosave_off')
+      end
+      table.insert(segments, 'autosave_sep')
+
       table.insert(segments, 'date_icon')
       table.insert(segments, 'date_text')
       table.insert(segments, 'separator')

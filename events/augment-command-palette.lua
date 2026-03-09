@@ -91,10 +91,29 @@ M.setup = function()
             action = act.ActivateCopyMode,
          },
          {
+            brief = 'Toggle Session Auto-Save  [Shift+F9]',
+            icon = 'md_content_save_cog',
+            action = wezterm.action_callback(function(win, _p)
+               local autosave = _G.session_auto_save
+               if autosave then
+                  autosave.enabled = not autosave.enabled
+                  local status = autosave.enabled and 'ON' or 'OFF'
+                  win:toast_notification('Sessions', 'Auto-save ' .. status, nil, 3000)
+               end
+            end),
+         },
+         {
             brief = 'Save Session  [F9]',
             icon = 'md_content_save',
             action = wezterm.action_callback(function(win, p)
                sessions.save(win, p)
+            end),
+         },
+         {
+            brief = 'Save Session (Named)  [Shift+F10]',
+            icon = 'md_content_save_edit',
+            action = wezterm.action_callback(function(win, p)
+               sessions.save_with_name(win, p)
             end),
          },
          {
@@ -112,6 +131,13 @@ M.setup = function()
                      end
                   end),
                }), p)
+            end),
+         },
+         {
+            brief = 'Delete Session  [Ctrl+F10]',
+            icon = 'md_delete',
+            action = wezterm.action_callback(function(win, p)
+               sessions.delete(win, p)
             end),
          },
          {

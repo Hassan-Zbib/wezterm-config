@@ -16,7 +16,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **Shell integration** (OSC 133) — jump between prompts with `Shift+Up/Down`
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
-- **Session persistence** — save and restore workspace layouts (F9/F10)
+- **Session persistence** — save/restore pane splits, directories, sub-shells (pwsh, wsl), and TUI apps (claude, lazygit, yazi, btop)
 - **SSH host selector** — fuzzy-search `~/.ssh/config` hosts (F7)
 - **WSL support** — open WSL tabs alongside Git Bash
 - **Tab bar at bottom** with active key-table indicator in left status
@@ -172,6 +172,8 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 | `F4` | Fuzzy Tabs | `F7` | SSH Host Selector |
 | `F5` | Fuzzy Workspaces | `F8` | Copy Mode |
 | `F9` | Save Session | `F10` | Restore Session |
+| `Shift+F9` | Toggle Auto-Save | `Shift+F10` | Save Session (Named) |
+| `Ctrl+F10` | Delete Session | | |
 | `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
 | `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
 | `Right-click` | Copy / Paste | `Alt+Shift+V` | Paste image as file path |

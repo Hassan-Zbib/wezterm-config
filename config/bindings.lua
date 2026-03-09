@@ -1,7 +1,6 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
-local sessions = require('utils.sessions')
 local ssh_hosts = require('utils.ssh-hosts')
 local act = wezterm.action
 
@@ -57,30 +56,7 @@ local keys = {
       end),
    },
    { key = 'F8', mods = 'NONE', action = 'ActivateCopyMode' },
-   {
-      key = 'F9',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         sessions.save(window, pane)
-      end),
-   },
-   {
-      key = 'F10',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         window:perform_action(act.InputSelector({
-            title = 'Restore Session',
-            choices = sessions.choices(),
-            fuzzy = true,
-            fuzzy_description = 'Select Session: ',
-            action = wezterm.action_callback(function(inner_window, inner_pane, id)
-               if id then
-                  sessions.restore(inner_window, inner_pane, id)
-               end
-            end),
-         }), pane)
-      end),
-   },
+   -- F9/F10 session bindings are added in home/.wezterm.lua
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
