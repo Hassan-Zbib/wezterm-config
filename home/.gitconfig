@@ -1,0 +1,15 @@
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+[core]
+	editor = \"C:\\Users\\Hasan\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\code\" --wait
+	autocrlf = false
+	eol = lf
+	ignorecase = false
+[color]
+	ui = true
+[user]
+	name = Hassan Zbib
+	email = hassan.zbib01@gmail.com

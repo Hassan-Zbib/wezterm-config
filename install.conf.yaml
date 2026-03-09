@@ -1,0 +1,40 @@
+- defaults:
+    link:
+      create: true
+      relink: true
+      force: true
+
+- clean: ['~']
+
+- link:
+    ~/.wezterm.lua: home/.wezterm.lua
+    ~/.bashrc: home/.bashrc
+    ~/.bash_profile: home/.bash_profile
+    ~/.gitconfig: home/.gitconfig
+    ~/.config/starship.toml: home/.config/starship.toml
+    ~/.config/git/ignore: home/.config/git/ignore
+    ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
+
+- create:
+    - ~/.config/wezterm/sessions
+
+- winget:
+    # required
+    - wez.wezterm.nightly
+    - Microsoft.PowerShell
+    - Git.Git
+    - DEVCOM.JetBrainsMonoNerdFont
+    - Starship.Starship
+    - sxyazi.yazi
+    - Fastfetch-cli.Fastfetch
+    # optional CLI tools
+    - JesseDuffield.lazygit
+    - eza-community.eza
+    - aristocratos.btop4win
+    - charmbracelet.glow
+    - MartiCliment.UniGetUI
+
+- shell:
+    - command: echo "Dotbot install complete!"
+      description: Done
+      quiet: true

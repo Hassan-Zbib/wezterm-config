@@ -27,6 +27,7 @@ require('events.tab-title').setup({ hide_active_tab_unseen = false, unseen_icon 
 require('events.new-tab-button').setup()
 require('events.gui-startup').setup()
 require('events.window-title').setup()
+require('events.augment-command-palette').setup()
 
 local config = Config:init()
    :append(require('config.appearance'))

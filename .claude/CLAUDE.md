@@ -10,7 +10,7 @@ A modular WezTerm terminal configuration for Windows, themed with Catppuccin Mac
 
 ### Entry Point & Config Loading
 
-`home/.wezterm.lua` (copied to `~/`) loads everything via a **builder pattern**:
+`home/.wezterm.lua` (symlinked to `~/` via Dotbot) loads everything via a **builder pattern**:
 
 ```lua
 Config:init()
@@ -49,7 +49,8 @@ In `config/bindings.lua`, `mod.SUPER` maps to `Alt` on Windows (to avoid conflic
 
 - **Indentation:** 3 spaces (enforced by `.stylua.toml`)
 - **Line endings:** The repo standardizes on LF, but files may have CRLF on Windows. Use binary mode (`'rb'`/`'wb'`) when editing files with Python to preserve existing endings. The Edit tool handles this automatically.
-- **starship.toml:** Contains Unicode powerline glyphs (multi-byte). Use Python with raw byte operations to edit the format string — sed and simple string matching will corrupt it.
+- **starship.toml:** Lives at `home/.config/starship.toml`. Contains Unicode powerline glyphs (multi-byte). Use Python with raw byte operations to edit the format string — sed and simple string matching will corrupt it.
+- **Dotfiles:** All files under `home/` are symlinked to `~` via Dotbot (`./install`). The `home/` directory mirrors `~` structure.
 - **OOP pattern:** Metatable-based classes (`__index = self`), fluent APIs returning `self`.
 - **Module exports:** `local M = {} ... return M` for function modules; singleton instances (like `BackDrops:init()`) returned directly.
 - **Type annotations:** LuaDoc style (`---@class`, `---@param`, `---@return`).

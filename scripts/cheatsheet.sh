@@ -130,6 +130,8 @@ sec_row "Alt+d"          "Scroll Down 5 lines"
 sec_row "Page Up"        "Scroll Page Up"
 sec_row "Page Down"      "Scroll Page Down"
 sec_row "End"            "Scroll to Bottom"
+sec_row "Shift+↑"        "Jump to Prev Prompt"
+sec_row "Shift+↓"        "Jump to Next Prompt"
 sec_blank
 sec_header "🖼️  Background Images"
 sec_row "Alt+/"          "Random Image"

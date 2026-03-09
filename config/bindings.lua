@@ -281,6 +281,10 @@ local keys = {
    { key = 'PageDown', mods = 'NONE',    action = act.ScrollByPage(0.75) },
    { key = 'End',      mods = 'NONE',    action = act.ScrollToBottom },
 
+   -- panes: jump between prompts (requires shell integration)
+   { key = 'UpArrow',   mods = 'SHIFT',  action = act.ScrollToPrompt(-1) },
+   { key = 'DownArrow', mods = 'SHIFT',  action = act.ScrollToPrompt(1) },
+
    -- key-tables --
    -- resizes fonts
    {

@@ -12,6 +12,8 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **Powerline Starship prompt** — git status, language versions, command duration
 - **Fastfetch system info** on shell startup — categorized with bordered labels, Catppuccin colors
 - **AI agent status bar** — live Claude Code working/waiting/idle indicator
+- **Command palette** with all custom commands — search any action by name (F2)
+- **Shell integration** (OSC 133) — jump between prompts with `Shift+Up/Down`
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
 - **Session persistence** — save and restore workspace layouts (F9/F10)
@@ -19,6 +21,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **WSL support** — open WSL tabs alongside Git Bash
 - **Tab bar at bottom** with active key-table indicator in left status
 - **CLI toolbox** — lazygit, eza, btop, glow, and UniGetUI pre-configured with aliases
+- **Dotbot-managed dotfiles** — one command to symlink all configs
 
 ---
 
@@ -54,36 +57,42 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 
 ## Setup
 
-### 1. Clone the repository
+### 1. Enable Developer Mode
+
+**Settings → System → For developers → Developer Mode → On**
+
+This allows symlink creation without admin privileges.
+
+### 2. Clone the repository
 
 ```bash
-git clone https://github.com/Hassan-Zbib/wezterm-config ~/Desktop/GitHub/wezterm-config
+git clone --recursive https://github.com/Hassan-Zbib/wezterm-config ~/Desktop/GitHub/wezterm-config
 ```
 
-> If you clone to a different location, update `WEZTERM_CONFIG_DIR` in the next two steps.
+> If you clone to a different location, update the config path in `home/.wezterm.lua`.
 
-### 2. Copy the home files
+### 3. Install (symlink all configs)
 
 ```bash
-cp ~/Desktop/GitHub/wezterm-config/home/.wezterm.lua ~/.wezterm.lua
-cp ~/Desktop/GitHub/wezterm-config/home/.bashrc ~/.bashrc
-mkdir -p ~/.config/fastfetch
-cp ~/Desktop/GitHub/wezterm-config/fastfetch.jsonc ~/.config/fastfetch/config.jsonc
+cd ~/Desktop/GitHub/wezterm-config
+./install
 ```
 
-Both files have a single path variable at the top — **only change it if you cloned to a different location**:
+This uses [Dotbot](https://github.com/anishathalye/dotbot) to create symlinks from `~` to the repo:
 
-**`~/.wezterm.lua`**
-```lua
-local WEZTERM_CONFIG_DIR = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
-```
+| Repo File | Symlinked To |
+|-----------|-------------|
+| `home/.wezterm.lua` | `~/.wezterm.lua` |
+| `home/.bashrc` | `~/.bashrc` |
+| `home/.bash_profile` | `~/.bash_profile` |
+| `home/.gitconfig` | `~/.gitconfig` |
+| `home/.config/starship.toml` | `~/.config/starship.toml` |
+| `home/.config/git/ignore` | `~/.config/git/ignore` |
+| `home/.config/fastfetch/config.jsonc` | `~/.config/fastfetch/config.jsonc` |
 
-**`~/.bashrc`**
-```bash
-WEZTERM_CONFIG_DIR="$HOME/Desktop/GitHub/wezterm-config"
-```
+Edits to any file (from either path) take effect immediately — there's only one copy.
 
-### 3. Restart WezTerm
+### 4. Restart WezTerm
 
 WezTerm auto-loads `~/.wezterm.lua` on startup. Open a new tab to see the system info panel appear.
 
@@ -93,46 +102,56 @@ WezTerm auto-loads `~/.wezterm.lua` on startup. Open a new tab to see the system
 
 ```
 wezterm-config/
-├── home/
-│   ├── .wezterm.lua        # Entry point — copy to ~/
-│   └── .bashrc             # Git Bash config — copy to ~/
+├── home/                           # Dotfiles (symlinked to ~ by dotbot)
+│   ├── .wezterm.lua                #   → ~/.wezterm.lua
+│   ├── .bashrc                     #   → ~/.bashrc
+│   ├── .bash_profile               #   → ~/.bash_profile
+│   ├── .gitconfig                  #   → ~/.gitconfig
+│   └── .config/
+│       ├── starship.toml           #   → ~/.config/starship.toml
+│       ├── git/
+│       │   └── ignore              #   → ~/.config/git/ignore
+│       └── fastfetch/
+│           └── config.jsonc        #   → ~/.config/fastfetch/config.jsonc
 │
 ├── config/
-│   ├── appearance.lua      # Opacity, tab bar, cursor, window frame
-│   ├── bindings.lua        # All keyboard & mouse shortcuts
-│   ├── domains.lua         # WSL domain definitions
-│   ├── fonts.lua           # Font family and size
-│   ├── general.lua         # Scrollback, kitty keyboard, hyperlinks, default cwd
-│   └── launch.lua          # Default shell (Git Bash)
+│   ├── appearance.lua              # Opacity, tab bar, cursor, window frame
+│   ├── bindings.lua                # All keyboard & mouse shortcuts
+│   ├── domains.lua                 # WSL domain definitions
+│   ├── fonts.lua                   # Font family and size
+│   ├── general.lua                 # Scrollback, kitty keyboard, hyperlinks, default cwd
+│   └── launch.lua                  # Default shell (Git Bash)
 │
 ├── events/
-│   ├── gui-startup.lua     # Window position on startup
-│   ├── left-status.lua     # Leader key / key-table indicator
-│   ├── right-status.lua    # Agent status, clock, battery
-│   ├── tab-title.lua       # Tab title formatting
-│   ├── new-tab-button.lua  # Custom new-tab button
-│   └── window-title.lua    # Window title (active pane name)
+│   ├── augment-command-palette.lua # Custom commands in Command Palette (F2)
+│   ├── gui-startup.lua             # Window position on startup
+│   ├── left-status.lua             # Leader key / key-table indicator
+│   ├── right-status.lua            # Agent status, clock, battery
+│   ├── tab-title.lua               # Tab title formatting
+│   ├── new-tab-button.lua          # Custom new-tab button
+│   └── window-title.lua            # Window title (active pane name)
 │
 ├── utils/
-│   ├── backdrops.lua       # Background image manager
-│   ├── cells.lua           # Status bar segment builder
-│   ├── gpu-adapter.lua     # GPU auto-selection for WebGPU
-│   ├── math.lua            # Math helpers
-│   ├── opts-validator.lua  # Config validation
-│   ├── platform.lua        # OS detection
-│   ├── sessions.lua        # Session save/restore
-│   └── ssh-hosts.lua       # SSH config parser + selector
+│   ├── backdrops.lua               # Background image manager
+│   ├── cells.lua                   # Status bar segment builder
+│   ├── gpu-adapter.lua             # GPU auto-selection for WebGPU
+│   ├── math.lua                    # Math helpers
+│   ├── opts-validator.lua          # Config validation
+│   ├── platform.lua                # OS detection
+│   ├── sessions.lua                # Session save/restore
+│   └── ssh-hosts.lua               # SSH config parser + selector
 │
 ├── colors/
-│   └── custom.lua          # Catppuccin Macchiato color overrides
+│   └── custom.lua                  # Catppuccin Macchiato color overrides
 │
-├── backdrops/              # Background wallpaper images
-│
+├── backdrops/                      # Background wallpaper images
 ├── scripts/
-│   └── cheatsheet.sh       # F1 keyboard shortcut reference (opens in new tab)
+│   └── cheatsheet.sh               # F1 keyboard shortcut reference
 │
-├── fastfetch.jsonc          # Fastfetch config — copy to ~/.config/fastfetch/config.jsonc
-└── starship.toml            # Starship prompt configuration
+├── dotbot/                         # Dotbot submodule (symlink manager)
+├── install                         # Bootstrap script — run to set up symlinks
+├── install.conf.yaml               # Dotbot link definitions
+└── fastfetch-logo.txt              # ASCII logo for fastfetch
 ```
 
 ---
@@ -141,7 +160,7 @@ wezterm-config/
 
 > **Windows key mapping:** `Super` = `Alt` · `Super+Rev` = `Alt+Ctrl`
 
-Press `F1` to open the full cheat sheet inside WezTerm.
+Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all commands by name.
 
 ### Quick Actions
 
@@ -193,6 +212,7 @@ Press `F1` to open the full cheat sheet inside WezTerm.
 | `Alt+u` | Scroll Up 5 lines | `Alt+d` | Scroll Down 5 lines |
 | `Page Up` | Scroll Page Up | `Page Down` | Scroll Page Down |
 | `End` | Scroll to Bottom | | |
+| `Shift+↑` | Jump to Previous Prompt | `Shift+↓` | Jump to Next Prompt |
 
 ### Background Images
 
@@ -291,8 +311,8 @@ When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fa
 
 - Only appears in **WezTerm** (gated on `$WEZTERM_PANE`)
 - Themed with **Catppuccin Macchiato** colors and bordered label boxes
-- Built-in Artix logo with categorized modules (System, Environment, Hardware, Tools)
-- Config lives at `fastfetch.jsonc` — synced to `~/.config/fastfetch/config.jsonc`
+- Custom Berserk Brand of Sacrifice ASCII logo
+- Config symlinked to `~/.config/fastfetch/config.jsonc`
 
 ---
 
@@ -302,7 +322,10 @@ When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fa
 
 **Right status** — powered by [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck):
 - AI agent activity counts (working / waiting / idle)
+- Notification toggle indicator
+- Focus mode indicator
 - 12-hour clock
+- RAM usage
 - Battery level
 
 ---
@@ -320,7 +343,7 @@ The prompt uses the Catppuccin Macchiato powerline preset, showing:
 - Terraform version + workspace (when in a TF directory)
 - Command duration (for commands that take a while)
 
-Config lives at `starship.toml` in the repo root. `STARSHIP_CONFIG` is set automatically by `.bashrc`.
+Config symlinked to `~/.config/starship.toml`.
 
 ---
 
@@ -328,7 +351,7 @@ Config lives at `starship.toml` in the repo root. `STARSHIP_CONFIG` is set autom
 
 ### Repo location
 
-Both `~/.wezterm.lua` and `~/.bashrc` have a single `WEZTERM_CONFIG_DIR` variable at the top. Change it if you clone to a different path.
+`~/.wezterm.lua` has a `config_path` variable at the top. Change it if you clone to a different path.
 
 ### Default working directory
 
@@ -371,11 +394,19 @@ font_size = 11.0
 
 In `config/domains.lua`, update the distribution name to match your installed WSL distro (run `wsl -l` to list available distros).
 
+### Adding dotfiles
+
+To track a new config file:
+1. Copy it into `home/` mirroring its path under `~`
+2. Add the link mapping to `install.conf.yaml`
+3. Run `./install`
+
 ---
 
 ## Credits
 
 - Base config: [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
+- Dotfile management: [Dotbot](https://github.com/anishathalye/dotbot)
 - Theme: [Catppuccin](https://github.com/catppuccin/catppuccin)
 - Agent status bar: [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck)
 - System info: [Fastfetch](https://github.com/fastfetch-cli/fastfetch)

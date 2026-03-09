@@ -1,13 +1,11 @@
 # ============================================================
 # Git Bash Configuration — WezTerm Setup
 # ============================================================
-#
-# SETUP: Change the line below to match where you cloned the repo.
-WEZTERM_CONFIG_DIR="$HOME/Desktop/GitHub/wezterm-config"
+# Managed by dotbot — run ./install from the repo to symlink.
 # ============================================================
 
 # ---- WezTerm Shell Integration ----
-# Tracks current directory so WezTerm tab title updates automatically
+# OSC 7: Tracks current directory so WezTerm tab title updates automatically
 __urlencode() {
     local string="$1"
     local encoded=""
@@ -26,20 +24,36 @@ __wezterm_set_cwd() {
     printf '\033]7;file://localhost%s\033\\' "$(__urlencode "$PWD")"
 }
 
+# OSC 133: Mark prompt boundaries for ScrollToPrompt (Shift+Up/Down)
+__wezterm_prompt_mark() {
+    printf '\033]133;A\033\\'
+}
+
+__wezterm_output_start() {
+    printf '\033]133;C\033\\'
+}
+
+__wezterm_command_finished() {
+    printf '\033]133;D;%s\033\\' "$?"
+}
+
 # ---- Skip heavy init when running inside Claude Code ----
 if [[ -z "$CLAUDECODE" ]]; then
    # ---- System Info Panel (WezTerm only, shown once at shell startup) ----
-   [[ -n "$WEZTERM_PANE" ]] && fastfetch --config "$WEZTERM_CONFIG_DIR/fastfetch.jsonc"
+   [[ -n "$WEZTERM_PANE" ]] && fastfetch
 
    # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
    bind '"\e[13;2u": "\n"'
 
    # ---- Starship Prompt ----
-   export STARSHIP_CONFIG="$WEZTERM_CONFIG_DIR/starship.toml"
    eval "$(starship init bash)"
 
-   # Append WezTerm cwd tracking after starship sets up PROMPT_COMMAND
-   PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_set_cwd"
+   # Append WezTerm integration after starship sets up PROMPT_COMMAND
+   # OSC 133;D (command finished) + OSC 7 (cwd) + OSC 133;A (prompt start)
+   PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_command_finished; __wezterm_set_cwd; __wezterm_prompt_mark"
+
+   # OSC 133;C: mark where command output begins (fires on every Enter)
+   trap '__wezterm_output_start' DEBUG
 fi
 
 # ---- Yazi File Manager with Auto-cd ----
