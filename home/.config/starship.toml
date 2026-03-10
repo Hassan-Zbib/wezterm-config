@@ -4,6 +4,7 @@ format = """
 [](red)\
 $os\
 $username\
+$shell\
 [](bg:peach fg:red)\
 $directory\
 [](bg:yellow fg:peach)\
@@ -178,6 +179,13 @@ style = "bold fg:overlay0"
 disabled = false
 show_notifications = true
 min_time_to_notify = 45000
+
+[shell]
+powershell_indicator = " pwsh"
+bash_indicator = " bash"
+format = "[ $indicator]($style)"
+style = "bg:red fg:crust"
+disabled = false
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"

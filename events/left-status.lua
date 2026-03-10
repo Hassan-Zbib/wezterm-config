@@ -41,7 +41,7 @@ local function build_hints()
 end
 
 M.setup = function()
-   wezterm.on('update-right-status', function(window, _pane)
+   wezterm.on('update-status', function(window, _pane)
       local name = window:active_key_table()
 
       if name then

@@ -16,6 +16,7 @@
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
     ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1: home/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
     ~/.config/wsl/wezterm-integration.bash: home/.config/wsl/wezterm-integration.bash
+    ~/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json: home/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json
 
 - create:
     - ~/.config/wezterm/sessions
@@ -35,6 +36,7 @@
     - aristocratos.btop4win
     - charmbracelet.glow
     - MartiCliment.UniGetUI
+    - tstack.lnav
 
 - shell:
     - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"

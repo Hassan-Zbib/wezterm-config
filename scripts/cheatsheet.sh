@@ -175,6 +175,10 @@ sec_row "btop"             "Open system monitor"
 sec_blank
 sec_header "🖥️  Fastfetch (System Info)"
 sec_row "fastfetch"        "Show system info panel"
+sec_blank
+sec_header "📋 lnav (Log Navigator)"
+sec_row "lnav FILE"        "Open log file"
+sec_row "lnav -r /var/log" "Recursive log directory"
 COL_LEFT=("${_SEC[@]}")
 
 start_section; sec_header "⚙️  Advanced Modes"

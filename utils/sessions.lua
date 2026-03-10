@@ -32,6 +32,7 @@ M.tuis = {
    nvim       = 'nvim',
    nano       = 'nano',
    htop       = 'htop',
+   lnav       = 'lnav',
 }
 
 ---Read sessions from disk

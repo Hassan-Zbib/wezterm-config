@@ -123,12 +123,6 @@
          "text": "docker version --format {{.Client.Version}}"
       },
       {
-         "type": "command",
-         "key": "\u001b[38;2;110;115;141m│ \u001b[38;2;238;212;159m󰸏 aws     \u001b[38;2;110;115;141m │",
-         "keyColor": "38;2;238;212;159",
-         "text": "powershell.exe -NoProfile -Command (aws --version).Split('/')[1].Split(' ')[0]"
-      },
-      {
          "type": "custom",
          "format": "\u001b[38;2;110;115;141m╰───────────────╯"
       }

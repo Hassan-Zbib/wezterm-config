@@ -4,6 +4,9 @@
 # Managed by dotbot — run ./install from the repo to symlink.
 # ============================================================
 
+# ---- winget ----
+function winget { winget.exe @args --accept-source-agreements --accept-package-agreements }
+
 # ---- Starship Prompt ----
 Invoke-Expression (&starship init powershell)
 

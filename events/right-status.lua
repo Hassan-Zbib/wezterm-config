@@ -166,7 +166,7 @@ M.setup = function(opts)
       wezterm.log_error(err)
    end
 
-   wezterm.on('update-right-status', function(window, _pane)
+   wezterm.on('update-status', function(window, _pane)
       local battery_text, battery_icon = battery_info()
 
       -- Agent status from wezterm-agent-deck plugin
