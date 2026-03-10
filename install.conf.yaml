@@ -14,6 +14,8 @@
     ~/.config/starship.toml: home/.config/starship.toml
     ~/.config/git/ignore: home/.config/git/ignore
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
+    ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1: home/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
+    ~/.config/wsl/wezterm-integration.bash: home/.config/wsl/wezterm-integration.bash
 
 - create:
     - ~/.config/wezterm/sessions
@@ -35,6 +37,9 @@
     - MartiCliment.UniGetUI
 
 - shell:
+    - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"
+      description: Injecting WezTerm shell integration into WSL .bashrc
+      quiet: true
     - command: echo "Dotbot install complete!"
       description: Done
       quiet: true

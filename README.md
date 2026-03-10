@@ -13,7 +13,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **Fastfetch system info** on shell startup — categorized with bordered labels, Catppuccin colors
 - **AI agent status bar** — live Claude Code working/waiting/idle indicator
 - **Command palette** with all custom commands — search any action by name (F2)
-- **Shell integration** (OSC 133) — jump between prompts with `Shift+Up/Down`
+- **Shell integration** (OSC 7 + OSC 133) for Git Bash, pwsh, and WSL — CWD tracking and prompt jump with `Shift+Up/Down`
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
 - **Session persistence** — save/restore pane splits, directories, sub-shells (pwsh, wsl), and TUI apps (claude, lazygit, yazi, btop)
@@ -89,6 +89,8 @@ This uses [Dotbot](https://github.com/anishathalye/dotbot) to create symlinks fr
 | `home/.config/starship.toml` | `~/.config/starship.toml` |
 | `home/.config/git/ignore` | `~/.config/git/ignore` |
 | `home/.config/fastfetch/config.jsonc` | `~/.config/fastfetch/config.jsonc` |
+| `home/Documents/PowerShell/Microsoft.PowerShell_profile.ps1` | `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1` |
+| `home/.config/wsl/wezterm-integration.bash` | `~/.config/wsl/wezterm-integration.bash` |
 
 Edits to any file (from either path) take effect immediately — there's only one copy.
 
@@ -107,12 +109,17 @@ wezterm-config/
 │   ├── .bashrc                     #   → ~/.bashrc
 │   ├── .bash_profile               #   → ~/.bash_profile
 │   ├── .gitconfig                  #   → ~/.gitconfig
+│   ├── Documents/
+│   │   └── PowerShell/
+│   │       └── Microsoft.PowerShell_profile.ps1  # → ~/Documents/PowerShell/...
 │   └── .config/
 │       ├── starship.toml           #   → ~/.config/starship.toml
 │       ├── git/
 │       │   └── ignore              #   → ~/.config/git/ignore
-│       └── fastfetch/
-│           └── config.jsonc        #   → ~/.config/fastfetch/config.jsonc
+│       ├── fastfetch/
+│       │   └── config.jsonc        #   → ~/.config/fastfetch/config.jsonc
+│       └── wsl/
+│           └── wezterm-integration.bash  # → ~/.config/wsl/wezterm-integration.bash
 │
 ├── config/
 │   ├── appearance.lua              # Opacity, tab bar, cursor, window frame
