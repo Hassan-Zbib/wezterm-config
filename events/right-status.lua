@@ -58,6 +58,7 @@ local charging_icons = {
 ---@type table<string, Cells.SegmentColors>
 -- stylua: ignore
 local colors = {
+   workspace     = { fg = '#b7bdf8', bg = 'rgba(0, 0, 0, 0.4)' },
    date          = { fg = '#fab387', bg = 'rgba(0, 0, 0, 0.4)' },
    battery       = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
    separator     = { fg = '#74c7ec', bg = 'rgba(0, 0, 0, 0.4)' },
@@ -75,6 +76,9 @@ local colors = {
 local cells = Cells:new()
 
 cells
+   :add_segment('workspace_icon', nf.cod_window .. '  ', colors.workspace, attr(attr.intensity('Bold')))
+   :add_segment('workspace_text', '', colors.workspace, attr(attr.intensity('Bold')))
+   :add_segment('workspace_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('agent_working', '', colors.agent_working, attr(attr.intensity('Bold')))
    :add_segment('agent_waiting', '', colors.agent_waiting, attr(attr.intensity('Bold')))
    :add_segment('agent_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -196,6 +200,7 @@ M.setup = function(opts)
       local ram_text = get_ram_usage()
 
       cells
+         :update_segment_text('workspace_text', wezterm.mux.get_active_workspace())
          :update_segment_text('agent_working', working_text)
          :update_segment_text('agent_waiting', waiting_text)
          :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
@@ -212,7 +217,7 @@ M.setup = function(opts)
          end
       end
 
-      local segments = {}
+      local segments = { 'workspace_icon', 'workspace_text', 'workspace_sep' }
       if has_agents then
          if working_text ~= '' then table.insert(segments, 'agent_working') end
          if waiting_text ~= '' then table.insert(segments, 'agent_waiting') end

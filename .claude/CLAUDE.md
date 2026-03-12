@@ -41,6 +41,12 @@ Events use `OptsValidator` for schema validation and register handlers via `wezt
 - **`utils/sessions.lua`** — Saves/restores pane layout trees as JSON. Uses `tab:panes_with_info()` positions to build a recursive split tree (direction: `Right` or `Bottom`).
 - **`utils/ssh-hosts.lua`** — Parses `~/.ssh/config` at call time. Uses `Cells` for formatted InputSelector labels.
 
+### Cheatsheet
+
+`scripts/cheatsheet.py` is the F1 keyboard shortcut reference displayed in a dedicated tab. It is a standalone Python script (no dependencies beyond stdlib) that prints a 3-column layout using ANSI colors.
+
+**Keep it in sync:** whenever you add a new keybinding to `config/bindings.lua` or `home/.wezterm.lua`, or add/remove a CLI tool from the setup, update the relevant section in `cheatsheet.py`. Use the existing `row()`, `header()`, `blank()`, and `note()` builder calls — do not change the layout structure or `three_cols()` function without good reason.
+
 ### Platform Modifier Convention
 
 In `config/bindings.lua`, `mod.SUPER` maps to `Alt` on Windows (to avoid conflicts with the Windows key) and `SUPER` on Mac. `mod.SUPER_REV` is `Alt+Ctrl` / `Super+Ctrl`.

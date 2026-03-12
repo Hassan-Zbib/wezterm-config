@@ -24,9 +24,9 @@ local keys = {
          local home = wezterm.home_dir:gsub('\\', '/')
          local drive = home:sub(1, 1):lower()
          local unix_home = '/' .. drive .. home:sub(3)
-         local script = unix_home .. '/Desktop/GitHub/wezterm-config/scripts/cheatsheet.sh'
+         local script = unix_home .. '/Desktop/GitHub/wezterm-config/scripts/cheatsheet.py'
          window:perform_action(act.SpawnCommandInNewTab({
-            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', script },
+            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', 'python "' .. script .. '"' },
          }), pane)
       end),
    },
@@ -37,6 +37,34 @@ local keys = {
       key = 'F5',
       mods = 'NONE',
       action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
+   },
+   {
+      key = 'F5',
+      mods = 'SHIFT',
+      action = act.PromptInputLine({
+         description = 'New workspace name:',
+         action = wezterm.action_callback(function(window, pane, line)
+            if line and line ~= '' then
+               window:perform_action(act.SwitchToWorkspace({ name = line }), pane)
+            end
+         end),
+      }),
+   },
+   {
+      key = 'F5',
+      mods = 'CTRL',
+      action = wezterm.action_callback(function(window, pane)
+         local current = window:active_workspace()
+         window:perform_action(act.PromptInputLine({
+            description = 'Rename workspace "' .. current .. '" to:',
+            action = wezterm.action_callback(function(win, p, line)
+               if line and line ~= '' then
+                  wezterm.mux.rename_workspace(current, line)
+                  wezterm.emit('update-status', win, p)
+               end
+            end),
+         }), pane)
+      end),
    },
    {
       key = 'F7',
@@ -98,8 +126,10 @@ local keys = {
    -- tabs: navigation
    { key = '[',          mods = mod.SUPER,     action = act.ActivateTabRelative(-1) },
    { key = ']',          mods = mod.SUPER,     action = act.ActivateTabRelative(1) },
-   { key = '[',          mods = mod.SUPER_REV, action = act.MoveTabRelative(-1) },
-   { key = ']',          mods = mod.SUPER_REV, action = act.MoveTabRelative(1) },
+
+   -- workspaces: cycle
+   { key = '[',          mods = mod.SUPER_REV, action = act.SwitchWorkspaceRelative(-1) },
+   { key = ']',          mods = mod.SUPER_REV, action = act.SwitchWorkspaceRelative(1) },
 
    -- tab: title
    { key = '0',          mods = mod.SUPER,     action = act.EmitEvent('tabs.manual-update-tab-title') },

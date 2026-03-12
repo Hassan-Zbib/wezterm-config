@@ -154,7 +154,7 @@ wezterm-config/
 │
 ├── backdrops/                      # Background wallpaper images
 ├── scripts/
-│   └── cheatsheet.sh               # F1 keyboard shortcut reference
+│   └── cheatsheet.py               # F1 keyboard shortcut reference (Python)
 │
 ├── dotbot/                         # Dotbot submodule (symlink manager)
 ├── install                         # Bootstrap script — run to set up symlinks
@@ -178,7 +178,8 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 | `F2` | Command Palette | `F12` | Debug Overlay |
 | `F3` | Launcher Menu | `F6` | Toggle Agent Notifications |
 | `F4` | Fuzzy Tabs | `F7` | SSH Host Selector |
-| `F5` | Fuzzy Workspaces | `F8` | Copy Mode |
+| `F5` | Search / switch workspace | `F8` | Copy Mode |
+| `Shift+F5` | New workspace | `Ctrl+F5` | Rename workspace |
 | `F9` | Save Session | `F10` | Restore Session |
 | `Shift+F9` | Toggle Auto-Save | `Shift+F10` | Save Session (Named) |
 | `Ctrl+F10` | Delete Session | | |
@@ -201,9 +202,16 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 |-----|--------|-----|--------|
 | `Alt+t` | New Tab (Git Bash) | `Alt+[` | Previous Tab |
 | `Alt+Ctrl+t` | New Tab (WSL) | `Alt+]` | Next Tab |
-| `Alt+Ctrl+w` | Close Tab | `Alt+Ctrl+[` | Move Tab Left |
-| `Alt+0` | Rename Tab | `Alt+Ctrl+]` | Move Tab Right |
+| `Alt+Ctrl+w` | Close Tab | `Alt+0` | Rename Tab |
 | `Alt+Ctrl+0` | Undo Rename | `Alt+9` | Toggle Tab Bar |
+
+### Workspaces
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `F5` | Search / switch workspace | `Shift+F5` | Create new workspace (named) |
+| `Ctrl+F5` | Rename current workspace | | |
+| `Alt+Ctrl+[` | Previous workspace | `Alt+Ctrl+]` | Next workspace |
 
 ### Panes
 
@@ -331,6 +339,7 @@ When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fa
 **Left status** — shows the active key-table name or a leader key indicator when pressed. Shows `F1:help` hint otherwise.
 
 **Right status** — powered by [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck):
+- Active workspace name
 - AI agent activity counts (working / waiting / idle)
 - Notification toggle indicator
 - Focus mode indicator

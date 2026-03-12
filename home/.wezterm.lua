@@ -50,6 +50,7 @@ table.insert(config.keys, {
    action = wezterm.action_callback(function(window, _pane)
       local cfg = agent_deck.get_config()
       cfg.notifications.enabled = not cfg.notifications.enabled
+      cfg.notifications.on_waiting = cfg.notifications.enabled
       local status = cfg.notifications.enabled and 'ON' or 'OFF'
       window:toast_notification('Agent Deck', 'Notifications ' .. status, nil, 3000)
    end),
