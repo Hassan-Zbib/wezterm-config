@@ -11,7 +11,7 @@ Commit all current changes to the repository.
    - Types: `feat`, `fix`, `chore`, `refactor`, `style`, `docs`, `perf`, `ci`, `test`
    - If multiple changes: add a blank line then single-line bullet points
    - Never add `Co-Authored-By` or any trailer lines
-5. Run `git add <file>` for each file separately — one file per command
+5. Run `git add <file1> <file2> ...` — stage all relevant files in a single command
 6. For single-line messages use `git commit -m "..."`. For multi-line use a HEREDOC
 7. Run `git status` after to verify success
 
