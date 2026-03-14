@@ -32,10 +32,10 @@ function BackDrops:init()
       images_dir = wezterm.config_dir .. '/backdrops/',
       focus_color = colors.background,
       focus_on = false,
-      auto_rotate_enabled = false,
+      auto_rotate_enabled = true,
       auto_rotate_interval = 60,
       _rotate_generation = 0,
-      overlay_opacity = 0.92,
+      overlay_opacity = 0.85,
       _browse_gen = 0,
       categories = {},
       current_category = 1,
@@ -89,13 +89,10 @@ function BackDrops:set_images()
       end
    end
 
-   -- "All" category: every image (flat root + all subdirs)
+   -- "All" category: flat root images only (not subdir images)
    self.categories = {}
-   local all_images = {}
-   for _, img in ipairs(flat)       do table.insert(all_images, img) end
-   for _, img in ipairs(in_subdirs) do table.insert(all_images, img) end
-   if #all_images > 0 then
-      table.insert(self.categories, { name = 'All', images = all_images })
+   if #flat > 0 then
+      table.insert(self.categories, { name = 'All', images = flat })
    end
 
    -- Per-subdirectory categories
@@ -109,6 +106,13 @@ function BackDrops:set_images()
 
    self.current_category = 1
    self.images           = self.categories[1].images
+
+   -- Start auto-rotation timer if enabled by default
+   if self.auto_rotate_enabled then
+      self._rotate_generation = self._rotate_generation + 1
+      self:_schedule_rotate(self._rotate_generation)
+   end
+
    return self
 end
 
