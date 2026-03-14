@@ -35,6 +35,11 @@ function BackDrops:init()
       auto_rotate_enabled = false,
       auto_rotate_interval = 60,
       _rotate_generation = 0,
+      overlay_opacity = 0.92,
+      _browse_gen = 0,
+      categories = {},
+      current_category = 1,
+      _category_flash_until = 0,
    }
    local backdrops = setmetatable(inital, self)
    return backdrops
@@ -57,6 +62,8 @@ end
 
 ---MUST BE RUN BEFORE ALL OTHER `BackDrops` functions
 ---Sets the `images` after instantiating `BackDrops`.
+---Automatically detects subdirectories as categories.
+---Each subdirectory becomes its own category; all images combined form the "All" category.
 ---
 --- INFO:
 ---   During the initial load of the config, this function can only invoked in `wezterm.lua`.
@@ -64,7 +71,44 @@ end
 ---   This throws a coroutine error if the function is invoked in outside of `wezterm.lua` in the -
 ---   initial load of the Terminal config.
 function BackDrops:set_images()
-   self.images = wezterm.glob(self.images_dir .. GLOB_PATTERN)
+   local flat       = wezterm.glob(self.images_dir .. GLOB_PATTERN)
+   local in_subdirs = wezterm.glob(self.images_dir .. '*/' .. GLOB_PATTERN)
+
+   -- Group subdir images by their immediate parent directory name
+   local cat_map   = {}
+   local cat_order = {}
+   for _, img in ipairs(in_subdirs) do
+      local rel      = img:sub(#self.images_dir + 1)
+      local dir_name = rel:match('^([^/\\]+)[/\\]')
+      if dir_name then
+         if not cat_map[dir_name] then
+            cat_map[dir_name] = {}
+            table.insert(cat_order, dir_name)
+         end
+         table.insert(cat_map[dir_name], img)
+      end
+   end
+
+   -- "All" category: every image (flat root + all subdirs)
+   self.categories = {}
+   local all_images = {}
+   for _, img in ipairs(flat)       do table.insert(all_images, img) end
+   for _, img in ipairs(in_subdirs) do table.insert(all_images, img) end
+   if #all_images > 0 then
+      table.insert(self.categories, { name = 'All', images = all_images })
+   end
+
+   -- Per-subdirectory categories
+   for _, name in ipairs(cat_order) do
+      table.insert(self.categories, { name = name, images = cat_map[name] })
+   end
+
+   if #self.categories == 0 then
+      self.categories = { { name = 'All', images = {} } }
+   end
+
+   self.current_category = 1
+   self.images           = self.categories[1].images
    return self
 end
 
@@ -91,7 +135,7 @@ function BackDrops:_create_opts()
          width = '120%',
          vertical_offset = '-10%',
          horizontal_offset = '-10%',
-         opacity = 0.92,
+         opacity = self.overlay_opacity,
       },
    }
 end
@@ -216,6 +260,56 @@ function BackDrops:set_img(window, idx)
    self:_set_opt(window, self:_create_opts())
 end
 
+---Switch to the next image category and apply the first image in it.
+---Shows a 2-second flash indicator in the status bar.
+---@param window any WezTerm Window
+function BackDrops:next_category(window)
+   if #self.categories <= 1 then return end
+   self.current_category = self.current_category == #self.categories and 1 or self.current_category + 1
+   self.images           = self.categories[self.current_category].images
+   if #self.images == 0 then return end
+   self.current_idx              = 1
+   self._category_flash_until    = os.time() + 2
+   self:_set_opt(window, self:_create_opts())
+   self:_schedule_category_flash()
+end
+
+---Switch to the previous image category and apply the first image in it.
+---Shows a 2-second flash indicator in the status bar.
+---@param window any WezTerm Window
+function BackDrops:prev_category(window)
+   if #self.categories <= 1 then return end
+   self.current_category = self.current_category == 1 and #self.categories or self.current_category - 1
+   self.images           = self.categories[self.current_category].images
+   if #self.images == 0 then return end
+   self.current_idx              = 1
+   self._category_flash_until    = os.time() + 2
+   self:_set_opt(window, self:_create_opts())
+   self:_schedule_category_flash()
+end
+
+---Schedule a forced status bar update after the flash duration expires.
+---@private
+function BackDrops:_schedule_category_flash()
+   wezterm.time.call_after(2.1, function()
+      local gui = wezterm.gui
+      if gui then
+         for _, win in ipairs(gui.gui_windows()) do
+            wezterm.emit('update-status', win, win:active_tab():active_pane())
+         end
+      end
+   end)
+end
+
+---Return a display string for the category flash indicator, or nil if the flash has expired.
+---@return string|nil
+function BackDrops:category_indicator()
+   if os.time() >= self._category_flash_until then return nil end
+   local cat = self.categories[self.current_category]
+   if not cat then return nil end
+   return string.format('%s  (%d/%d)', cat.name, self.current_category, #self.categories)
+end
+
 ---Toggle the focus mode
 ---When leaving focus mode, starts auto-rotation. When entering, stops it.
 ---@param window any WezTerm `Window` see: https://wezfurlong.org/wezterm/config/lua/window/index.html
@@ -225,7 +319,6 @@ function BackDrops:toggle_focus(window)
    if self.focus_on then
       background_opts = self:_create_opts()
       self.focus_on = false
-      self:start_auto_rotate(self.auto_rotate_interval)
    else
       background_opts = self:_create_focus_opts()
       self.focus_on = true
@@ -285,6 +378,83 @@ function BackDrops:stop_auto_rotate()
    self.auto_rotate_enabled = false
    self._rotate_generation = self._rotate_generation + 1
    return self
+end
+
+---Enter image browse mode: saves current index so it can be reverted on cancel.
+---@param window any WezTerm Window
+function BackDrops:enter_browse_mode(window)
+   self._browse_start_idx = self.current_idx
+   self._browse_gen = self._browse_gen + 1
+   self.focus_on = false
+   self:_set_opt(window, self:_create_opts())
+end
+
+---Shared debounced navigation: updates index immediately, defers image load 150ms.
+---@private
+local BROWSE_DELAY = 0.15
+local function _browse_navigate(self, window, pane)
+   self._browse_gen = self._browse_gen + 1
+   local gen = self._browse_gen
+   -- Keep key table alive immediately (no image load yet)
+   window:perform_action(wezterm.action.ActivateKeyTable({
+      name = 'browse_backdrop',
+      one_shot = false,
+      timeout_milliseconds = 30000,
+   }), pane)
+   -- Deferred image load — only fires if no newer keypress arrives
+   wezterm.time.call_after(BROWSE_DELAY, function()
+      if gen ~= self._browse_gen then return end
+      self:_set_opt(window, self:_create_opts())
+      window:perform_action(wezterm.action.ActivateKeyTable({
+         name = 'browse_backdrop',
+         one_shot = false,
+         timeout_milliseconds = 30000,
+      }), pane)
+   end)
+end
+
+---Advance to the next image during browse mode.
+---@param window any WezTerm Window
+---@param pane any WezTerm Pane
+function BackDrops:browse_next(window, pane)
+   self.current_idx = self.current_idx == #self.images and 1 or self.current_idx + 1
+   _browse_navigate(self, window, pane)
+end
+
+---Go back to the previous image during browse mode.
+---@param window any WezTerm Window
+---@param pane any WezTerm Pane
+function BackDrops:browse_prev(window, pane)
+   self.current_idx = self.current_idx == 1 and #self.images or self.current_idx - 1
+   _browse_navigate(self, window, pane)
+end
+
+---Confirm browse mode: cancels pending timer, applies current image, exits.
+---@param window any WezTerm Window
+---@param pane any WezTerm Pane
+function BackDrops:browse_confirm(window, pane)
+   self._browse_gen = self._browse_gen + 1
+   self:_set_opt(window, self:_create_opts())
+   window:perform_action(wezterm.action.PopKeyTable, pane)
+end
+
+---Cancel browse mode: revert to the image that was active when browse started.
+---@param window any WezTerm Window
+---@param pane any WezTerm Pane
+function BackDrops:browse_cancel(window, pane)
+   self._browse_gen = self._browse_gen + 1
+   self.current_idx = self._browse_start_idx or self.current_idx
+   self:_set_opt(window, self:_create_opts())
+   window:perform_action(wezterm.action.PopKeyTable, pane)
+end
+
+---Adjust the overlay opacity by a delta and re-apply to the window.
+---Clamps between 0.0 and 1.0. No-ops in focus mode.
+---@param window any WezTerm Window
+---@param delta number positive to increase, negative to decrease
+function BackDrops:adjust_overlay_opacity(window, delta)
+   self.overlay_opacity = math.floor(math.max(0.0, math.min(1.0, self.overlay_opacity + delta)) * 100 + 0.5) / 100
+   self:_set_opt(window, self:_create_opts())
 end
 
 return BackDrops:init()

@@ -217,32 +217,27 @@ local keys = {
       key = [[,]],
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
-         backdrops:cycle_back(window)
+         backdrops:prev_category(window)
       end),
    },
    {
       key = [[.]],
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
-         backdrops:cycle_forward(window)
+         backdrops:next_category(window)
       end),
    },
    {
       key = [[/]],
       mods = mod.SUPER_REV,
-      action = act.InputSelector({
-         title = 'InputSelector: Select Background',
-         choices = backdrops:choices(),
-         fuzzy = true,
-         fuzzy_description = 'Select Background: ',
-         action = wezterm.action_callback(function(window, _pane, idx)
-            if not idx then
-               return
-            end
-            ---@diagnostic disable-next-line: param-type-mismatch
-            backdrops:set_img(window, tonumber(idx))
-         end),
-      }),
+      action = wezterm.action_callback(function(window, pane)
+         backdrops:enter_browse_mode(window)
+         window:perform_action(act.ActivateKeyTable({
+            name = 'browse_backdrop',
+            one_shot = false,
+            timeout_milliseconds = 30000,
+         }), pane)
+      end),
    },
    {
       key = 'b',
@@ -250,6 +245,31 @@ local keys = {
       action = wezterm.action_callback(function(window, _pane)
          backdrops:toggle_focus(window)
       end)
+   },
+   {
+      key = 'r',
+      mods = mod.SUPER,
+      action = wezterm.action_callback(function(_window, _pane)
+         if backdrops.auto_rotate_enabled then
+            backdrops:stop_auto_rotate()
+         else
+            backdrops:start_auto_rotate()
+         end
+      end),
+   },
+   {
+      key = ',',
+      mods = mod.SUPER_REV,
+      action = wezterm.action_callback(function(window, _pane)
+         backdrops:adjust_overlay_opacity(window, -0.05)
+      end),
+   },
+   {
+      key = '.',
+      mods = mod.SUPER_REV,
+      action = wezterm.action_callback(function(window, _pane)
+         backdrops:adjust_overlay_opacity(window, 0.05)
+      end),
    },
 
    -- panes --
@@ -330,6 +350,16 @@ local key_tables = {
       { key = 'RightArrow', action = act.AdjustPaneSize({ 'Right', 1 }) },
       { key = 'Escape',     action = 'PopKeyTable' },
       { key = 'q',          action = 'PopKeyTable' },
+   },
+   browse_backdrop = {
+      -- stylua: ignore
+      { key = 'RightArrow', action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
+      { key = 'LeftArrow',  action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
+      { key = '.',          action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
+      { key = ',',          action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
+      { key = 'Return',     action = wezterm.action_callback(function(win, pane) backdrops:browse_confirm(win, pane) end) },
+      { key = 'Escape',     action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
+      { key = 'q',          action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
    },
 }
 

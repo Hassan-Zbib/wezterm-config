@@ -25,8 +25,9 @@ local attr = Cells.attr
 local M = {}
 
 local ICON_SEPARATOR = nf.oct_dash
-local ICON_DATE = nf.fa_calendar
-local ICON_RAM = nf.md_memory
+local ICON_DATE      = nf.fa_calendar
+local ICON_RAM       = nf.md_memory
+local ICON_CATEGORY  = nf.md_layers
 
 ---@type string[]
 local discharging_icons = {
@@ -68,9 +69,11 @@ local colors = {
    notif_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_on      = { fg = '#cba6f7', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
-   autosave_on   = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
-   autosave_off  = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
+   overlay       = { fg = '#89dceb', bg = 'rgba(0, 0, 0, 0.4)' },
+   rotate_on     = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
+   rotate_off    = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    ram           = { fg = '#94e2d5', bg = 'rgba(0, 0, 0, 0.4)' },
+   category      = { fg = '#cdd6f4', bg = 'rgba(0, 0, 0, 0.55)' },
 }
 
 local cells = Cells:new()
@@ -88,9 +91,11 @@ cells
    :add_segment('focus_on', nf.md_eye .. ' ON', colors.focus_on, attr(attr.intensity('Bold')))
    :add_segment('focus_off', nf.md_eye_off .. ' OFF', colors.focus_off)
    :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
-   :add_segment('autosave_on', nf.md_content_save .. ' ON', colors.autosave_on, attr(attr.intensity('Bold')))
-   :add_segment('autosave_off', nf.md_content_save_off .. ' OFF', colors.autosave_off)
-   :add_segment('autosave_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('overlay_text', '', colors.overlay)
+   :add_segment('overlay_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('rotate_on', nf.md_rotate_right .. ' ON', colors.rotate_on, attr(attr.intensity('Bold')))
+   :add_segment('rotate_off', nf.md_rotate_right .. ' OFF', colors.rotate_off)
+   :add_segment('rotate_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('date_icon', ICON_DATE .. '  ', colors.date, attr(attr.intensity('Bold')))
    :add_segment('date_text', '', colors.date, attr(attr.intensity('Bold')))
    :add_segment('separator', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -99,6 +104,8 @@ cells
    :add_segment('ram_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('battery_icon', '', colors.battery)
    :add_segment('battery_text', '', colors.battery, attr(attr.intensity('Bold')))
+   :add_segment('category_text', '', colors.category, attr(attr.intensity('Bold')))
+   :add_segment('category_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
 
 ---@return string, string
 local function battery_info()
@@ -207,6 +214,7 @@ M.setup = function(opts)
          :update_segment_text('ram_text', ram_text)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
+         :update_segment_text('overlay_text', nf.md_brightness_6 .. '  ' .. string.format('%.0f%%', backdrops.overlay_opacity * 100))
 
       -- Notification toggle indicator
       local notif_enabled = false
@@ -217,7 +225,17 @@ M.setup = function(opts)
          end
       end
 
+      -- Category flash indicator (temporary, shown for 2s after switching categories)
+      local cat_label = backdrops:category_indicator()
+      if cat_label then
+         cells:update_segment_text('category_text', ICON_CATEGORY .. '  ' .. cat_label)
+      end
+
       local segments = { 'workspace_icon', 'workspace_text', 'workspace_sep' }
+      if cat_label then
+         table.insert(segments, 'category_text')
+         table.insert(segments, 'category_sep')
+      end
       if has_agents then
          if working_text ~= '' then table.insert(segments, 'agent_working') end
          if waiting_text ~= '' then table.insert(segments, 'agent_waiting') end
@@ -235,15 +253,20 @@ M.setup = function(opts)
          table.insert(segments, 'focus_off')
       end
       table.insert(segments, 'focus_sep')
-
-      -- Auto-save indicator (reads global set in entry point)
-      local autosave = _G.session_auto_save
-      if autosave and autosave.enabled then
-         table.insert(segments, 'autosave_on')
-      else
-         table.insert(segments, 'autosave_off')
+      if not backdrops.focus_on then
+         table.insert(segments, 'overlay_text')
+         table.insert(segments, 'overlay_sep')
       end
-      table.insert(segments, 'autosave_sep')
+
+      -- Background auto-rotate indicator (only when backdrop is visible)
+      if not backdrops.focus_on then
+         if backdrops.auto_rotate_enabled then
+            table.insert(segments, 'rotate_on')
+         else
+            table.insert(segments, 'rotate_off')
+         end
+         table.insert(segments, 'rotate_sep')
+      end
 
       table.insert(segments, 'date_icon')
       table.insert(segments, 'date_text')

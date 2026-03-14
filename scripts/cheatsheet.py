@@ -101,7 +101,6 @@ three_cols(
         row('F7',          'SSH Host Selector')      +
         row('F8',          'Copy Mode')              +
         row('F9',          'Save Session')           +
-        row('Shift+F9',    'Toggle Auto-Save')       +
         row('F10',         'Restore Session')        +
         row('Shift+F10',   'Save Session (Named)')   +
         row('Ctrl+F10',    'Delete Session')         +
@@ -168,11 +167,17 @@ three_cols(
         row('Alt+n',           'New Window')   +
         row('Alt+Ctrl+Enter',  'Maximize'),
     header('🖼️  Background Images') +
-        row('Alt+/',       'Random Image')    +
-        row('Alt+,',       'Previous Image')  +
-        row('Alt+.',       'Next Image')      +
-        row('Alt+Ctrl+/',  'Browse Images')   +
-        row('Alt+b',       'Toggle Background'),
+        row('Alt+/',           'Random Image')          +
+        row('Alt+,',           'Previous Category')    +
+        row('Alt+.',           'Next Category')        +
+        row('Alt+Ctrl+/',      'Browse (live preview)')+
+        row('Alt+b',           'Toggle Focus')        +
+        row('Alt+r',           'Toggle Auto-Rotate')  +
+        row('Alt+Ctrl+,',      'Overlay Opacity ↓')  +
+        row('Alt+Ctrl+.',      'Overlay Opacity ↑')  +
+        blank() +
+        note('Browse: ←/→ navigate · Enter confirm') +
+        note('        Esc/q cancel'),
     header('⚙️  Advanced Modes') +
         [f'  {TXT}Leader: {BLD}{YLW}Alt+Ctrl+Space{RST}{TXT}, then:{RST}'] +
         row('  f', 'Font Resize Mode') +

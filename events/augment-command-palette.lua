@@ -91,14 +91,13 @@ M.setup = function()
             action = act.ActivateCopyMode,
          },
          {
-            brief = 'Toggle Session Auto-Save  [Shift+F9]',
-            icon = 'md_content_save_cog',
-            action = wezterm.action_callback(function(win, _p)
-               local autosave = _G.session_auto_save
-               if autosave then
-                  autosave.enabled = not autosave.enabled
-                  local status = autosave.enabled and 'ON' or 'OFF'
-                  win:toast_notification('Sessions', 'Auto-save ' .. status, nil, 3000)
+            brief = 'Toggle Background Auto-Rotate  [' .. key.S .. '+R]',
+            icon = 'md_rotate_right',
+            action = wezterm.action_callback(function(_win, _p)
+               if backdrops.auto_rotate_enabled then
+                  backdrops:stop_auto_rotate()
+               else
+                  backdrops:start_auto_rotate()
                end
             end),
          },
@@ -223,39 +222,50 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Previous Background  [' .. key.S .. '+,]',
+            brief = 'Previous Category  [' .. key.S .. '+,]',
             icon = 'md_arrow_left',
             action = wezterm.action_callback(function(win, _p)
-               backdrops:cycle_back(win)
+               backdrops:prev_category(win)
             end),
          },
          {
-            brief = 'Next Background  [' .. key.S .. '+.]',
+            brief = 'Next Category  [' .. key.S .. '+.]',
             icon = 'md_arrow_right',
             action = wezterm.action_callback(function(win, _p)
-               backdrops:cycle_forward(win)
+               backdrops:next_category(win)
             end),
          },
          {
-            brief = 'Select Background  [' .. key.SR .. '+/]',
+            brief = 'Browse Backgrounds (Live Preview)  [' .. key.SR .. '+/]',
             icon = 'md_image_search',
-            action = act.InputSelector({
-               title = 'InputSelector: Select Background',
-               choices = backdrops:choices(),
-               fuzzy = true,
-               fuzzy_description = 'Select Background: ',
-               action = wezterm.action_callback(function(win, _p, idx)
-                  if not idx then return end
-                  ---@diagnostic disable-next-line: param-type-mismatch
-                  backdrops:set_img(win, tonumber(idx))
-               end),
-            }),
+            action = wezterm.action_callback(function(win, pane)
+               backdrops:enter_browse_mode(win)
+               win:perform_action(act.ActivateKeyTable({
+                  name = 'browse_backdrop',
+                  one_shot = false,
+                  timeout_milliseconds = 30000,
+               }), pane)
+            end),
          },
          {
             brief = 'Toggle Focus Mode (Hide Background)  [' .. key.S .. '+B]',
             icon = 'md_eye',
             action = wezterm.action_callback(function(win, _p)
                backdrops:toggle_focus(win)
+            end),
+         },
+         {
+            brief = 'Decrease Background Overlay Opacity  [' .. key.SR .. '+,]',
+            icon = 'md_brightness_4',
+            action = wezterm.action_callback(function(win, _p)
+               backdrops:adjust_overlay_opacity(win, -0.05)
+            end),
+         },
+         {
+            brief = 'Increase Background Overlay Opacity  [' .. key.SR .. '+.]',
+            icon = 'md_brightness_7',
+            action = wezterm.action_callback(function(win, _p)
+               backdrops:adjust_overlay_opacity(win, 0.05)
             end),
          },
 

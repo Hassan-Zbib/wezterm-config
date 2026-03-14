@@ -1,5 +1,6 @@
 local wezterm = require('wezterm')
 local Cells = require('utils.cells')
+local backdrops = require('utils.backdrops')
 
 local nf = wezterm.nerdfonts
 local attr = Cells.attr
@@ -45,9 +46,13 @@ M.setup = function()
       local name = window:active_key_table()
 
       if name then
+         local label = ' ' .. string.upper(name)
+         if name == 'browse_backdrop' then
+            label = label .. '  [' .. backdrops.current_idx .. '/' .. #backdrops.images .. ']'
+         end
          cells
             :update_segment_text(2, GLYPH_KEY_TABLE)
-            :update_segment_text(3, ' ' .. string.upper(name))
+            :update_segment_text(3, label)
          window:set_left_status(wezterm.format(cells:render_all()))
          return
       end

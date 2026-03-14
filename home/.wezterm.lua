@@ -16,7 +16,8 @@ local Config = require('config')
 local sessions = require('utils.sessions')
 local agent_deck = wezterm.plugin.require('https://github.com/Eric162/wezterm-agent-deck')
 
-require('utils.backdrops')
+local backdrops = require('utils.backdrops')
+backdrops
    -- :set_focus('#000000')
    :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/wezterm-config/backdrops/')
    :set_images()
@@ -56,40 +57,6 @@ table.insert(config.keys, {
    end),
 })
 
--- Session save/restore with auto-save toggle
-local session_auto_save = { enabled = false, interval = 900 }
-
-local function session_auto_save_loop()
-   wezterm.time.call_after(session_auto_save.interval, function()
-      if session_auto_save.enabled then
-         local mux = wezterm.mux
-         local win = mux.get_active_workspace()
-         for _, mux_win in ipairs(mux.all_windows()) do
-            local gui_win = mux_win:gui_window()
-            if gui_win then
-               local pane = mux_win:active_pane()
-               sessions.save(gui_win, pane)
-               break
-            end
-         end
-      end
-      session_auto_save_loop()
-   end)
-end
-session_auto_save_loop()
-
-_G.session_auto_save = session_auto_save
-
--- Shift+F9: Toggle auto-save
-table.insert(config.keys, {
-   key = 'F9',
-   mods = 'SHIFT',
-   action = wezterm.action_callback(function(win, _pane)
-      session_auto_save.enabled = not session_auto_save.enabled
-      local status = session_auto_save.enabled and 'ON' or 'OFF'
-      win:toast_notification('Sessions', 'Auto-save ' .. status, nil, 3000)
-   end),
-})
 
 -- F9: Save session (auto-named: workspace-tab-datetime)
 table.insert(config.keys, {
