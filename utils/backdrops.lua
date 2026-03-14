@@ -272,7 +272,7 @@ function BackDrops:next_category(window)
    self.current_category = self.current_category == #self.categories and 1 or self.current_category + 1
    self.images           = self.categories[self.current_category].images
    if #self.images == 0 then return end
-   self.current_idx              = 1
+   self.current_idx              = math.random(#self.images)
    self._category_flash_until    = os.time() + 2
    self:_set_opt(window, self:_create_opts())
    self:_schedule_category_flash()
@@ -286,7 +286,7 @@ function BackDrops:prev_category(window)
    self.current_category = self.current_category == 1 and #self.categories or self.current_category - 1
    self.images           = self.categories[self.current_category].images
    if #self.images == 0 then return end
-   self.current_idx              = 1
+   self.current_idx              = math.random(#self.images)
    self._category_flash_until    = os.time() + 2
    self:_set_opt(window, self:_create_opts())
    self:_schedule_category_flash()
