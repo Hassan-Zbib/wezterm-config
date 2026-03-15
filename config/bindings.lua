@@ -351,6 +351,53 @@ local key_tables = {
       { key = 'Escape',     action = 'PopKeyTable' },
       { key = 'q',          action = 'PopKeyTable' },
    },
+   copy_mode = {
+      -- movement: arrow keys
+      { key = 'LeftArrow',  mods = 'NONE', action = act.CopyMode('MoveLeft') },
+      { key = 'DownArrow',  mods = 'NONE', action = act.CopyMode('MoveDown') },
+      { key = 'UpArrow',    mods = 'NONE', action = act.CopyMode('MoveUp') },
+      { key = 'RightArrow', mods = 'NONE', action = act.CopyMode('MoveRight') },
+      -- movement: word
+      { key = 'w',          mods = 'NONE', action = act.CopyMode('MoveForwardWord') },
+      { key = 'b',          mods = 'NONE', action = act.CopyMode('MoveBackwardWord') },
+      { key = 'e',          mods = 'NONE', action = act.CopyMode('MoveForwardWordEnd') },
+      { key = 'RightArrow', mods = 'CTRL', action = act.CopyMode('MoveForwardWord') },
+      { key = 'LeftArrow',  mods = 'CTRL', action = act.CopyMode('MoveBackwardWord') },
+      -- movement: line
+      { key = '0',          mods = 'NONE', action = act.CopyMode('MoveToStartOfLine') },
+      { key = '$',          mods = 'NONE', action = act.CopyMode('MoveToEndOfLineContent') },
+      { key = '^',          mods = 'NONE', action = act.CopyMode('MoveToStartOfLineContent') },
+      { key = 'Home',       mods = 'NONE', action = act.CopyMode('MoveToStartOfLine') },
+      { key = 'End',        mods = 'NONE', action = act.CopyMode('MoveToEndOfLineContent') },
+      -- movement: viewport/scrollback
+      { key = 'g',          mods = 'NONE', action = act.CopyMode('MoveToScrollbackTop') },
+      { key = 'G',          mods = 'NONE', action = act.CopyMode('MoveToScrollbackBottom') },
+      { key = 'H',          mods = 'NONE', action = act.CopyMode('MoveToViewportTop') },
+      { key = 'M',          mods = 'NONE', action = act.CopyMode('MoveToViewportMiddle') },
+      { key = 'L',          mods = 'NONE', action = act.CopyMode('MoveToViewportBottom') },
+      { key = 'Home',       mods = 'CTRL', action = act.CopyMode('MoveToScrollbackTop') },
+      { key = 'End',        mods = 'CTRL', action = act.CopyMode('MoveToScrollbackBottom') },
+      -- movement: paging
+      { key = 'PageUp',     mods = 'NONE', action = act.CopyMode({ MoveByPage = -1 }) },
+      { key = 'PageDown',   mods = 'NONE', action = act.CopyMode({ MoveByPage = 1 }) },
+      { key = 'u',          mods = 'CTRL', action = act.CopyMode({ MoveByPage = -0.5 }) },
+      { key = 'd',          mods = 'CTRL', action = act.CopyMode({ MoveByPage = 0.5 }) },
+      -- selection
+      { key = 'v',          mods = 'NONE', action = act.CopyMode({ SetSelectionMode = 'Cell' }) },
+      { key = 'V',          mods = 'NONE', action = act.CopyMode({ SetSelectionMode = 'Line' }) },
+      { key = 'v',          mods = 'CTRL', action = act.CopyMode({ SetSelectionMode = 'Block' }) },
+      -- copy + exit
+      { key = 'y',          mods = 'NONE', action = act.Multiple({ act.CopyTo('ClipboardAndPrimarySelection'), act.CopyMode('Close') }) },
+      { key = 'Return',     mods = 'NONE', action = act.Multiple({ act.CopyTo('ClipboardAndPrimarySelection'), act.CopyMode('Close') }) },
+      -- search
+      { key = '/',          mods = 'NONE', action = act.Search('CurrentSelectionOrEmptyString') },
+      { key = 'n',          mods = 'NONE', action = act.CopyMode('NextMatch') },
+      { key = 'N',          mods = 'NONE', action = act.CopyMode('PriorMatch') },
+      { key = 'g',          mods = 'CTRL', action = act.CopyMode('ClearPattern') },
+      -- exit
+      { key = 'q',          mods = 'NONE', action = act.CopyMode('Close') },
+      { key = 'Escape',     mods = 'NONE', action = act.CopyMode('Close') },
+   },
    browse_backdrop = {
       -- stylua: ignore
       { key = 'RightArrow', action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },

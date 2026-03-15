@@ -83,6 +83,7 @@ cells
    :add_segment('workspace_text', '', colors.workspace, attr(attr.intensity('Bold')))
    :add_segment('workspace_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('agent_working', '', colors.agent_working, attr(attr.intensity('Bold')))
+   :add_segment('agent_mid_sep', '  ·  ', colors.separator)
    :add_segment('agent_waiting', '', colors.agent_waiting, attr(attr.intensity('Bold')))
    :add_segment('agent_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('notif_on', nf.md_bell .. ' ON', colors.notif_on, attr(attr.intensity('Bold')))
@@ -238,6 +239,7 @@ M.setup = function(opts)
       end
       if has_agents then
          if working_text ~= '' then table.insert(segments, 'agent_working') end
+         if working_text ~= '' and waiting_text ~= '' then table.insert(segments, 'agent_mid_sep') end
          if waiting_text ~= '' then table.insert(segments, 'agent_waiting') end
          table.insert(segments, 'agent_sep')
       end

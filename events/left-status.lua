@@ -30,9 +30,40 @@ local hints = {
    { fg = '#89b4fa', text = ' F1:help ' },
 }
 
+local copy_mode_hint_items = {
+   { fg = '#a6e3a1', text = '  ←↑↓→ ' },
+   { fg = '#cdd6f4', text = 'move' },
+   { fg = '#6e738d', text = '  ·  ' },
+   { fg = '#a6e3a1', text = 'Ctrl+←→/wb ' },
+   { fg = '#cdd6f4', text = 'word' },
+   { fg = '#6e738d', text = '  ·  ' },
+   { fg = '#f9e2af', text = 'v/V/^v ' },
+   { fg = '#cdd6f4', text = 'select' },
+   { fg = '#6e738d', text = '  ·  ' },
+   { fg = '#89b4fa', text = 'y ' },
+   { fg = '#cdd6f4', text = 'copy' },
+   { fg = '#6e738d', text = '  ·  ' },
+   { fg = '#cba6f7', text = '/ ' },
+   { fg = '#cdd6f4', text = 'search' },
+   { fg = '#6e738d', text = '  ·  ' },
+   { fg = '#f38ba8', text = 'q ' },
+   { fg = '#cdd6f4', text = 'exit  ' },
+}
+
 local function build_hints()
    local result = {}
    for _, h in ipairs(hints) do
+      table.insert(result, { Foreground = { Color = h.fg } })
+      table.insert(result, { Background = { Color = '#1e1e2e' } })
+      table.insert(result, { Attribute = { Intensity = 'Bold' } })
+      table.insert(result, { Text = h.text })
+   end
+   return result
+end
+
+local function build_copy_mode_hints()
+   local result = {}
+   for _, h in ipairs(copy_mode_hint_items) do
       table.insert(result, { Foreground = { Color = h.fg } })
       table.insert(result, { Background = { Color = '#1e1e2e' } })
       table.insert(result, { Attribute = { Intensity = 'Bold' } })
@@ -53,7 +84,13 @@ M.setup = function()
          cells
             :update_segment_text(2, GLYPH_KEY_TABLE)
             :update_segment_text(3, label)
-         window:set_left_status(wezterm.format(cells:render_all()))
+         local rendered = cells:render({ 1, 2, 3, 4 })
+         if name == 'copy_mode' then
+            for _, item in ipairs(build_copy_mode_hints()) do
+               table.insert(rendered, item)
+            end
+         end
+         window:set_left_status(wezterm.format(rendered))
          return
       end
 
