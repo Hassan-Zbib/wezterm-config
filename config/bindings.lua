@@ -5,6 +5,7 @@ local ssh_hosts = require('utils.ssh-hosts')
 local act = wezterm.action
 
 local mod = {}
+local is_maximized = false
 
 if platform.is_mac then
    mod.SUPER = 'SUPER'
@@ -148,7 +149,7 @@ local keys = {
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          local dimensions = window:get_dimensions()
-         if dimensions.is_full_screen then
+         if dimensions.is_full_screen or is_maximized then
             return
          end
          local new_width = dimensions.pixel_width - 50
@@ -161,7 +162,7 @@ local keys = {
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          local dimensions = window:get_dimensions()
-         if dimensions.is_full_screen then
+         if dimensions.is_full_screen or is_maximized then
             return
          end
          local new_width = dimensions.pixel_width + 50
@@ -173,7 +174,13 @@ local keys = {
       key = 'Enter',
       mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, _pane)
-         window:maximize()
+         if is_maximized then
+            window:restore()
+            is_maximized = false
+         else
+            window:maximize()
+            is_maximized = true
+         end
       end)
    },
 
