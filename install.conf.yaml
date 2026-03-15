@@ -11,6 +11,7 @@
     ~/.bashrc: home/.bashrc
     ~/.bash_profile: home/.bash_profile
     ~/.gitconfig: home/.gitconfig
+    ~/.vimrc: home/.vimrc
     ~/.config/starship.toml: home/.config/starship.toml
     ~/.config/git/ignore: home/.config/git/ignore
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
