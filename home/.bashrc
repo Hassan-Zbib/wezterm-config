@@ -76,3 +76,6 @@ alias ll='eza --icons -la'
 alias lt='eza --icons --tree --level=2'
 alias btop='btop4win'
 alias cls='clear'
+
+# ---- zoxide (smart cd) ----
+eval "$(zoxide init bash)"

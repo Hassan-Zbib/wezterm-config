@@ -298,7 +298,11 @@ _EZA_BTOP = (
         row('lt',          'Tree view (2 levels)') +
         blank() +
         header('📊 btop') +
-        row('btop',        'Open system monitor')
+        row('btop',        'Open system monitor')  +
+        blank() +
+        header('⚡ zoxide') +
+        row('z DIR',       'Jump to frecent dir')  +
+        row('zi',          'Interactive picker')
 )
 
 _GLOW_PKG_FF = (
@@ -338,6 +342,10 @@ else:
             blank() +
             header('📊 btop') +
             row('btop',        'Open system monitor') +
+            blank() +
+            header('⚡ zoxide') +
+            row('z DIR',       'Jump to frecent dir')  +
+            row('zi',          'Interactive picker') +
             blank() +
             header('📄 Glow (Markdown)') +
             row('glow FILE.md','Render markdown')      +

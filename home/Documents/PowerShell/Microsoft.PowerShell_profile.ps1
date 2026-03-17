@@ -35,3 +35,6 @@ function prompt {
     # Run starship prompt
     & $__starshipPrompt
 }
+
+# ---- zoxide (smart cd) ----
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
