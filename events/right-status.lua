@@ -215,7 +215,6 @@ M.setup = function(opts)
          :update_segment_text('ram_text', ram_text)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
-         :update_segment_text('overlay_text', nf.md_brightness_6 .. '  ' .. string.format('%.0f%%', backdrops.overlay_opacity * 100))
 
       -- Notification toggle indicator
       local notif_enabled = false
@@ -226,10 +225,16 @@ M.setup = function(opts)
          end
       end
 
-      -- Category flash indicator (temporary, shown for 2s after switching categories)
-      local cat_label = backdrops:category_indicator()
+      -- Flash indicators (momentary, only when focus mode is off)
+      local cat_label    = backdrops:category_indicator()
+      local rotate_label = backdrops:rotate_indicator()
+      local overlay_label = backdrops:overlay_indicator()
+
       if cat_label then
          cells:update_segment_text('category_text', ICON_CATEGORY .. '  ' .. cat_label)
+      end
+      if overlay_label then
+         cells:update_segment_text('overlay_text', nf.md_brightness_6 .. '  ' .. overlay_label)
       end
 
       local segments = { 'workspace_icon', 'workspace_text', 'workspace_sep' }
@@ -255,13 +260,11 @@ M.setup = function(opts)
          table.insert(segments, 'focus_off')
       end
       table.insert(segments, 'focus_sep')
-      if not backdrops.focus_on then
+      if overlay_label then
          table.insert(segments, 'overlay_text')
          table.insert(segments, 'overlay_sep')
       end
-
-      -- Background auto-rotate indicator (only when backdrop is visible)
-      if not backdrops.focus_on then
+      if rotate_label then
          if backdrops.auto_rotate_enabled then
             table.insert(segments, 'rotate_on')
          else

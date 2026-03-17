@@ -238,6 +238,7 @@ local keys = {
       key = [[/]],
       mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, pane)
+         if backdrops.focus_on then return end
          backdrops:enter_browse_mode(window)
          window:perform_action(act.ActivateKeyTable({
             name = 'browse_backdrop',
@@ -257,11 +258,7 @@ local keys = {
       key = 'r',
       mods = mod.SUPER,
       action = wezterm.action_callback(function(_window, _pane)
-         if backdrops.auto_rotate_enabled then
-            backdrops:stop_auto_rotate()
-         else
-            backdrops:start_auto_rotate()
-         end
+         backdrops:toggle_auto_rotate()
       end),
    },
    {
