@@ -313,6 +313,10 @@ _GLOW_PKG_FF = (
         header('📦 UniGetUI') +
         row('pkgs',        'Open UniGetUI') +
         blank() +
+        header('🔍 fzf') +
+        row('fzf',         'Fuzzy-find files')     +
+        row('Ctrl+r',      'Fuzzy history search') +
+        blank() +
         header('🖥️  Fastfetch') +
         row('fastfetch',   'Show system info panel')
 )
@@ -353,6 +357,10 @@ else:
             blank() +
             header('📦 UniGetUI') +
             row('pkgs',        'Open UniGetUI') +
+            blank() +
+            header('🔍 fzf') +
+            row('fzf',         'Fuzzy-find files')     +
+            row('Ctrl+r',      'Fuzzy history search') +
             blank() +
             header('🖥️  Fastfetch') +
             row('fastfetch',   'Show system info panel')

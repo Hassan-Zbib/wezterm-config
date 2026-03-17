@@ -39,6 +39,7 @@
     - MartiCliment.UniGetUI
     - tstack.lnav
     - ajeetdsouza.zoxide
+    - junegunn.fzf
 
 - shell:
     - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"

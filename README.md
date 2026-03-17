@@ -54,6 +54,7 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 | [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install MartiCliment.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
 | [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
+| [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
 
 ---
 
@@ -438,3 +439,4 @@ To track a new config file:
 - Markdown viewer: [Glow](https://github.com/charmbracelet/glow)
 - Package manager GUI: [UniGetUI](https://github.com/marticliment/UniGetUI)
 - Directory jumper: [zoxide](https://github.com/ajeetdsouza/zoxide)
+- Fuzzy finder: [fzf](https://github.com/junegunn/fzf)
