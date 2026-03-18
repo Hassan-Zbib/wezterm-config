@@ -33,7 +33,7 @@ function BackDrops:init()
       focus_color = colors.background,
       focus_on = false,
       auto_rotate_enabled = true,
-      auto_rotate_interval = 60,
+      auto_rotate_interval = 30,
       _rotate_generation = 0,
       overlay_opacity = 0.90,
       _browse_gen = 0,
@@ -418,9 +418,9 @@ function BackDrops:_schedule_rotate(gen)
 end
 
 ---Start auto-rotating backdrops at the given interval
----@param seconds? number rotation interval in seconds (default: 60)
+---@param seconds? number rotation interval in seconds (default: 30)
 function BackDrops:start_auto_rotate(seconds)
-   self.auto_rotate_interval = seconds or 60
+   self.auto_rotate_interval = seconds or 30
    self.auto_rotate_enabled = true
    self._rotate_generation = self._rotate_generation + 1
    self:_schedule_rotate(self._rotate_generation)

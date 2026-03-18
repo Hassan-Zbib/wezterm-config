@@ -138,13 +138,13 @@ _FONT_WIN = (
 _BACKGROUND = (
     header('🖼️  Background Images') +
         row('Alt+/',           'Random Image')          +
-        row('Alt+,',           'Previous Category')    +
-        row('Alt+.',           'Next Category')        +
+        row('Alt+Ctrl+,',      'Previous Category')    +
+        row('Alt+Ctrl+.',      'Next Category')        +
         row('Alt+Ctrl+/',      'Browse (live preview)')+
         row('Alt+b',           'Toggle Focus')        +
         row('Alt+r',           'Toggle Auto-Rotate')  +
-        row('Alt+Ctrl+,',      'Overlay Opacity ↓')  +
-        row('Alt+Ctrl+.',      'Overlay Opacity ↑')  +
+        row('Alt+,',           'Overlay Opacity ↓')  +
+        row('Alt+.',           'Overlay Opacity ↑')  +
         blank() +
         note('Browse: ←/→ navigate · Enter confirm') +
         note('        Esc/q cancel')
@@ -205,6 +205,9 @@ _CURSOR_NAV = (
 )
 
 _LAZYGIT_CMDS = (
+    header('🔌 Lazyssh') +
+        row('lazyssh / lssh', 'Open SSH manager') +
+        blank() +
     header('🔀 Lazygit Commands') +
         row('Space',       'Stage/unstage file') +
         row('c',           'Commit')             +
@@ -333,6 +336,9 @@ else:
             blank() +
             header('🔀 Lazygit') +
             row('lazygit / lg',    'Open in current repo') +
+            blank() +
+            header('🔌 Lazyssh') +
+            row('lazyssh / lssh',  'Open SSH manager') +
             blank() +
             header('📋 lnav') +
             row('lnav FILE',       'Open log file')       +

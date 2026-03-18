@@ -24,6 +24,7 @@ M.shells = {
 M.tuis = {
    yazi       = 'yazi',
    lazygit    = 'lazygit',
+   lazyssh    = 'lazyssh',
    btop       = 'btop',
    btop4win   = 'btop',
    glow       = 'glow',

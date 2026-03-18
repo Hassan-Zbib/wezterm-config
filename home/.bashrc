@@ -68,8 +68,12 @@ function yy() {
     rm -f -- "$tmp"
 }
 
+# ---- PATH ----
+export PATH="$HOME/bin:$PATH"
+
 # ---- Aliases ----
 alias lg='lazygit'
+alias lssh='lazyssh'
 alias pkgs='"/c/Users/Hasan/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
 alias ls='eza --icons'
 alias ll='eza --icons -la'

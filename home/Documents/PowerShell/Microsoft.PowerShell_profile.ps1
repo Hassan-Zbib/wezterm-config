@@ -36,5 +36,9 @@ function prompt {
     & $__starshipPrompt
 }
 
+# ---- ~/bin on PATH ----
+$env:PATH = "$HOME\bin;$env:PATH"
+Set-Alias lssh lazyssh
+
 # ---- zoxide (smart cd) ----
 Invoke-Expression (& { (zoxide init powershell | Out-String) })

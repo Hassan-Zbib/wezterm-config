@@ -222,14 +222,14 @@ local keys = {
    },
    {
       key = [[,]],
-      mods = mod.SUPER,
+      mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, _pane)
          backdrops:prev_category(window)
       end),
    },
    {
       key = [[.]],
-      mods = mod.SUPER,
+      mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, _pane)
          backdrops:next_category(window)
       end),
@@ -263,14 +263,14 @@ local keys = {
    },
    {
       key = ',',
-      mods = mod.SUPER_REV,
+      mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          backdrops:adjust_overlay_opacity(window, -0.05)
       end),
    },
    {
       key = '.',
-      mods = mod.SUPER_REV,
+      mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          backdrops:adjust_overlay_opacity(window, 0.05)
       end),

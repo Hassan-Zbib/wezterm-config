@@ -16,11 +16,11 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 - **Shell integration** (OSC 7 + OSC 133) for Git Bash, pwsh, and WSL — CWD tracking and prompt jump with `Shift+Up/Down`
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
-- **Session persistence** — save/restore pane splits, directories, sub-shells (pwsh, wsl), and TUI apps (claude, lazygit, yazi, btop)
+- **Session persistence** — save/restore pane splits, directories, sub-shells (pwsh, wsl), and TUI apps (claude, lazygit, lazyssh, yazi, btop)
 - **SSH host selector** — fuzzy-search `~/.ssh/config` hosts (F7)
 - **WSL support** — open WSL tabs alongside Git Bash
 - **Tab bar at bottom** with active key-table indicator in left status
-- **CLI toolbox** — lazygit, eza, btop, glow, and UniGetUI pre-configured with aliases
+- **CLI toolbox** — lazygit, lazyssh, eza, btop, glow, and UniGetUI pre-configured with aliases
 - **Dotbot-managed dotfiles** — one command to symlink all configs
 
 ---
@@ -48,10 +48,11 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 | Tool | Install | Alias | Description |
 |------|---------|-------|-------------|
 | [Lazygit](https://github.com/jesseduffield/lazygit) | `winget install JesseDuffield.lazygit` | `lg` | Terminal UI for Git |
+| [Lazyssh](https://github.com/Adembc/lazyssh) | Download from [releases](https://github.com/Adembc/lazyssh/releases/latest) → place in `bin/lazyssh.exe` | `lssh` | Terminal UI for SSH host management |
 | [eza](https://github.com/eza-community/eza) | `winget install eza-community.eza` | `ls`, `ll`, `lt` | Modern `ls` with icons and tree view |
 | [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop` | Interactive system monitor (CPU, RAM, disk, network) |
 | [Glow](https://github.com/charmbracelet/glow) | `winget install charmbracelet.glow` | `glow` | Render Markdown files in the terminal |
-| [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install MartiCliment.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
+| [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install Devolutions.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
 | [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
 | [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
@@ -434,6 +435,7 @@ To track a new config file:
 - Prompt: [Starship](https://starship.rs/)
 - File manager: [Yazi](https://yazi-rs.github.io/)
 - Git TUI: [Lazygit](https://github.com/jesseduffield/lazygit)
+- SSH TUI: [Lazyssh](https://github.com/Adembc/lazyssh)
 - Modern ls: [eza](https://github.com/eza-community/eza)
 - System monitor: [btop4win](https://github.com/aristocratos/btop4win)
 - Markdown viewer: [Glow](https://github.com/charmbracelet/glow)
