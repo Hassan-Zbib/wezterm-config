@@ -365,7 +365,7 @@ function BackDrops:toggle_auto_rotate()
 end
 
 ---Toggle the focus mode
----When leaving focus mode, starts auto-rotation. When entering, stops it.
+---When leaving focus mode, always re-enables auto-rotation. When entering, stops it.
 ---@param window any WezTerm `Window` see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 function BackDrops:toggle_focus(window)
    local background_opts
@@ -373,6 +373,7 @@ function BackDrops:toggle_focus(window)
    if self.focus_on then
       background_opts = self:_create_opts()
       self.focus_on = false
+      self:start_auto_rotate()
    else
       background_opts = self:_create_focus_opts()
       self.focus_on = true

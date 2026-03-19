@@ -39,6 +39,7 @@ function prompt {
 # ---- ~/bin on PATH ----
 $env:PATH = "$HOME\bin;$env:PATH"
 Set-Alias lssh lazyssh
+Set-Alias cc claude
 
 # ---- zoxide (smart cd) ----
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
