@@ -502,13 +502,18 @@ function M.restore(window, pane, name)
       return
    end
 
+   local target_workspace = session.workspace or 'default'
+   local _tab, first_pane, mux_win = wezterm.mux.spawn_window({
+      workspace = target_workspace,
+   })
+
    for tab_idx, tab in ipairs(session.tabs) do
       local tab_pane
 
       if tab_idx == 1 then
-         tab_pane = pane
+         tab_pane = first_pane
       else
-         local _, new_pane, _ = window:mux_window():spawn_tab({})
+         local _, new_pane, _ = mux_win:spawn_tab({})
          tab_pane = new_pane
       end
 
@@ -613,9 +618,10 @@ function M.restore(window, pane, name)
       end
    end
 
+   window:perform_action(act.SwitchToWorkspace({ name = target_workspace }), pane)
    window:toast_notification(
       'Session Restored',
-      'Restored "' .. name .. '" (' .. #session.tabs .. ' tabs)',
+      'Restored "' .. name .. '" (' .. #session.tabs .. ' tabs) in workspace "' .. target_workspace .. '"',
       nil,
       3000
    )
