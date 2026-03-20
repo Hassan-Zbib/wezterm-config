@@ -1,0 +1,23 @@
+# ============================================================
+# Yazi Config
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+# ============================================================
+
+[manager]
+show_hidden    = true
+sort_by        = "natural"
+sort_sensitive = false
+sort_reverse   = false
+show_symlink   = true
+
+[preview]
+image_filter   = "triangle"
+image_quality  = 75
+max_width      = 600
+max_height     = 900
+
+[opener]
+edit = [
+   { run = 'vim "$@"', block = true, desc = "vim" },
+]

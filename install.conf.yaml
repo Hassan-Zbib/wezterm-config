@@ -15,6 +15,11 @@
     ~/.config/starship.toml: home/.config/starship.toml
     ~/.config/git/ignore: home/.config/git/ignore
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
+    ~/.config/eza/theme.yml: home/.config/eza/theme.yml
+    ~/AppData/Roaming/yazi/config/yazi.toml: home/AppData/Roaming/yazi/config/yazi.toml
+    ~/AppData/Roaming/yazi/config/theme.toml: home/AppData/Roaming/yazi/config/theme.toml
+    ~/AppData/Roaming/yazi/config/init.lua: home/AppData/Roaming/yazi/config/init.lua
+    ~/AppData/Roaming/yazi/config/keymap.toml: home/AppData/Roaming/yazi/config/keymap.toml
     ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1: home/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
     ~/.config/wsl/wezterm-integration.bash: home/.config/wsl/wezterm-integration.bash
     ~/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json: home/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json
@@ -46,6 +51,15 @@
 - shell:
     - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"
       description: Injecting WezTerm shell integration into WSL .bashrc
+      quiet: true
+    - command: ya pkg add yazi-rs/plugins:git || true
+      description: Adding yazi git plugin
+      quiet: true
+    - command: ya pkg add Rolv-Apneseth/starship || true
+      description: Adding yazi starship plugin
+      quiet: true
+    - command: ya pkg install
+      description: Installing/updating all yazi plugins
       quiet: true
     - command: echo "Dotbot install complete!"
       description: Done

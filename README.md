@@ -49,7 +49,7 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 |------|---------|-------|-------------|
 | [Lazygit](https://github.com/jesseduffield/lazygit) | `winget install JesseDuffield.lazygit` | `lg` | Terminal UI for Git |
 | [Lazyssh](https://github.com/Adembc/lazyssh) | Download from [releases](https://github.com/Adembc/lazyssh/releases/latest) → place in `bin/lazyssh.exe` | `lssh` | Terminal UI for SSH host management |
-| [eza](https://github.com/eza-community/eza) | `winget install eza-community.eza` | `ls`, `ll`, `lt` | Modern `ls` with icons and tree view |
+| [eza](https://github.com/eza-community/eza) | `winget install eza-community.eza` | `ls`, `la`, `ll`, `lt` | Modern `ls` with icons, git status, and tree view |
 | [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop` | Interactive system monitor (CPU, RAM, disk, network) |
 | [Glow](https://github.com/charmbracelet/glow) | `winget install charmbracelet.glow` | `glow` | Render Markdown files in the terminal |
 | [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install Devolutions.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
@@ -93,6 +93,11 @@ This uses [Dotbot](https://github.com/anishathalye/dotbot) to create symlinks fr
 | `home/.config/starship.toml` | `~/.config/starship.toml` |
 | `home/.config/git/ignore` | `~/.config/git/ignore` |
 | `home/.config/fastfetch/config.jsonc` | `~/.config/fastfetch/config.jsonc` |
+| `home/.config/eza/theme.yml` | `~/.config/eza/theme.yml` |
+| `home/AppData/Roaming/yazi/config/yazi.toml` | `~/AppData/Roaming/yazi/config/yazi.toml` |
+| `home/AppData/Roaming/yazi/config/theme.toml` | `~/AppData/Roaming/yazi/config/theme.toml` |
+| `home/AppData/Roaming/yazi/config/keymap.toml` | `~/AppData/Roaming/yazi/config/keymap.toml` |
+| `home/AppData/Roaming/yazi/config/init.lua` | `~/AppData/Roaming/yazi/config/init.lua` |
 | `home/Documents/PowerShell/Microsoft.PowerShell_profile.ps1` | `~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1` |
 | `home/.config/wsl/wezterm-integration.bash` | `~/.config/wsl/wezterm-integration.bash` |
 
@@ -256,7 +261,48 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 |-----|--------|
 | `Alt+e` | Open yazi (auto-cd to selected directory on quit) |
 
-Inside yazi: `h` `j` `k` `l` navigate · `Space` select · `y` copy · `p` paste · `/` search · `q` quit
+Themed with Catppuccin Macchiato. Plugins: `git.yazi` (git status in file list), `starship.yazi` (starship status bar).
+
+#### Navigation
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `↑`/`k` | Move up | `↓`/`j` | Move down |
+| `←`/`h` | Go to parent | `→`/`l` | Enter / open |
+| `gg` | Top of list | `G` | Bottom of list |
+| `Ctrl+PgUp` | Half page up | `Ctrl+PgDn` | Half page down |
+| `H` | History back | `L` | History forward |
+| `~` | Go to home | | |
+
+#### File Operations
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `y` | Copy (yank) | `x` | Cut |
+| `p` | Paste | `d` | Move to trash |
+| `D` | Delete permanently | `r` | Rename |
+| `a` | Create file/dir (end with `/` for dir) | | |
+
+#### Selection
+
+| Key | Action |
+|-----|--------|
+| `Space` | Toggle select |
+| `v` | Visual select mode |
+| `V` | Select all |
+| `u` | Deselect all |
+
+#### Search, Tabs & More
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `/` | Search | `n`/`N` | Next / Prev match |
+| `f` | Filter list | `.` | Toggle hidden files |
+| `Tab` | Toggle preview | `w` | Task manager |
+| `t` | New tab | `[`/`]` | Prev / Next tab |
+| `1`–`9` | Go to tab N | | |
+| `e` | Open in editor (vim) | `!` | Open shell here |
+| `z` | Jump with zoxide | `q`/`Q` | Quit / Quit (no cd) |
 
 ### Advanced Modes
 
@@ -273,16 +319,19 @@ Inside yazi: `h` `j` `k` `l` navigate · `Space` select · `y` copy · `p` paste
 
 The `.bashrc` configures the following aliases:
 
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `ls` | `eza --icons` | List files with icons |
-| `ll` | `eza --icons -la` | Long list with hidden files |
-| `lt` | `eza --icons --tree --level=2` | Tree view (2 levels) |
-| `lg` | `lazygit` | Terminal UI for Git |
-| `btop` | `btop4win` | Interactive system monitor |
-| `pkgs` | UniGetUI | GUI package manager |
-| `glow` | `glow` | Markdown viewer/browser |
-| `yy` | yazi with auto-cd | File manager (cd to dir on quit) |
+| Alias | Description |
+|-------|-------------|
+| `ls` | List with icons, dirs first, git repo status, color-scaled |
+| `la` | Same as `ls` but includes hidden files |
+| `ll` | Long format with git status per file, header, dirs first |
+| `lt` | Tree view (2 levels deep) |
+| `lg` | Lazygit — terminal UI for Git |
+| `btop` | btop4win — interactive system monitor |
+| `pkgs` | UniGetUI — GUI package manager |
+| `glow` | Markdown viewer/browser |
+| `yy` | Yazi with auto-cd — cd to selected dir on quit |
+
+All `ls`/`la`/`ll`/`lt` aliases accept extra flags, e.g. `ll -s size` or `lt --level=3`. Themed with Catppuccin Macchiato via `~/.config/eza/theme.yml`.
 
 ### Lazygit Quick Reference
 

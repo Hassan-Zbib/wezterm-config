@@ -1,0 +1,93 @@
+# ============================================================
+# Yazi Theme — Catppuccin Macchiato (manual, no package needed)
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+# ============================================================
+
+[manager]
+cwd             = { fg = "#8aadf4" }
+hovered         = { fg = "#1e2030", bg = "#8aadf4" }
+preview_hovered = { underline = true }
+find_keyword    = { fg = "#eed49f", bold = true, italic = true, underline = true }
+find_position   = { fg = "#c6a0f6", bg = "reset", bold = true, italic = true }
+marker_selected = { fg = "#a6da95", bg = "#a6da95" }
+marker_copied   = { fg = "#eed49f", bg = "#eed49f" }
+marker_cut      = { fg = "#ed8796", bg = "#ed8796" }
+tab_active      = { fg = "#1e2030", bg = "#8aadf4" }
+tab_inactive    = { fg = "#a5adcb", bg = "#363a4f" }
+tab_width       = 1
+count_copied    = { fg = "#eed49f", bg = "#363a4f" }
+count_cut       = { fg = "#ed8796", bg = "#363a4f" }
+count_selected  = { fg = "#a6da95", bg = "#363a4f" }
+border_symbol   = "│"
+border_style    = { fg = "#494d64" }
+
+[status]
+separator_open  = ""
+separator_close = ""
+separator_style = { fg = "#363a4f", bg = "#363a4f" }
+mode_normal     = { fg = "#1e2030", bg = "#8aadf4", bold = true }
+mode_select     = { fg = "#1e2030", bg = "#a6da95", bold = true }
+mode_unset      = { fg = "#1e2030", bg = "#c6a0f6", bold = true }
+progress_label  = { fg = "#cad3f5", bold = true }
+progress_normal = { fg = "#8aadf4", bg = "#1e2030" }
+progress_error  = { fg = "#ed8796", bg = "#1e2030" }
+permissions_t   = { fg = "#a6da95" }
+permissions_r   = { fg = "#eed49f" }
+permissions_w   = { fg = "#ed8796" }
+permissions_x   = { fg = "#8bd5ca" }
+permissions_s   = { fg = "#363a4f" }
+
+[input]
+border   = { fg = "#8aadf4" }
+title    = { fg = "#cad3f5" }
+value    = { fg = "#cad3f5" }
+selected = { reversed = true }
+
+[completion]
+border   = { fg = "#8aadf4" }
+active   = { fg = "#1e2030", bg = "#8aadf4" }
+inactive = { fg = "#a5adcb" }
+
+[tasks]
+border  = { fg = "#8aadf4" }
+title   = { fg = "#cad3f5" }
+hovered = { underline = true }
+
+[which]
+mask            = { bg = "#1e2030" }
+cand            = { fg = "#8bd5ca" }
+rest            = { fg = "#6e738d" }
+desc            = { fg = "#c6a0f6" }
+separator       = "  "
+separator_style = { fg = "#494d64" }
+
+[notify]
+title_info  = { fg = "#8aadf4" }
+title_warn  = { fg = "#eed49f" }
+title_error = { fg = "#ed8796" }
+
+[help]
+on      = { fg = "#8bd5ca" }
+exec    = { fg = "#a6da95" }
+desc    = { fg = "#939ab7" }
+hovered = { reversed = true }
+footer  = { fg = "#1e2030", bg = "#a5adcb" }
+
+[filetype]
+rules = [
+   { mime = "image/*",                  fg = "#8bd5ca" },
+   { mime = "video/*",                  fg = "#c6a0f6" },
+   { mime = "audio/*",                  fg = "#c6a0f6" },
+   { mime = "application/pdf",          fg = "#a6da95" },
+   { mime = "application/zip",          fg = "#ed8796" },
+   { mime = "application/gzip",         fg = "#ed8796" },
+   { mime = "application/x-tar",        fg = "#ed8796" },
+   { mime = "application/x-bzip2",      fg = "#ed8796" },
+   { mime = "application/x-7z-compressed", fg = "#ed8796" },
+   { mime = "application/x-rar",        fg = "#ed8796" },
+   { mime = "application/x-xz",         fg = "#ed8796" },
+   { mime = "text/*",                   fg = "#cad3f5" },
+   { mime = "inode/x-empty",            fg = "#6e738d" },
+   { name = "*", is = "orphan",         fg = "#ed8796", bold = true },
+]

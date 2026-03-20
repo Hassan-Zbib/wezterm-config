@@ -1,0 +1,16 @@
+# ============================================================
+# Yazi Keymap
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+# Only overrides are listed here; all other defaults are kept.
+# ============================================================
+
+[manager]
+prepend_keymap = [
+   # Replace Ctrl+U/D half-page scroll with Ctrl+PgUp/PgDn
+   # (PageUp/PageDown bare are taken by WezTerm for terminal scroll)
+   { on = ["<C-u>"],        run = "noop" },
+   { on = ["<C-d>"],        run = "noop" },
+   { on = ["<C-PageUp>"],   run = "arrow -50%", desc = "Scroll up half page" },
+   { on = ["<C-PageDown>"], run = "arrow 50%",  desc = "Scroll down half page" },
+]

@@ -1,0 +1,83 @@
+# ============================================================
+# eza Theme — Catppuccin Macchiato
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+# ============================================================
+
+filekinds:
+  normal: ~
+  directory:    { foreground: "#8aadf4", is_bold: true }
+  symlink:      { foreground: "#8bd5ca" }
+  pipe:         { foreground: "#f5a97f" }
+  block_device: { foreground: "#f5a97f", is_bold: true }
+  char_device:  { foreground: "#f5a97f", is_bold: true }
+  socket:       { foreground: "#ed8796" }
+  special:      { foreground: "#f5a97f" }
+  executable:   { foreground: "#a6da95", is_bold: true }
+  mount_point:  { foreground: "#8bd5ca", is_bold: true }
+
+perms:
+  user_read:         { foreground: "#eed49f" }
+  user_write:        { foreground: "#ed8796" }
+  user_execute_file: { foreground: "#a6da95", is_bold: true }
+  user_execute_other:{ foreground: "#a6da95" }
+  group_read:        { foreground: "#eed49f" }
+  group_write:       { foreground: "#ed8796" }
+  group_execute:     { foreground: "#a6da95" }
+  other_read:        { foreground: "#eed49f" }
+  other_write:       { foreground: "#ed8796" }
+  other_execute:     { foreground: "#a6da95" }
+  special_user_file: { foreground: "#c6a0f6" }
+  special_other:     { foreground: "#c6a0f6" }
+  attribute:         { foreground: "#8bd5ca" }
+
+size:
+  major:       { foreground: "#a6da95" }
+  minor:       { foreground: "#a6da95" }
+  number_byte: { foreground: "#a6da95" }
+  number_kilo: { foreground: "#91d7e3" }
+  number_mega: { foreground: "#f5a97f" }
+  number_giga: { foreground: "#ee99a0" }
+  number_huge: { foreground: "#ed8796", is_bold: true }
+  unit_byte:   { foreground: "#a6da95" }
+  unit_kilo:   { foreground: "#91d7e3" }
+  unit_mega:   { foreground: "#f5a97f" }
+  unit_giga:   { foreground: "#ee99a0" }
+  unit_huge:   { foreground: "#ed8796", is_bold: true }
+
+users:
+  user_you:    { foreground: "#eed49f", is_bold: true }
+  user_root:   { foreground: "#ed8796", is_bold: true }
+  user_other:  { foreground: "#eed49f" }
+  group_yours: { foreground: "#f5a97f" }
+  group_other: { foreground: "#eed49f" }
+  group_root:  { foreground: "#ed8796" }
+
+links:
+  normal:          { foreground: "#ed8796" }
+  multi_link_file: { foreground: "#ed8796", is_bold: true }
+
+git:
+  new:        { foreground: "#a6da95" }
+  modified:   { foreground: "#eed49f" }
+  deleted:    { foreground: "#ed8796" }
+  renamed:    { foreground: "#8aadf4" }
+  ignored:    { foreground: "#6e738d" }
+  conflicted: { foreground: "#ee99a0", is_bold: true }
+
+git_repo:
+  branch_main:  { foreground: "#a6da95" }
+  branch_other: { foreground: "#eed49f" }
+  git_clean:    { foreground: "#a6da95" }
+  git_dirty:    { foreground: "#eed49f" }
+
+punctuation:    { foreground: "#6e738d" }
+date:           { foreground: "#b7bdf8" }
+inode:          { foreground: "#c6a0f6" }
+blocks:         { foreground: "#5b6078" }
+header:         { foreground: "#8aadf4", is_bold: true, is_underline: true }
+octal:          { foreground: "#c6a0f6" }
+flags:          ~
+symlink_arrow:  { foreground: "#8bd5ca" }
+control_char:   { foreground: "#ed8796", is_bold: true, is_reverse: true }
+broken_symlink: { foreground: "#ed8796", is_bold: true }

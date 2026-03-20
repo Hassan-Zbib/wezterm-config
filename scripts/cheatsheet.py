@@ -286,8 +286,8 @@ _YAZI_LNAV = (
     header('📁 File Manager (yazi)') +
         row('Alt+e',           'Open yazi (auto-cd)') +
         blank() +
-        note('hjkl navigate • Space select') +
-        note('y copy • p paste • / search • q quit') +
+        note('↑↓←→ or hjkl navigate  •  Space select') +
+        note('Ctrl+PgUp/Dn half page  •  see below ↓') +
         blank() +
         header('📋 lnav') +
         row('lnav FILE',       'Open log file')       +
@@ -296,9 +296,10 @@ _YAZI_LNAV = (
 
 _EZA_BTOP = (
     header('📂 eza (Modern ls)') +
-        row('ls',          'List with icons')      +
-        row('ll',          'List all (long)')      +
-        row('lt',          'Tree view (2 levels)') +
+        row('ls',          'List (dirs first, git)')  +
+        row('la',          'List all incl. hidden')   +
+        row('ll',          'Long + git + header')     +
+        row('lt',          'Tree view (2 levels)')    +
         blank() +
         header('📊 btop') +
         row('btop',        'Open system monitor')  +
@@ -331,8 +332,8 @@ else:
         header('📁 File Manager (yazi)') +
             row('Alt+e',           'Open yazi (auto-cd)') +
             blank() +
-            note('hjkl navigate • Space select') +
-            note('y copy • p paste • / search • q quit') +
+            note('↑↓←→ or hjkl navigate  •  Space select') +
+            note('Ctrl+PgUp/Dn half page  •  see below ↓') +
             blank() +
             header('🔀 Lazygit') +
             row('lazygit / lg',    'Open in current repo') +
@@ -346,9 +347,10 @@ else:
     )
     _EZA_BTOP_GLOW_FF = (
         header('📂 eza (Modern ls)') +
-            row('ls',          'List with icons')      +
-            row('ll',          'List all (long)')      +
-            row('lt',          'Tree view (2 levels)') +
+            row('ls',          'List (dirs first, git)')  +
+            row('la',          'List all incl. hidden')   +
+            row('ll',          'Long + git + header')     +
+            row('lt',          'Tree view (2 levels)')    +
             blank() +
             header('📊 btop') +
             row('btop',        'Open system monitor') +
@@ -372,6 +374,61 @@ else:
             row('fastfetch',   'Show system info panel')
     )
     render_cols(_YAZI_LAZYGIT_LNAV, _EZA_BTOP_GLOW_FF, _LAZYGIT_CMDS)
+print()
+
+# ── Band 5: Full Yazi Keybindings ─────────────────────────────────────────────
+_YAZI_NAV = (
+    header('📁 Yazi — Navigation') +
+        row('j / k / ↑ / ↓',  'Move down / up')            +
+        row('h / ←',           'Go to parent directory')    +
+        row('l / →',           'Enter directory / open')    +
+        row('gg / G',          'Top / Bottom of list')      +
+        row('Ctrl+PgUp',       'Half page up')              +
+        row('Ctrl+PgDn',       'Half page down')            +
+        row('H / L',           'History back / forward')    +
+        row('~',               'Go to home directory')
+)
+
+_YAZI_OPS = (
+    header('📋 Yazi — File Operations') +
+        row('y',               'Copy (yank)')               +
+        row('x',               'Cut')                       +
+        row('p',               'Paste')                     +
+        row('d',               'Move to trash')             +
+        row('D',               'Delete permanently')        +
+        row('r',               'Rename')                    +
+        row('a',               'Create  (end with / = dir)')+
+        blank() +
+        note('Selection') +
+        row('Space',           'Toggle select')             +
+        row('v',               'Visual select mode')        +
+        row('V',               'Select all')                +
+        row('u',               'Deselect all')
+)
+
+_YAZI_MISC = (
+    header('🔍 Yazi — Search, Tabs & More') +
+        row('/',               'Search')                    +
+        row('n / N',           'Next / Prev match')         +
+        row('f',               'Filter list')               +
+        row('.',               'Toggle hidden files')       +
+        row('Tab',             'Toggle preview panel')      +
+        blank() +
+        row('t',               'New tab')                   +
+        row('[ / ]',           'Prev / Next tab')           +
+        row('1–9',             'Go to tab N')               +
+        blank() +
+        row('e',               'Open in editor (vim)')      +
+        row('!',               'Open shell here')           +
+        row('z',               'Jump with zoxide')          +
+        row('w',               'Task manager')              +
+        row('q / Q',           'Quit / Quit (no cd)')
+)
+
+if NUM_COLS == 4:
+    render_cols(_YAZI_NAV, _YAZI_OPS, _YAZI_MISC, [])
+else:
+    render_cols(_YAZI_NAV, _YAZI_OPS, _YAZI_MISC)
 print()
 
 print(f'  {DIM}  Full docs: github.com/Hassan-Zbib/wezterm-config{RST}')
