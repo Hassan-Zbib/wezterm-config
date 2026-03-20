@@ -118,8 +118,8 @@ _WORKSPACES = (
 
 _SCROLLING = (
     header('📜 Scrolling') +
-        row('Alt+u',       'Scroll Up 5 lines')   +
-        row('Alt+d',       'Scroll Down 5 lines') +
+        row('Alt+PgUp',    'Scroll Up 5 lines')   +
+        row('Alt+PgDn',    'Scroll Down 5 lines') +
         row('Page Up',     'Scroll Page Up')      +
         row('Page Down',   'Scroll Page Down')    +
         row('End',         'Scroll to Bottom')    +
