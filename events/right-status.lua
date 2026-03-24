@@ -4,6 +4,7 @@ local Cells = require('utils.cells')
 local backdrops = require('utils.backdrops')
 local platform = require('utils.platform')
 local OptsValidator = require('utils.opts-validator')
+local peal = require('utils.peal')
 
 ---@alias Event.RightStatusOptions { date_format?: string }
 
@@ -74,6 +75,8 @@ local colors = {
    rotate_off    = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    ram           = { fg = '#94e2d5', bg = 'rgba(0, 0, 0, 0.4)' },
    category      = { fg = '#cdd6f4', bg = 'rgba(0, 0, 0, 0.55)' },
+   peal_online   = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
+   peal_offline  = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
 }
 
 local cells = Cells:new()
@@ -89,6 +92,9 @@ cells
    :add_segment('notif_on', nf.md_bell .. ' ON', colors.notif_on, attr(attr.intensity('Bold')))
    :add_segment('notif_off', nf.md_bell_off .. ' OFF', colors.notif_off)
    :add_segment('notif_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('peal_online',  nf.md_bell_ring .. ' peal', colors.peal_online, attr(attr.intensity('Bold')))
+   :add_segment('peal_offline', nf.md_bell_off  .. ' peal', colors.peal_offline)
+   :add_segment('peal_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('focus_on', nf.md_eye .. ' ON', colors.focus_on, attr(attr.intensity('Bold')))
    :add_segment('focus_off', nf.md_eye_off .. ' OFF', colors.focus_off)
    :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -170,6 +176,9 @@ local function get_ram_usage()
    return ram_cache.value
 end
 
+-- Track previous agent working count to detect completions.
+local prev_working = 0
+
 ---@param opts? Event.RightStatusOptions Default: {date_format = '%a %I:%M %p'}
 M.setup = function(opts)
    local valid_opts, err = EVENT_OPTS.validator:validate(opts or {})
@@ -191,6 +200,15 @@ M.setup = function(opts)
          local working = (counts.working or 0)
          local waiting = (counts.waiting or 0)
          local idle    = (counts.idle or 0)
+
+         -- Notify when agents finish working (working count drops).
+         if prev_working > 0 and working < prev_working then
+            local finished = prev_working - working
+            local summary  = finished == 1 and 'Agent finished' or (finished .. ' agents finished')
+            peal.notify(window, 'Agent Deck', summary, { urgency = 'normal', expire_ms = 5000 })
+         end
+         prev_working = working
+
          if working > 0 then
             working_text = working .. ' working'
             has_agents = true
@@ -254,6 +272,16 @@ M.setup = function(opts)
          table.insert(segments, 'notif_off')
       end
       table.insert(segments, 'notif_sep')
+      -- Peal daemon indicator — reads cached state, never makes a network call.
+      local peal_status = peal.cached_status()
+      if peal_status ~= 'unknown' then
+         if peal_status == 'online' then
+            table.insert(segments, 'peal_online')
+         else
+            table.insert(segments, 'peal_offline')
+         end
+         table.insert(segments, 'peal_sep')
+      end
       if backdrops.focus_on then
          table.insert(segments, 'focus_on')
       else

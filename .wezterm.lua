@@ -13,6 +13,7 @@ package.path = package.path .. ';' .. config_path .. '/?/init.lua'
 
 -- Load and return the config from the repo
 local Config = require('config')
+local peal = require('utils.peal')
 local agent_deck = wezterm.plugin.require('https://github.com/Eric162/wezterm-agent-deck')
 
 require('utils.backdrops')
@@ -42,6 +43,7 @@ agent_deck.apply_to_config(config, {
 })
 
 -- Toggle agent deck notifications (F6)
+-- Uses peal for the confirmation popup; falls back to WezTerm toast if daemon is offline.
 table.insert(config.keys, {
    key = 'F6',
    mods = 'NONE',
@@ -49,7 +51,10 @@ table.insert(config.keys, {
       local cfg = agent_deck.get_config()
       cfg.notifications.enabled = not cfg.notifications.enabled
       local status = cfg.notifications.enabled and 'ON' or 'OFF'
-      window:toast_notification('Agent Deck', 'Notifications ' .. status, nil, 3000)
+      peal.notify(window, 'Agent Deck', 'Notifications ' .. status, {
+         urgency   = 'low',
+         expire_ms = 3000,
+      })
    end),
 })
 

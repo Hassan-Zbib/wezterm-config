@@ -200,7 +200,8 @@ _CURSOR_NAV = (
         row('Alt+Ctrl+u',      'Open URL')              +
         row('Ctrl+Shift+C',    'Copy')                  +
         row('Ctrl+Shift+V',    'Paste')                 +
-        row('Right-click',     'Copy / Paste')          +
+        row('Middle-click',    'Copy')                  +
+        row('Right-click',     'Paste')                 +
         row('Alt+Shift+v',     'Paste image path')
 )
 

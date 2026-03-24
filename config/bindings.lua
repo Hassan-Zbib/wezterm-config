@@ -421,18 +421,17 @@ local mouse_bindings = {
       mods = 'CTRL',
       action = act.OpenLinkAtMouseCursor,
    },
-   -- Right-click: copy if text is selected, paste otherwise
+   -- Middle-click: copy selection
+   {
+      event = { Down = { streak = 1, button = 'Middle' } },
+      mods = 'NONE',
+      action = act.CopyTo('ClipboardAndPrimarySelection'),
+   },
+   -- Right-click: paste
    {
       event = { Down = { streak = 1, button = 'Right' } },
       mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         local has_selection = window:get_selection_text_for_pane(pane) ~= ''
-         if has_selection then
-            window:perform_action(act.CopyTo('ClipboardAndPrimarySelection'), pane)
-         else
-            window:perform_action(act.PasteFrom('Clipboard'), pane)
-         end
-      end),
+      action = act.PasteFrom('Clipboard'),
    },
 }
 

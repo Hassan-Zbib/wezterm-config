@@ -193,7 +193,8 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 | `Ctrl+F10` | Delete Session | | |
 | `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
 | `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
-| `Right-click` | Copy / Paste | `Alt+Shift+V` | Paste image as file path |
+| `Middle-click` | Copy | `Right-click` | Paste |
+| `Alt+Shift+V` | Paste image as file path | | |
 
 ### Cursor Movement
 
