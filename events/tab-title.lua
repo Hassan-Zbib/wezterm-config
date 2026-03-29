@@ -141,11 +141,13 @@ local function create_title(process_name, base_title, max_width, inset)
       inset = inset - 2
    end
 
-   if title:len() > max_width - inset then
-      local diff = title:len() - max_width + inset
-      title = title:sub(1, title:len() - diff)
+   local title_width = wezterm.column_width(title)
+   local available = max_width - inset
+
+   if title_width > available then
+      title = wezterm.truncate_right(title, available)
    else
-      local padding = max_width - title:len() - inset
+      local padding = available - title_width
       title = title .. string.rep(' ', padding)
    end
 
