@@ -209,6 +209,9 @@ _LAZYGIT_CMDS = (
     header('🔌 Lazyssh') +
         row('lazyssh / lssh', 'Open SSH manager') +
         blank() +
+    header('🧩 LazySkills') +
+        row('lazyskills',     'Manage agent skills') +
+        blank() +
     header('🔀 Lazygit Commands') +
         row('Space',       'Stage/unstage file') +
         row('c',           'Commit')             +
@@ -341,6 +344,9 @@ else:
             blank() +
             header('🔌 Lazyssh') +
             row('lazyssh / lssh',  'Open SSH manager') +
+            blank() +
+            header('🧩 LazySkills') +
+            row('lazyskills',      'Manage agent skills') +
             blank() +
             header('📋 lnav') +
             row('lnav FILE',       'Open log file')       +

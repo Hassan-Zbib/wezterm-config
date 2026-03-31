@@ -56,6 +56,7 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 | [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
 | [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
+| [LazySkills](https://lazyskills.xyz/) | `npm install -g lazyskills` or `scoop install alpha-innovation-labs/lazyskills` | `lazyskills` | TUI for discovering and managing coding agent skills |
 
 ---
 
@@ -492,3 +493,4 @@ To track a new config file:
 - Package manager GUI: [UniGetUI](https://github.com/marticliment/UniGetUI)
 - Directory jumper: [zoxide](https://github.com/ajeetdsouza/zoxide)
 - Fuzzy finder: [fzf](https://github.com/junegunn/fzf)
+- Agent skill manager: [LazySkills](https://lazyskills.xyz/)
