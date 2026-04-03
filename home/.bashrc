@@ -81,7 +81,7 @@ alias ll='eza --icons -l --git --git-repos --header --group-directories-first --
 alias lt='eza --icons --tree --level=2'
 alias btop='btop4win'
 alias cls='clear'
-alias cc='pwsh -NoLogo -Command claude'
+alias cc='claude'
 
 # ---- zoxide (smart cd) ----
 eval "$(zoxide init bash)"
