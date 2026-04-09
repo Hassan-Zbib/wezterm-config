@@ -39,7 +39,7 @@ function prompt {
 # ---- ~/bin on PATH ----
 $env:PATH = "$HOME\bin;$env:PATH"
 Set-Alias lssh lazyssh
-Set-Alias cc claude
+function cc { claude --allow-dangerously-skip-permissions @args }
 
 # ---- eza aliases ----
 function ls { eza --icons --group-directories-first --git-repos --color-scale=all @args }
