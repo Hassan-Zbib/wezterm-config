@@ -16,6 +16,7 @@
     ~/.config/git/ignore: home/.config/git/ignore
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
     ~/.config/eza/theme.yml: home/.config/eza/theme.yml
+    ~/.config/ccstatusline/settings.json: home/.config/ccstatusline/settings.json
     ~/AppData/Roaming/yazi/config/yazi.toml: home/AppData/Roaming/yazi/config/yazi.toml
     ~/AppData/Roaming/yazi/config/theme.toml: home/AppData/Roaming/yazi/config/theme.toml
     ~/AppData/Roaming/yazi/config/init.lua: home/AppData/Roaming/yazi/config/init.lua
