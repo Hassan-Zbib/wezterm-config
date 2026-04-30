@@ -82,6 +82,14 @@
         "color": "brightMagenta"
       },
       {
+        "id": "3c4018fe-bf18-4bc2-adf0-763c5eb2aa12",
+        "type": "separator"
+      },
+      {
+        "id": "af12a931-be33-4a05-bc74-07c437c5d158",
+        "type": "context-percentage-usable"
+      },
+      {
         "id": "92cfe350-36bc-4d92-816b-46a181024a65",
         "type": "separator"
       },

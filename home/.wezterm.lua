@@ -7,19 +7,18 @@
 local wezterm = require('wezterm')
 
 -- Add the wezterm-config repo to Lua's package path
-local config_path = wezterm.home_dir .. '/Desktop/GitHub/wezterm-config'
+local config_path = wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config'
 package.path = package.path .. ';' .. config_path .. '/?.lua'
 package.path = package.path .. ';' .. config_path .. '/?/init.lua'
 
 -- Load and return the config from the repo
 local Config = require('config')
 local sessions = require('utils.sessions')
-local agent_deck = wezterm.plugin.require('https://github.com/Eric162/wezterm-agent-deck')
 
 local backdrops = require('utils.backdrops')
 backdrops
    -- :set_focus('#000000')
-   :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/wezterm-config/backdrops/')
+   :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/backdrops/')
    :set_images()
    :random()
 
@@ -38,25 +37,6 @@ local config = Config:init()
    :append(require('config.fonts'))
    :append(require('config.general'))
    :append(require('config.launch')).options
-
-agent_deck.apply_to_config(config, {
-   right_status = { enabled = false },
-   notifications = { enabled = false },
-})
-
--- Toggle agent deck notifications (F6)
-table.insert(config.keys, {
-   key = 'F6',
-   mods = 'NONE',
-   action = wezterm.action_callback(function(window, _pane)
-      local cfg = agent_deck.get_config()
-      cfg.notifications.enabled = not cfg.notifications.enabled
-      cfg.notifications.on_waiting = cfg.notifications.enabled
-      local status = cfg.notifications.enabled and 'ON' or 'OFF'
-      window:toast_notification('Agent Deck', 'Notifications ' .. status, nil, 3000)
-   end),
-})
-
 
 -- F9: Save session (auto-named: workspace-tab-datetime)
 table.insert(config.keys, {

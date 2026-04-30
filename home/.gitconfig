@@ -4,7 +4,7 @@
 	smudge = git-lfs smudge -- %f
 	process = git-lfs filter-process
 [core]
-	editor = \"C:\\Users\\Hasan\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\code\" --wait
+	editor = \"C:\\Users\\hassa\\AppData\\Local\\Programs\\Microsoft VS Code\\bin\\code\" --wait
 	autocrlf = false
 	eol = lf
 	ignorecase = false

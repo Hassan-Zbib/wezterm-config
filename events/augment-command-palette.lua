@@ -56,19 +56,6 @@ M.setup = function()
             action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
          },
          {
-            brief = 'Toggle Agent Deck Notifications  [F6]',
-            icon = 'md_bell',
-            action = wezterm.action_callback(function(win, _p)
-               local ok, agent_deck = pcall(wezterm.plugin.require, 'https://github.com/Eric162/wezterm-agent-deck')
-               if ok then
-                  local cfg = agent_deck.get_config()
-                  cfg.notifications.enabled = not cfg.notifications.enabled
-                  local status = cfg.notifications.enabled and 'ON' or 'OFF'
-                  win:toast_notification('Agent Deck', 'Notifications ' .. status, nil, 3000)
-               end
-            end),
-         },
-         {
             brief = 'SSH Host Connect  [F7]',
             icon = 'md_ssh',
             action = wezterm.action_callback(function(win, p)

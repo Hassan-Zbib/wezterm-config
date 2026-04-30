@@ -74,7 +74,7 @@ export PATH="$HOME/bin:$PATH"
 # ---- Aliases ----
 alias lg='lazygit'
 alias lssh='lazyssh'
-alias pkgs='"/c/Users/Hasan/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
+alias pkgs='"/c/Users/hassa/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
 alias ls='eza --icons --group-directories-first --git-repos --color-scale=all'
 alias la='eza --icons --all --group-directories-first --git-repos --color-scale=all'
 alias ll='eza --icons -l --git --git-repos --header --group-directories-first --color-scale=all'

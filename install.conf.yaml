@@ -50,7 +50,7 @@
     - junegunn.fzf
 
 - shell:
-    - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"
+    - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"
       description: Injecting WezTerm shell integration into WSL .bashrc
       quiet: true
     - command: ya pkg add yazi-rs/plugins:git || true

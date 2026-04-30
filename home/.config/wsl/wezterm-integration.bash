@@ -2,8 +2,8 @@
 # WezTerm Shell Integration for WSL
 # ============================================================
 # Source this from your WSL ~/.bashrc:
-#   [ -f /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash ] && \
-#     source /mnt/c/Users/Hasan/.config/wsl/wezterm-integration.bash
+#   [ -f /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash ] && \
+#     source /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash
 # ============================================================
 
 # OSC 7: Report current directory so WezTerm tracks CWD inside WSL

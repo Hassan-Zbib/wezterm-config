@@ -63,10 +63,6 @@ local colors = {
    date          = { fg = '#fab387', bg = 'rgba(0, 0, 0, 0.4)' },
    battery       = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
    separator     = { fg = '#74c7ec', bg = 'rgba(0, 0, 0, 0.4)' },
-   agent_working = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
-   agent_waiting = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
-   notif_on      = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
-   notif_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_on      = { fg = '#cba6f7', bg = 'rgba(0, 0, 0, 0.4)' },
    focus_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
    overlay       = { fg = '#89dceb', bg = 'rgba(0, 0, 0, 0.4)' },
@@ -82,13 +78,6 @@ cells
    :add_segment('workspace_icon', nf.cod_window .. '  ', colors.workspace, attr(attr.intensity('Bold')))
    :add_segment('workspace_text', '', colors.workspace, attr(attr.intensity('Bold')))
    :add_segment('workspace_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
-   :add_segment('agent_working', '', colors.agent_working, attr(attr.intensity('Bold')))
-   :add_segment('agent_mid_sep', '  ·  ', colors.separator)
-   :add_segment('agent_waiting', '', colors.agent_waiting, attr(attr.intensity('Bold')))
-   :add_segment('agent_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
-   :add_segment('notif_on', nf.md_bell .. ' ON', colors.notif_on, attr(attr.intensity('Bold')))
-   :add_segment('notif_off', nf.md_bell_off .. ' OFF', colors.notif_off)
-   :add_segment('notif_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('focus_on', nf.md_eye .. ' ON', colors.focus_on, attr(attr.intensity('Bold')))
    :add_segment('focus_off', nf.md_eye_off .. ' OFF', colors.focus_off)
    :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
@@ -140,11 +129,10 @@ local function get_ram_usage()
 
    if platform.is_win then
       local ok, stdout = wezterm.run_child_process({
-         'wmic',
-         'OS',
-         'get',
-         'FreePhysicalMemory,TotalVisibleMemorySize',
-         '/Value',
+         'powershell',
+         '-NoProfile',
+         '-Command',
+         '$os = Get-CimInstance Win32_OperatingSystem; "FreePhysicalMemory=$($os.FreePhysicalMemory)`nTotalVisibleMemorySize=$($os.TotalVisibleMemorySize)"',
       })
       if ok and stdout then
          local total = stdout:match('TotalVisibleMemorySize=(%d+)')
@@ -181,50 +169,14 @@ M.setup = function(opts)
    wezterm.on('update-status', function(window, _pane)
       local battery_text, battery_icon = battery_info()
 
-      -- Agent status from wezterm-agent-deck plugin
-      local working_text = ''
-      local waiting_text = ''
-      local has_agents = false
-      local ok, agent_deck = pcall(wezterm.plugin.require, 'https://github.com/Eric162/wezterm-agent-deck')
-      if ok then
-         local counts = agent_deck.count_agents_by_status()
-         local working = (counts.working or 0)
-         local waiting = (counts.waiting or 0)
-         local idle    = (counts.idle or 0)
-
-         if working > 0 then
-            working_text = working .. ' working'
-            has_agents = true
-         end
-         local waiting_parts = {}
-         if waiting > 0 then table.insert(waiting_parts, waiting .. ' waiting') end
-         if idle > 0    then table.insert(waiting_parts, idle .. ' idle') end
-         if #waiting_parts > 0 then
-            waiting_text = table.concat(waiting_parts, ' · ')
-            has_agents = true
-         end
-      end
-
-      -- RAM usage
       local ram_text = get_ram_usage()
 
       cells
          :update_segment_text('workspace_text', wezterm.mux.get_active_workspace())
-         :update_segment_text('agent_working', working_text)
-         :update_segment_text('agent_waiting', waiting_text)
          :update_segment_text('date_text', wezterm.strftime(valid_opts.date_format))
          :update_segment_text('ram_text', ram_text)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
-
-      -- Notification toggle indicator
-      local notif_enabled = false
-      if ok then
-         local agent_cfg = agent_deck.get_config()
-         if agent_cfg and agent_cfg.notifications then
-            notif_enabled = agent_cfg.notifications.enabled
-         end
-      end
 
       -- Flash indicators (momentary, only when focus mode is off)
       local cat_label    = backdrops:category_indicator()
@@ -243,18 +195,6 @@ M.setup = function(opts)
          table.insert(segments, 'category_text')
          table.insert(segments, 'category_sep')
       end
-      if has_agents then
-         if working_text ~= '' then table.insert(segments, 'agent_working') end
-         if working_text ~= '' and waiting_text ~= '' then table.insert(segments, 'agent_mid_sep') end
-         if waiting_text ~= '' then table.insert(segments, 'agent_waiting') end
-         table.insert(segments, 'agent_sep')
-      end
-      if notif_enabled then
-         table.insert(segments, 'notif_on')
-      else
-         table.insert(segments, 'notif_off')
-      end
-      table.insert(segments, 'notif_sep')
       if backdrops.focus_on then
          table.insert(segments, 'focus_on')
       else
