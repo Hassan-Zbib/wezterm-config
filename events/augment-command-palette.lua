@@ -34,7 +34,7 @@ M.setup = function()
                local home = wezterm.home_dir:gsub('\\', '/')
                local drive = home:sub(1, 1):lower()
                local unix_home = '/' .. drive .. home:sub(3)
-               local script = unix_home .. '/Desktop/GitHub/wezterm-config/scripts/cheatsheet.sh'
+               local script = unix_home .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/scripts/cheatsheet.py'
                win:perform_action(act.SpawnCommandInNewTab({
                   args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', script },
                }), p)

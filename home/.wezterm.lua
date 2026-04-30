@@ -1,6 +1,6 @@
 -- ============================================================================
 -- WezTerm Configuration
--- References: C:\Users\Hasan\Desktop\GitHub\wezterm-config
+-- References: C:\Users\hassa\Desktop\GitHub\Hassan-Zbib\wezterm-config
 -- Repo: https://github.com/KevinSilvester/wezterm-config
 -- ============================================================================
 
