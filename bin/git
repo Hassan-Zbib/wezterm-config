@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Wrapper that routes to Windows-native git.exe under Claude Code, where the
+# MSYS2 git at /mingw64/bin/git segfaults on fork-exec of ssh. Outside Claude
+# Code, falls through to the normal MSYS2 git so interactive Git Bash sessions
+# keep their usual behavior (path translation, etc.).
+if [[ -n "$CLAUDECODE" ]]; then
+   exec "/c/Program Files/Git/cmd/git.exe" "$@"
+fi
+exec /mingw64/bin/git "$@"
