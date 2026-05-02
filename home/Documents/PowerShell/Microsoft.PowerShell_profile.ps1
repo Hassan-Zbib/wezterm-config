@@ -7,6 +7,10 @@
 # ---- winget ----
 function winget { winget.exe @args --accept-source-agreements --accept-package-agreements }
 
+# ---- PSReadLine ----
+# Use audible bell (system beep) instead of the default visual flash
+Set-PSReadLineOption -BellStyle Audible
+
 # ---- Starship Prompt ----
 Invoke-Expression (&starship init powershell)
 

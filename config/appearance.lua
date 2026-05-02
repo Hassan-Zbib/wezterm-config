@@ -5,7 +5,7 @@ local colors = require('colors.custom')
 
 return {
    max_fps = 120,
-   front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = gpu_adapters:pick_best(),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
@@ -17,7 +17,7 @@ return {
    animation_fps = 120,
    cursor_blink_ease_in = 'EaseOut',
    cursor_blink_ease_out = 'EaseOut',
-   default_cursor_style = 'BlinkingBlock',
+   default_cursor_style = 'SteadyBlock',
    cursor_blink_rate = 650,
 
    -- color scheme
@@ -63,13 +63,5 @@ return {
    inactive_pane_hsb = {
       saturation = 0.85,
       brightness = 0.6,
-   },
-
-   visual_bell = {
-      fade_in_function = 'EaseIn',
-      fade_in_duration_ms = 250,
-      fade_out_function = 'EaseOut',
-      fade_out_duration_ms = 250,
-      target = 'CursorColor',
    },
 }

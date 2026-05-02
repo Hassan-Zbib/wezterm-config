@@ -1,0 +1,8 @@
+# GNU Readline config — used by bash and any other readline-based REPL
+# (psql, python, etc.) on this machine.
+
+# Use the system beep instead of readline's visible bell (which flashes the
+# whole terminal pane on every invalid keystroke — backspace on empty line,
+# arrow past line edges, no-match tab completion, etc.). Set to `none` to
+# silence it entirely.
+set bell-style audible

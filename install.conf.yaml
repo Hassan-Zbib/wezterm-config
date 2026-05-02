@@ -10,6 +10,7 @@
     ~/.wezterm.lua: home/.wezterm.lua
     ~/.bashrc: home/.bashrc
     ~/.bash_profile: home/.bash_profile
+    ~/.inputrc: home/.inputrc
     ~/.gitconfig: home/.gitconfig
     ~/.vimrc: home/.vimrc
     ~/.config/starship.toml: home/.config/starship.toml
