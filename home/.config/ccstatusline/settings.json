@@ -62,18 +62,13 @@
     ],
     [
       {
-        "id": "b4d88e66-1ecc-40b8-a942-674037bb700d",
-        "type": "context-bar",
-        "color": "black"
-      },
-      {
         "id": "e3358428-b829-4045-8b13-3f541076c22a",
         "type": "separator"
       },
       {
-        "id": "5c8f6f8e-b374-4ae7-adc6-b1916724b4c0",
-        "type": "tokens-total",
-        "color": "magenta"
+        "id": "7dfd8430-a64a-48ed-8b01-1e654081b01f",
+        "type": "context-bar",
+        "color": "brightBlue"
       },
       {
         "id": "46dea3fe-1614-4080-96d9-a49fdaae23c8",
@@ -81,7 +76,8 @@
       },
       {
         "id": "a78a8167-d6d8-4ca1-bdc7-51eb39438568",
-        "type": "session-usage"
+        "type": "session-usage",
+        "color": ""
       },
       {
         "id": "68d00ecb-dc6e-4e1f-94f7-14cfa704a49a",
@@ -98,7 +94,8 @@
       },
       {
         "id": "ad87c596-654b-4ba7-8019-6ff98df66200",
-        "type": "weekly-usage"
+        "type": "weekly-usage",
+        "color": "green"
       },
       {
         "id": "9cc3b32d-56a5-43c4-b235-e45eea27ef0e",
