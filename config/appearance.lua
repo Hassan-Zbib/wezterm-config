@@ -51,7 +51,7 @@ return {
       top = 10,
       bottom = 7.5,
    },
-   window_background_opacity = 1.0,
+   window_background_opacity = 0.80,
    win32_system_backdrop = 'Disable',
    adjust_window_size_when_changing_font_size = false,
    window_close_confirmation = 'NeverPrompt',

@@ -22,8 +22,7 @@ backdrops
    :set_images()
    :random()
 
-local oled = require('utils.oled-mode')
-oled:load()
+require('utils.oled-mode')
 
 require('events.left-status').setup()
 require('events.right-status').setup()
