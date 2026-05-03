@@ -146,10 +146,14 @@ function BackDrops:_create_opts()
    }
 end
 
----Create the `background` options for focus mode
+---Create the `background` options for focus mode. Layer opacity is OLED-aware:
+---  oled off -> 0.6 (heavy glass; Acrylic blurs desktop through the dark tint)
+---  oled on  -> 1.0 (fully opaque black; no lit subpixels behind, OLED-safe)
 ---@private
 ---@return table
 function BackDrops:_create_focus_opts()
+   local ok, oled = pcall(require, 'utils.oled-mode')
+   local layer_opacity = (ok and oled and oled.enabled) and 1.0 or 0.6
    return {
       {
          source = { Color = self.focus_color },
@@ -157,7 +161,7 @@ function BackDrops:_create_focus_opts()
          width = '120%',
          vertical_offset = '-10%',
          horizontal_offset = '-10%',
-         opacity = 1,
+         opacity = layer_opacity,
       },
    }
 end
@@ -176,14 +180,24 @@ function BackDrops:initial_options(focus_on)
    return self:_create_opts()
 end
 
----Override the current window options for background
+---Override the current window options for background.
+---Picks window_background_opacity based on focus + OLED state:
+---  focus off                    -> 0.80 (light desktop bleed under backdrops)
+---  focus on,  oled off          -> 0.75 (heavy glass over Acrylic blur)
+---  focus on,  oled on           -> 1.00 (pure black opaque, OLED-safe)
 ---@private
 ---@param window any WezTerm Window see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 ---@param background_opts table background option
 function BackDrops:_set_opt(window, background_opts)
+   local opacity = 0.80
+   if self.focus_on then
+      local ok, oled = pcall(require, 'utils.oled-mode')
+      opacity = (ok and oled and oled.enabled) and 1.0 or 0.75
+   end
    window:set_config_overrides({
       background = background_opts,
       enable_tab_bar = window:effective_config().enable_tab_bar,
+      window_background_opacity = opacity,
    })
 end
 

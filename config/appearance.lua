@@ -52,7 +52,7 @@ return {
       bottom = 7.5,
    },
    window_background_opacity = 0.80,
-   win32_system_backdrop = 'Disable',
+   win32_system_backdrop = 'Acrylic',
    adjust_window_size_when_changing_font_size = false,
    window_close_confirmation = 'NeverPrompt',
    window_frame = {
