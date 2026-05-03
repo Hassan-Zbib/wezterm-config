@@ -32,7 +32,7 @@ local keys = {
          }), pane)
       end),
    },
-   { key = 'F2', mods = 'NONE', action = act.ActivateCommandPalette },
+   { key = 'F2', mods = 'NONE', action = 'ActivateCopyMode' },
    { key = 'F3', mods = 'NONE', action = act.ShowLauncher },
    { key = 'F4', mods = 'NONE', action = act.ShowLauncherArgs({ flags = 'FUZZY|TABS' }) },
    {
@@ -92,7 +92,7 @@ local keys = {
          }), pane)
       end),
    },
-   { key = 'F8', mods = 'NONE', action = 'ActivateCopyMode' },
+   { key = 'F8', mods = 'NONE', action = act.ActivateCommandPalette },
    -- F9/F10 session bindings are added in home/.wezterm.lua
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
@@ -315,11 +315,18 @@ local keys = {
       action = act.PaneSelect({ alphabet = '1234567890', mode = 'SwapWithActiveKeepFocus' }),
    },
 
+   -- panes: resize (flat bindings)
+   { key = 'UpArrow',    mods = 'ALT|SHIFT', action = act.AdjustPaneSize({ 'Up', 2 }) },
+   { key = 'DownArrow',  mods = 'ALT|SHIFT', action = act.AdjustPaneSize({ 'Down', 2 }) },
+   { key = 'LeftArrow',  mods = 'ALT|SHIFT', action = act.AdjustPaneSize({ 'Left', 2 }) },
+   { key = 'RightArrow', mods = 'ALT|SHIFT', action = act.AdjustPaneSize({ 'Right', 2 }) },
+
    -- panes: scroll pane
    { key = 'PageUp',   mods = 'ALT',     action = act.ScrollByLine(-5) },
    { key = 'PageDown', mods = 'ALT',     action = act.ScrollByLine(5) },
    { key = 'PageUp',   mods = 'NONE',    action = act.ScrollByPage(-0.75) },
    { key = 'PageDown', mods = 'NONE',    action = act.ScrollByPage(0.75) },
+   { key = 'Home',     mods = 'NONE',    action = act.ScrollToTop },
    { key = 'End',      mods = 'NONE',    action = act.ScrollToBottom },
 
    -- panes: jump between prompts (requires shell integration)
