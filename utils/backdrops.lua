@@ -185,20 +185,26 @@ end
 ---  focus off                    -> 0.80 (light desktop bleed under backdrops)
 ---  focus on,  oled off          -> 0.75 (heavy glass over Acrylic blur)
 ---  focus on,  oled on           -> 1.00 (pure black opaque, OLED-safe)
+---When OLED is on, also dims the pane split line to near-black.
 ---@private
 ---@param window any WezTerm Window see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 ---@param background_opts table background option
 function BackDrops:_set_opt(window, background_opts)
+   local ok, oled = pcall(require, 'utils.oled-mode')
+   local oled_on = ok and oled and oled.enabled
    local opacity = 0.80
    if self.focus_on then
-      local ok, oled = pcall(require, 'utils.oled-mode')
-      opacity = (ok and oled and oled.enabled) and 1.0 or 0.75
+      opacity = oled_on and 1.0 or 0.75
    end
-   window:set_config_overrides({
+   local override = {
       background = background_opts,
       enable_tab_bar = window:effective_config().enable_tab_bar,
       window_background_opacity = opacity,
-   })
+   }
+   if oled_on then
+      override.colors = { split = '#1a1a1a' }
+   end
+   window:set_config_overrides(override)
 end
 
 ---Override the current window options for background with focus color

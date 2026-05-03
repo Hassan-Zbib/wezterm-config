@@ -34,14 +34,18 @@ end
 function OledMode:toggle(window)
    self.enabled = not self.enabled
 
+   -- Repaint every window so backdrops' _set_opt re-evaluates OLED-aware
+   -- knobs (window opacity, split color). Pick the right bg layer based on
+   -- focus state so we don't accidentally swap modes.
    local ok, backdrops = pcall(require, 'utils.backdrops')
-   if ok and backdrops and backdrops.focus_on then
-      local gui = wezterm.gui
-      if gui then
-         for _, win in ipairs(gui.gui_windows()) do
-            backdrops:_set_opt(win, backdrops:_create_focus_opts())
-         end
-      end
+   if not ok or not backdrops then return end
+   local gui = wezterm.gui
+   if not gui then return end
+   for _, win in ipairs(gui.gui_windows()) do
+      local opts = backdrops.focus_on
+         and backdrops:_create_focus_opts()
+         or backdrops:_create_opts()
+      backdrops:_set_opt(win, opts)
    end
 end
 
