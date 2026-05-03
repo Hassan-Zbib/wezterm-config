@@ -42,8 +42,8 @@ local nf = wezterm.nerdfonts
 
 local M = {}
 
-local GLYPH_SCIRCLE_LEFT = nf.ple_left_half_circle_thick --[[  ]]
-local GLYPH_SCIRCLE_RIGHT = nf.ple_right_half_circle_thick --[[  ]]
+local GLYPH_SCIRCLE_LEFT = '' --[[  ]]
+local GLYPH_SCIRCLE_RIGHT = '' --[[  ]]
 local GLYPH_CIRCLE = nf.fa_circle --[[  ]]
 local GLYPH_ADMIN = nf.md_shield_half_full --[[ 󰞀 ]]
 local GLYPH_LINUX = nf.cod_terminal_linux --[[  ]]
@@ -399,6 +399,17 @@ M.setup = function(opts)
       window:set_config_overrides({
          enable_tab_bar = not effective_config.enable_tab_bar,
          background = effective_config.background,
+      })
+   end)
+
+   -- CUSTOM EVENT
+   -- Flip tab bar position (top <-> bottom). Window buttons follow the bar.
+   wezterm.on('tabs.toggle-tab-bar-position', function(window, _pane)
+      local effective_config = window:effective_config()
+      window:set_config_overrides({
+         tab_bar_at_bottom = not effective_config.tab_bar_at_bottom,
+         background = effective_config.background,
+         enable_tab_bar = effective_config.enable_tab_bar,
       })
    end)
 

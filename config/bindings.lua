@@ -147,6 +147,9 @@ local keys = {
    -- tab: hide tab-bar
    { key = '9',          mods = mod.SUPER,     action = act.EmitEvent('tabs.toggle-tab-bar'), },
 
+   -- tab: flip top <-> bottom
+   { key = '8',          mods = mod.SUPER,     action = act.EmitEvent('tabs.toggle-tab-bar-position'), },
+
    -- window --
    -- window: spawn windows
    { key = 'n',          mods = mod.SUPER,     action = act.SpawnWindow },

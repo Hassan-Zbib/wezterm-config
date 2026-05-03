@@ -25,14 +25,24 @@ function OledMode:current_palette()
    return { accent = OLED_ACCENT, accent_dim = OLED_ACCENT_DIM }
 end
 
----Toggle OLED mode on/off. PURELY state-only: never calls
----set_config_overrides, never touches backdrops, never emits events, never
----persists. Event handlers (right-status, left-status, tab-title) read
----`oled.enabled` and apply the static dimmed palette on their next natural
----tick.
----@param window any WezTerm Window (unused)
+---Toggle OLED mode on/off. State-only for status bar / tab visuals (event
+---handlers read `oled.enabled` on their next natural tick). When focus mode
+---is currently on, also repaint focus across all windows so the new OLED
+---state takes effect immediately (opacity 0.6 glass off vs 1.0 opaque black
+---on). The repaint goes through the same `_set_opt` path Alt+B uses.
+---@param window any WezTerm Window from the keybinding callback (unused)
 function OledMode:toggle(window)
    self.enabled = not self.enabled
+
+   local ok, backdrops = pcall(require, 'utils.backdrops')
+   if ok and backdrops and backdrops.focus_on then
+      local gui = wezterm.gui
+      if gui then
+         for _, win in ipairs(gui.gui_windows()) do
+            backdrops:_set_opt(win, backdrops:_create_focus_opts())
+         end
+      end
+   end
 end
 
 ---No-op kept callable so existing right-status handler doesn't error.

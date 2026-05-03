@@ -125,6 +125,7 @@ cells
    :add_segment('oled_on', ICON_OLED_ON .. ' Oled', colors.oled_on, attr(attr.intensity('Bold')))
    :add_segment('oled_off', ICON_OLED_OFF .. ' Oled', colors.oled_off)
    :add_segment('oled_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('tail_pad', '   ', colors.separator)
 
 ---@return string, string
 local function battery_info()
@@ -311,6 +312,7 @@ M.setup = function(opts)
       table.insert(segments, 'ram_sep')
       table.insert(segments, 'battery_icon')
       table.insert(segments, 'battery_text')
+      table.insert(segments, 'tail_pad')
 
       window:set_right_status(
          wezterm.format(

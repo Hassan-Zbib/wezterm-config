@@ -35,7 +35,7 @@ function BackDrops:init()
       auto_rotate_enabled = true,
       auto_rotate_interval = 30,
       _rotate_generation = 0,
-      overlay_opacity = 0.90,
+      overlay_opacity = 0.70,
       _browse_gen = 0,
       categories = {},
       current_category = 1,
