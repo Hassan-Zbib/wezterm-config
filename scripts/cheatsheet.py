@@ -254,6 +254,7 @@ _QUICK_ACTIONS = (
         row('F5',          'Search/Switch Workspace')+
         row('Shift+F5',    'New Workspace')          +
         row('Ctrl+F5',     'Rename Workspace')       +
+        row('F6',          'Toggle OLED Mode')       +
         row('F7',          'SSH Host Selector')      +
         row('F8',          'Copy Mode')              +
         row('F9',          'Save Session')           +

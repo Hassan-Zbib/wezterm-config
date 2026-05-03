@@ -4,7 +4,7 @@ local backdrops = require('utils.backdrops')
 local colors = require('colors.custom')
 
 return {
-   max_fps = 120,
+   max_fps = 60,
    front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = gpu_adapters:pick_best(),
@@ -14,7 +14,7 @@ return {
    warn_about_missing_glyphs = false,
 
    -- cursor
-   animation_fps = 120,
+   animation_fps = 60,
    cursor_blink_ease_in = 'EaseOut',
    cursor_blink_ease_out = 'EaseOut',
    default_cursor_style = 'SteadyBlock',
@@ -62,6 +62,6 @@ return {
    },
    inactive_pane_hsb = {
       saturation = 0.85,
-      brightness = 0.6,
+      brightness = 0.5,
    },
 }

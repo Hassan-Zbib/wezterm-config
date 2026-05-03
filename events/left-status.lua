@@ -1,6 +1,7 @@
 local wezterm = require('wezterm')
 local Cells = require('utils.cells')
 local backdrops = require('utils.backdrops')
+local oled = require('utils.oled-mode')
 
 local nf = wezterm.nerdfonts
 local attr = Cells.attr
@@ -97,6 +98,11 @@ M.setup = function()
       if window:leader_is_active() then
          cells:update_segment_text(2, GLYPH_KEY):update_segment_text(3, ' ')
          window:set_left_status(wezterm.format(cells:render_all()))
+         return
+      end
+
+      if oled.enabled then
+         window:set_left_status('')
          return
       end
 

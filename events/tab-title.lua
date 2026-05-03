@@ -4,6 +4,7 @@
 
 local wezterm = require('wezterm')
 local Cells = require('utils.cells')
+local oled = require('utils.oled-mode')
 local OptsValidator = require('utils.opts-validator')
 
 ---
@@ -107,6 +108,30 @@ local colors = {
    scircle_active        = { bg = 'rgba(0, 0, 0, 0.4)', fg = '#74C7EC' },
 }
 
+-- Return either the base color or the OLED-mode equivalent for a given key.
+-- In OLED mode, text/unseen segments use cycling accent on near-black bg, and
+-- scircle segments mirror the corresponding text bg so the tab pill blends.
+---@param key string e.g. 'text_default', 'scircle_active', 'unseen_output_hover'
+---@return Cells.SegmentColors
+local function pick_color(key)
+   if not oled.enabled then return colors[key] end
+   local p = oled:current_palette()
+   local OLED_BG_ACTIVE   = '#1a1a1a'
+   local OLED_BG_INACTIVE = '#0a0a0a'
+   if key == 'text_default' or key == 'unseen_output_default' then
+      return { bg = OLED_BG_INACTIVE, fg = p.accent_dim }
+   elseif key == 'text_hover' or key == 'unseen_output_hover' then
+      return { bg = OLED_BG_ACTIVE, fg = p.accent }
+   elseif key == 'text_active' or key == 'unseen_output_active' then
+      return { bg = OLED_BG_ACTIVE, fg = p.accent }
+   elseif key == 'scircle_default' then
+      return { bg = 'rgba(0, 0, 0, 0.4)', fg = OLED_BG_INACTIVE }
+   elseif key == 'scircle_hover' or key == 'scircle_active' then
+      return { bg = 'rgba(0, 0, 0, 0.4)', fg = OLED_BG_ACTIVE }
+   end
+   return colors[key]
+end
+
 ---
 -- ================
 -- Helper functions
@@ -142,10 +167,10 @@ local function create_title(process_name, base_title, max_width, inset)
    end
 
    local title_width = wezterm.column_width(title)
-   local available = max_width - inset
+   local available = math.max(0, max_width - inset)
 
    if title_width > available then
-      title = wezterm.truncate_right(title, available)
+      title = available > 0 and wezterm.truncate_right(title, available) or ''
    else
       local padding = available - title_width
       title = title .. string.rep(' ', padding)
@@ -291,14 +316,25 @@ function Tab:update_cells(event_opts, is_active, hover)
       )
    end
 
+   -- Cache the last-applied (tab_state, oled_enabled). Skip the seven
+   -- update_segment_colors calls when nothing changed — format-tab-title
+   -- fires many times per render and stacking that work on top of focus
+   -- mode's set_config_overrides was causing keymap dispatch issues.
+   local oled_enabled = oled.enabled
+   if self._last_state == tab_state and self._last_oled == oled_enabled then
+      return
+   end
+   self._last_state = tab_state
+   self._last_oled = oled_enabled
+
    self.cells
-      :update_segment_colors('scircle_left', colors['scircle_' .. tab_state])
-      :update_segment_colors('admin', colors['text_' .. tab_state])
-      :update_segment_colors('wsl', colors['text_' .. tab_state])
-      :update_segment_colors('title', colors['text_' .. tab_state])
-      :update_segment_colors('unseen_output', colors['unseen_output_' .. tab_state])
-      :update_segment_colors('padding', colors['text_' .. tab_state])
-      :update_segment_colors('scircle_right', colors['scircle_' .. tab_state])
+      :update_segment_colors('scircle_left', pick_color('scircle_' .. tab_state))
+      :update_segment_colors('admin', pick_color('text_' .. tab_state))
+      :update_segment_colors('wsl', pick_color('text_' .. tab_state))
+      :update_segment_colors('title', pick_color('text_' .. tab_state))
+      :update_segment_colors('unseen_output', pick_color('unseen_output_' .. tab_state))
+      :update_segment_colors('padding', pick_color('text_' .. tab_state))
+      :update_segment_colors('scircle_right', pick_color('scircle_' .. tab_state))
 end
 
 ---@return FormatItem[] (ref: https://wezfurlong.org/wezterm/config/lua/wezterm/format.html)

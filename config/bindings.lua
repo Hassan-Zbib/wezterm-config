@@ -1,6 +1,7 @@
 local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
+local oled = require('utils.oled-mode')
 local ssh_hosts = require('utils.ssh-hosts')
 local act = wezterm.action
 
@@ -65,6 +66,13 @@ local keys = {
                end
             end),
          }), pane)
+      end),
+   },
+   {
+      key = 'F6',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, _pane)
+         oled:toggle(window)
       end),
    },
    {
