@@ -152,7 +152,13 @@ local keys = {
 
    -- window --
    -- window: spawn windows
-   { key = 'n',          mods = mod.SUPER,     action = act.SpawnWindow },
+   {
+      key = 'n', mods = mod.SUPER,
+      action = wezterm.action_callback(function(_window, _pane)
+         local _, new_pane, _ = wezterm.mux.spawn_window({})
+         new_pane:send_text('ff\n')
+      end),
+   },
 
    -- window: zoom window
    {

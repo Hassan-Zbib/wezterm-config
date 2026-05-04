@@ -294,7 +294,7 @@ _VIEWERS = (
         blank() +
         sub('btop / fastfetch') +
         row('btop',            'System monitor')        +
-        row('fastfetch',       'System info panel')     +
+        row('fastfetch · ff',  'System info panel')     +
         blank() +
         sub('UniGetUI') +
         row('pkgs',            'Open package manager')

@@ -353,7 +353,7 @@ All `ls`/`la`/`ll`/`lt` aliases accept extra flags, e.g. `ll -s size` or `lt --l
 
 ## Startup System Info Panel
 
-When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fastfetch) displays a categorized system info panel:
+When a new WezTerm window opens, [Fastfetch](https://github.com/fastfetch-cli/fastfetch) displays a categorized system info panel in the first pane (driven by `events/gui-startup.lua` and the `Alt+n` binding — splits and new tabs stay clean). Run `ff` (alias for `fastfetch`) any time to show it manually.
 
 ```
 ╭───────────────╮
@@ -381,7 +381,7 @@ When opening a new WezTerm pane, [Fastfetch](https://github.com/fastfetch-cli/fa
 ╰───────────────╯
 ```
 
-- Only appears in **WezTerm** (gated on `$WEZTERM_PANE`)
+- Only appears in the first pane of a new **WezTerm** window (sent by WezTerm itself, not the shell)
 - Themed with **Catppuccin Macchiato** colors and bordered label boxes
 - Custom Berserk Brand of Sacrifice ASCII logo
 - Config symlinked to `~/.config/fastfetch/config.jsonc`

@@ -39,9 +39,6 @@ __wezterm_command_finished() {
 
 # ---- Skip heavy init when running inside Claude Code ----
 if [[ -z "$CLAUDECODE" ]]; then
-   # ---- System Info Panel (WezTerm only, shown once at shell startup) ----
-   [[ -n "$WEZTERM_PANE" ]] && fastfetch
-
    # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
    bind '"\e[13;2u": "\n"'
 
@@ -82,6 +79,7 @@ alias lt='eza --icons --tree --level=2'
 alias btop='btop4win'
 alias cls='clear'
 alias cc='claude --allow-dangerously-skip-permissions'
+alias ff='fastfetch'
 
 # ---- zoxide (smart cd) ----
 eval "$(zoxide init bash)"
