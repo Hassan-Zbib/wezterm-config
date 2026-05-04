@@ -202,7 +202,17 @@ function BackDrops:_set_opt(window, background_opts)
       window_background_opacity = opacity,
    }
    if oled_on then
-      override.colors = { split = '#1a1a1a' }
+      override.colors = {
+         split = '#1a1a1a',
+         -- Flatten the tab bar's trailing fill and new-tab button to pure black.
+         -- Defaults are rgba(0,0,0,0.4) and #1f1f28, which read as grey when the
+         -- desktop bleeds through (focus off) or even on top of pure black.
+         tab_bar = {
+            background = '#000000',
+            new_tab = { bg_color = '#000000', fg_color = '#cdd6f4' },
+            new_tab_hover = { bg_color = '#0a0a0a', fg_color = '#fab387' },
+         },
+      }
    end
    window:set_config_overrides(override)
 end
