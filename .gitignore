@@ -4,4 +4,6 @@
 /.luarocks
 .DS_Store
 backdrops/
+backdrops-optimized/
+scripts/optimize-backdrops/
 .claude/settings.local.json
