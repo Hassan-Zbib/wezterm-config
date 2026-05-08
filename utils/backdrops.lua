@@ -358,8 +358,12 @@ function BackDrops:toggle_focus(window)
    if self.focus_on then
       background_opts = self:_create_opts()
       self.focus_on = false
-      self:start_auto_rotate()
+      if self._auto_rotate_before_focus then
+         self:start_auto_rotate()
+      end
+      self._auto_rotate_before_focus = nil
    else
+      self._auto_rotate_before_focus = self.auto_rotate_enabled
       background_opts = self:_create_focus_opts()
       self.focus_on = true
       self:stop_auto_rotate()
