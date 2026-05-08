@@ -1,5 +1,6 @@
 local wezterm = require('wezterm')
 local colors = require('colors.custom')
+local state = require('utils.state')
 
 -- Seeding random numbers before generating for use
 -- Known issue with lua math library
@@ -26,22 +27,20 @@ BackDrops.__index = BackDrops
 --- Initialise backdrop controller
 ---@private
 function BackDrops:init()
+   local saved = state.read()
    local inital = {
       current_idx = 1,
       images = {},
       images_dir = wezterm.config_dir .. '/backdrops/',
       focus_color = colors.background,
       focus_on = false,
-      auto_rotate_enabled = true,
+      auto_rotate_enabled = saved.auto_rotate_enabled ~= false,
       auto_rotate_interval = 30,
       _rotate_generation = 0,
-      overlay_opacity = 0.70,
+      overlay_opacity = type(saved.overlay_opacity) == 'number' and saved.overlay_opacity or 0.70,
       _browse_gen = 0,
       categories = {},
       current_category = 1,
-      _category_flash_until = 0,
-      _rotate_flash_until = 0,
-      _overlay_flash_until = 0,
    }
    local backdrops = setmetatable(inital, self)
    return backdrops
@@ -196,9 +195,11 @@ function BackDrops:_set_opt(window, background_opts)
    if self.focus_on then
       opacity = oled_on and 1.0 or 0.75
    end
+   local effective = window:effective_config()
    local override = {
       background = background_opts,
-      enable_tab_bar = window:effective_config().enable_tab_bar,
+      enable_tab_bar = effective.enable_tab_bar,
+      tab_bar_at_bottom = effective.tab_bar_at_bottom,
       window_background_opacity = opacity,
    }
    if oled_on then
@@ -233,6 +234,7 @@ function BackDrops:_set_focus_opt(window)
          },
       },
       enable_tab_bar = window:effective_config().enable_tab_bar,
+      tab_bar_at_bottom = window:effective_config().tab_bar_at_bottom,
    }
    window:set_config_overrides(opts)
 end
@@ -256,7 +258,6 @@ end
 function BackDrops:random(window)
    if self.focus_on then return end
    self.current_idx = math.random(#self.images)
-
    if window ~= nil then
       self:_set_opt(window, self:_create_opts())
    end
@@ -308,14 +309,11 @@ function BackDrops:next_category(window)
    self.current_category = self.current_category == #self.categories and 1 or self.current_category + 1
    self.images           = self.categories[self.current_category].images
    if #self.images == 0 then return end
-   self.current_idx              = math.random(#self.images)
-   self._category_flash_until    = os.time() + 2
+   self.current_idx = math.random(#self.images)
    self:_set_opt(window, self:_create_opts())
-   self:_schedule_status_flash()
 end
 
 ---Switch to the previous image category and apply the first image in it.
----Shows a 2-second flash indicator in the status bar.
 ---@param window any WezTerm Window
 function BackDrops:prev_category(window)
    if self.focus_on then return end
@@ -323,49 +321,8 @@ function BackDrops:prev_category(window)
    self.current_category = self.current_category == 1 and #self.categories or self.current_category - 1
    self.images           = self.categories[self.current_category].images
    if #self.images == 0 then return end
-   self.current_idx              = math.random(#self.images)
-   self._category_flash_until    = os.time() + 2
+   self.current_idx = math.random(#self.images)
    self:_set_opt(window, self:_create_opts())
-   self:_schedule_status_flash()
-end
-
----Schedule a forced status bar update after the flash duration expires.
----@private
-function BackDrops:_schedule_status_flash()
-   wezterm.time.call_after(2.1, function()
-      local gui = wezterm.gui
-      if gui then
-         for _, win in ipairs(gui.gui_windows()) do
-            wezterm.emit('update-status', win, win:active_tab():active_pane())
-         end
-      end
-   end)
-end
-
----Return a display string for the category flash indicator, or nil if expired or focus mode is on.
----@return string|nil
-function BackDrops:category_indicator()
-   if self.focus_on then return nil end
-   if os.time() >= self._category_flash_until then return nil end
-   local cat = self.categories[self.current_category]
-   if not cat then return nil end
-   return string.format('%s  (%d/%d)', cat.name, self.current_category, #self.categories)
-end
-
----Return 'ON' or 'OFF' during the rotate flash window, or nil if expired or focus mode is on.
----@return string|nil
-function BackDrops:rotate_indicator()
-   if self.focus_on then return nil end
-   if os.time() >= self._rotate_flash_until then return nil end
-   return self.auto_rotate_enabled and 'ON' or 'OFF'
-end
-
----Return an opacity string during the overlay flash window, or nil if expired or focus mode is on.
----@return string|nil
-function BackDrops:overlay_indicator()
-   if self.focus_on then return nil end
-   if os.time() >= self._overlay_flash_until then return nil end
-   return string.format('%.0f%%', self.overlay_opacity * 100)
 end
 
 ---Emit update-status immediately on all open windows.
@@ -379,8 +336,7 @@ function BackDrops:_trigger_status_update()
    end
 end
 
----Toggle auto-rotation and show a momentary status bar indicator.
----No-ops when focus mode is on.
+---Toggle auto-rotation. No-ops when focus mode is on.
 function BackDrops:toggle_auto_rotate()
    if self.focus_on then return self end
    if self.auto_rotate_enabled then
@@ -388,9 +344,8 @@ function BackDrops:toggle_auto_rotate()
    else
       self:start_auto_rotate()
    end
-   self._rotate_flash_until = os.time() + 2
+   state.update('auto_rotate_enabled', self.auto_rotate_enabled)
    self:_trigger_status_update()
-   self:_schedule_status_flash()
    return self
 end
 
@@ -541,9 +496,8 @@ end
 function BackDrops:adjust_overlay_opacity(window, delta)
    if self.focus_on then return end
    self.overlay_opacity = math.floor(math.max(0.0, math.min(1.0, self.overlay_opacity + delta)) * 100 + 0.5) / 100
-   self._overlay_flash_until = os.time() + 2
+   state.update('overlay_opacity', self.overlay_opacity)
    self:_set_opt(window, self:_create_opts())
-   self:_schedule_status_flash()
 end
 
 return BackDrops:init()

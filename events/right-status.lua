@@ -262,16 +262,18 @@ M.setup = function(opts)
          last_oled_enabled = enabled
       end
 
-      -- Flash indicators (momentary, only when focus mode is off)
-      local cat_label    = backdrops:category_indicator()
-      local rotate_label = backdrops:rotate_indicator()
-      local overlay_label = backdrops:overlay_indicator()
+      local focus_off = not backdrops.focus_on
 
-      if cat_label then
-         cells:update_segment_text('category_text', ICON_CATEGORY .. '  ' .. cat_label)
+      -- Category: always visible when focus is off and multiple categories exist
+      local cat = backdrops.categories[backdrops.current_category]
+      local show_category = focus_off and cat and #backdrops.categories > 1
+      if show_category then
+         cells:update_segment_text('category_text', ICON_CATEGORY .. '  ' .. string.format('%s  (%d/%d)', cat.name, backdrops.current_category, #backdrops.categories))
       end
-      if overlay_label then
-         cells:update_segment_text('overlay_text', nf.md_brightness_6 .. '  ' .. overlay_label)
+
+      -- Overlay opacity: always visible when focus is off
+      if focus_off then
+         cells:update_segment_text('overlay_text', nf.md_brightness_6 .. '  ' .. string.format('%d%%', math.floor(backdrops.overlay_opacity * 100 + 0.5)))
       end
 
       local segments = { 'workspace_icon', 'workspace_text', 'workspace_sep' }
@@ -281,7 +283,7 @@ M.setup = function(opts)
          table.insert(segments, 'oled_off')
       end
       table.insert(segments, 'oled_sep')
-      if cat_label then
+      if show_category then
          table.insert(segments, 'category_text')
          table.insert(segments, 'category_sep')
       end
@@ -291,11 +293,9 @@ M.setup = function(opts)
          table.insert(segments, 'focus_off')
       end
       table.insert(segments, 'focus_sep')
-      if overlay_label then
+      if focus_off then
          table.insert(segments, 'overlay_text')
          table.insert(segments, 'overlay_sep')
-      end
-      if rotate_label then
          if backdrops.auto_rotate_enabled then
             table.insert(segments, 'rotate_on')
          else

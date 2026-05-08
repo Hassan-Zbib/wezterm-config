@@ -406,11 +406,13 @@ M.setup = function(opts)
    -- Flip tab bar position (top <-> bottom). Window buttons follow the bar.
    wezterm.on('tabs.toggle-tab-bar-position', function(window, _pane)
       local effective_config = window:effective_config()
+      local new_pos = not effective_config.tab_bar_at_bottom
       window:set_config_overrides({
-         tab_bar_at_bottom = not effective_config.tab_bar_at_bottom,
+         tab_bar_at_bottom = new_pos,
          background = effective_config.background,
          enable_tab_bar = effective_config.enable_tab_bar,
       })
+      require('utils.state').update('tab_bar_at_bottom', new_pos)
    end)
 
    -- BUILTIN EVENT
