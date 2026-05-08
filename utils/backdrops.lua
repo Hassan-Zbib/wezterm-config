@@ -152,7 +152,7 @@ end
 ---@return table
 function BackDrops:_create_focus_opts()
    local ok, oled = pcall(require, 'utils.oled-mode')
-   local layer_opacity = (ok and oled and oled.enabled) and 1.0 or 0.6
+   local layer_opacity = (ok and oled and oled.enabled) and 1.0 or 0.4
    return {
       {
          source = { Color = self.focus_color },
