@@ -6,8 +6,8 @@ local colors = require('colors.custom')
 local state = require('utils.state')
 
 return {
-   max_fps = 60,
-   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   max_fps = 120,
+   front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = gpu_adapters:pick_best(),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
@@ -16,7 +16,7 @@ return {
    warn_about_missing_glyphs = false,
 
    -- cursor
-   animation_fps = 60,
+   animation_fps = 120,
    cursor_blink_ease_in = 'EaseOut',
    cursor_blink_ease_out = 'EaseOut',
    default_cursor_style = 'SteadyBlock',
