@@ -17,7 +17,6 @@ local sessions = require('utils.sessions')
 
 local backdrops = require('utils.backdrops')
 backdrops
-   :set_focus('#010101')
    :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/backdrops/')
    :set_images()
    :random()
