@@ -28,7 +28,7 @@ local keys = {
          local unix_home = '/' .. drive .. home:sub(3)
          local script = unix_home .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/scripts/cheatsheet.py'
          window:perform_action(act.SpawnCommandInNewTab({
-            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', 'python "' .. script .. '"' },
+            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', 'uv run python "' .. script .. '"' },
          }), pane)
       end),
    },

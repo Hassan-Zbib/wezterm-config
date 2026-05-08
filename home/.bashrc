@@ -40,7 +40,7 @@ __wezterm_command_finished() {
 # ---- Skip heavy init when running inside Claude Code ----
 if [[ -z "$CLAUDECODE" ]]; then
    # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
-   bind '"\e[13;2u": "\n"'
+   [[ $- == *i* ]] && bind '"\e[13;2u": "\n"'
 
    # ---- Starship Prompt ----
    eval "$(starship init bash)"
