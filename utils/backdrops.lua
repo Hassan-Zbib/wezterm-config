@@ -145,22 +145,22 @@ function BackDrops:_create_opts()
    }
 end
 
----Create the `background` options for focus mode. Color is OLED-aware:
----  oled off -> focus_color at full opacity (solid theme base, no Acrylic on WebGpu/Dx12)
----  oled on  -> pure black at full opacity (no lit subpixels, OLED-safe)
+---Create the `background` options for focus mode. Layer opacity is OLED-aware:
+---  oled off -> 0.6 (heavy glass; Acrylic blurs desktop through the dark tint)
+---  oled on  -> 1.0 (fully opaque black; no lit subpixels behind, OLED-safe)
 ---@private
 ---@return table
 function BackDrops:_create_focus_opts()
    local ok, oled = pcall(require, 'utils.oled-mode')
-   local color = (ok and oled and oled.enabled) and '#000000' or self.focus_color
+   local layer_opacity = (ok and oled and oled.enabled) and 1.0 or 0.6
    return {
       {
-         source = { Color = color },
+         source = { Color = self.focus_color },
          height = '120%',
          width = '120%',
          vertical_offset = '-10%',
          horizontal_offset = '-10%',
-         opacity = 1.0,
+         opacity = layer_opacity,
       },
    }
 end
