@@ -9,7 +9,8 @@ return {
    max_fps = 120,
    front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
-   webgpu_preferred_adapter = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu'),
+   webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
+   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Gl', 'Other'),
    underline_thickness = '1.5pt',
@@ -54,7 +55,7 @@ return {
       bottom = 7.5,
    },
    window_background_opacity = 0.80,
-   win32_system_backdrop = 'Acrylic',
+   win32_system_backdrop = 'Tabbed',
    window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
    integrated_title_button_alignment = 'Right',
    integrated_title_button_style = 'Windows',
