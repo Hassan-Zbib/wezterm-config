@@ -6,3 +6,6 @@
 # arrow past line edges, no-match tab completion, etc.). Set to `none` to
 # silence it entirely.
 set bell-style audible
+
+# Shift+Enter inserts a newline without submitting (kitty keyboard protocol)
+"\e[13;2u": "\n"

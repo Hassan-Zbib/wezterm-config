@@ -306,6 +306,9 @@ local keys = {
       action = act.SplitPane({ direction = 'Right', size = { Percent = 40 } }),
    },
 
+   -- Shift+Enter inserts a newline in readline/bash via bracketed paste
+   { key = 'Enter', mods = 'SHIFT', action = act.SendString('\x1b[200~\n\x1b[201~') },
+
    -- panes: zoom+close pane
    { key = 'Enter', mods = mod.SUPER,     action = act.TogglePaneZoomState },
    { key = 'w',     mods = mod.SUPER,     action = act.CloseCurrentPane({ confirm = false }) },
