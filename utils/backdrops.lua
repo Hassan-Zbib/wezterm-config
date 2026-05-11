@@ -39,6 +39,7 @@ function BackDrops:init()
       _rotate_generation = 0,
       overlay_opacity = type(saved.overlay_opacity) == 'number' and saved.overlay_opacity or 0.70,
       _browse_gen = 0,
+      _browse_active = false,
       categories = {},
       current_category = 1,
    }
@@ -305,6 +306,7 @@ end
 ---@param window any WezTerm Window
 function BackDrops:next_category(window)
    if self.focus_on then return end
+   self:_exit_browse_if_active(window)
    if #self.categories <= 1 then return end
    self.current_category = self.current_category == #self.categories and 1 or self.current_category + 1
    self.images           = self.categories[self.current_category].images
@@ -317,6 +319,7 @@ end
 ---@param window any WezTerm Window
 function BackDrops:prev_category(window)
    if self.focus_on then return end
+   self:_exit_browse_if_active(window)
    if #self.categories <= 1 then return end
    self.current_category = self.current_category == 1 and #self.categories or self.current_category - 1
    self.images           = self.categories[self.current_category].images
@@ -339,6 +342,7 @@ end
 ---Toggle auto-rotation. No-ops when focus mode is on.
 function BackDrops:toggle_auto_rotate()
    if self.focus_on then return self end
+   self:_exit_browse_if_active(nil)
    if self.auto_rotate_enabled then
       self:stop_auto_rotate()
    else
@@ -353,6 +357,7 @@ end
 ---When leaving focus mode, always re-enables auto-rotation. When entering, stops it.
 ---@param window any WezTerm `Window` see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 function BackDrops:toggle_focus(window)
+   self:_exit_browse_if_active(window)
    local background_opts
 
    if self.focus_on then
@@ -424,11 +429,35 @@ function BackDrops:stop_auto_rotate()
    return self
 end
 
+---Force-exit browse mode if active: invalidates pending timers, pops the key
+---table, and clears the active flag. Safe to call with or without a window;
+---when `window` is nil, pops on all GUI windows.
+---@private
+---@param window any? WezTerm Window
+function BackDrops:_exit_browse_if_active(window)
+   if not self._browse_active then return end
+   self._browse_active = false
+   self._browse_gen = self._browse_gen + 1
+   if window then
+      local pane = window:active_tab():active_pane()
+      window:perform_action(wezterm.action.PopKeyTable, pane)
+      return
+   end
+   local gui = wezterm.gui
+   if gui then
+      for _, win in ipairs(gui.gui_windows()) do
+         win:perform_action(wezterm.action.PopKeyTable, win:active_tab():active_pane())
+      end
+   end
+end
+
 ---Enter image browse mode: saves current index so it can be reverted on cancel.
----No-ops when focus mode is on.
+---No-ops when focus mode is on or browse mode is already active.
 ---@param window any WezTerm Window
 function BackDrops:enter_browse_mode(window)
    if self.focus_on then return end
+   if self._browse_active then return end
+   self._browse_active = true
    self._browse_start_idx = self.current_idx
    self._browse_gen = self._browse_gen + 1
    self:_set_opt(window, self:_create_opts())
@@ -479,6 +508,7 @@ end
 ---@param pane any WezTerm Pane
 function BackDrops:browse_confirm(window, pane)
    self._browse_gen = self._browse_gen + 1
+   self._browse_active = false
    self:_set_opt(window, self:_create_opts())
    window:perform_action(wezterm.action.PopKeyTable, pane)
 end
@@ -488,6 +518,7 @@ end
 ---@param pane any WezTerm Pane
 function BackDrops:browse_cancel(window, pane)
    self._browse_gen = self._browse_gen + 1
+   self._browse_active = false
    self.current_idx = self._browse_start_idx or self.current_idx
    self:_set_opt(window, self:_create_opts())
    window:perform_action(wezterm.action.PopKeyTable, pane)

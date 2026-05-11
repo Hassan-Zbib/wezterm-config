@@ -255,7 +255,7 @@ local keys = {
       key = [[/]],
       mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, pane)
-         if backdrops.focus_on then return end
+         if backdrops.focus_on or backdrops._browse_active then return end
          backdrops:enter_browse_mode(window)
          window:perform_action(act.ActivateKeyTable({
             name = 'browse_backdrop',
@@ -431,13 +431,13 @@ local key_tables = {
    },
    browse_backdrop = {
       -- stylua: ignore
-      { key = 'RightArrow', action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
-      { key = 'LeftArrow',  action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
-      { key = '.',          action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
-      { key = ',',          action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
-      { key = 'Return',     action = wezterm.action_callback(function(win, pane) backdrops:browse_confirm(win, pane) end) },
-      { key = 'Escape',     action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
-      { key = 'q',          action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
+      { key = 'RightArrow', mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
+      { key = 'LeftArrow',  mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
+      { key = '.',          mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_next(win, pane) end) },
+      { key = ',',          mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_prev(win, pane) end) },
+      { key = 'Return',     mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_confirm(win, pane) end) },
+      { key = 'Escape',     mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
+      { key = 'q',          mods = 'NONE', action = wezterm.action_callback(function(win, pane) backdrops:browse_cancel(win, pane) end) },
    },
 }
 
