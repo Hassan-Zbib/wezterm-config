@@ -106,6 +106,7 @@ function BackDrops:set_images()
 
    self.current_category = 1
    self.images           = self.categories[1].images
+   self.current_idx      = #self.images > 0 and math.random(#self.images) or 1
 
    -- Start auto-rotation timer if enabled by default
    if self.auto_rotate_enabled then

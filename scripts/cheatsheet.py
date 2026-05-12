@@ -166,7 +166,8 @@ _WINDOW = (
         row('Alt+=',           'Grow 50px')             +
         row('Alt+-',           'Shrink 50px')           +
         row('Alt+Ctrl+Enter',  'Toggle maximize')       +
-        row('F11',             'Toggle fullscreen')
+        row('F11',             'Toggle fullscreen')     +
+        row('Ctrl+Shift+r',    'Reload config')
 )
 
 _SCROLLING = (

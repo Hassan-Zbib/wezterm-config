@@ -126,6 +126,9 @@ local keys = {
    { key = 'c',          mods = 'CTRL|SHIFT',  action = act.CopyTo('Clipboard') },
    { key = 'v',          mods = 'CTRL|SHIFT',  action = act.PasteFrom('Clipboard') },
 
+   -- reload config --
+   { key = 'r',          mods = 'CTRL|SHIFT',  action = act.ReloadConfiguration },
+
    -- tabs --
    -- tabs: spawn+close
    { key = 't',          mods = mod.SUPER,     action = act.SpawnTab('DefaultDomain') },
