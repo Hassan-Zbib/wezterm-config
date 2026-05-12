@@ -41,7 +41,13 @@ function prompt {
 }
 
 # ---- ~/bin on PATH ----
-$env:PATH = "$HOME\bin;$env:PATH"
+# Strip any inherited copies of ~/bin (bash's .bashrc prepends it, and a
+# parent bash session leaks those into PowerShell when Claude Code shells
+# pwsh), then append exactly once. Extensionless bash wrappers in ~/bin
+# (e.g. the 'git' shim) must NOT come before real .exe's — PowerShell can't
+# execute extensionless files and would fall back to the "Open With" picker.
+$binPath = "$HOME\bin"
+$env:PATH = (($env:PATH -split ';' | Where-Object { $_ -and $_ -ine $binPath }) -join ';') + ";$binPath"
 Set-Alias lssh lazyssh
 function cc { claude --allow-dangerously-skip-permissions @args }
 
