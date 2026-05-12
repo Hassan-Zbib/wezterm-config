@@ -255,7 +255,8 @@ local keys = {
       key = [[/]],
       mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, pane)
-         if backdrops.focus_on or backdrops._browse_active then return end
+         if backdrops.focus_on then return end
+         if window:active_key_table() == 'browse_backdrop' then return end
          backdrops:enter_browse_mode(window)
          window:perform_action(act.ActivateKeyTable({
             name = 'browse_backdrop',

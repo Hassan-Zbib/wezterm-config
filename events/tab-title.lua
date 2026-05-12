@@ -412,7 +412,6 @@ M.setup = function(opts)
          background = effective_config.background,
          enable_tab_bar = effective_config.enable_tab_bar,
       })
-      require('utils.state').update('tab_bar_at_bottom', new_pos)
    end)
 
    -- BUILTIN EVENT

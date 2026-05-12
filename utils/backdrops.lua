@@ -1,6 +1,5 @@
 local wezterm = require('wezterm')
 local colors = require('colors.custom')
-local state = require('utils.state')
 
 -- Seeding random numbers before generating for use
 -- Known issue with lua math library
@@ -27,17 +26,16 @@ BackDrops.__index = BackDrops
 --- Initialise backdrop controller
 ---@private
 function BackDrops:init()
-   local saved = state.read()
    local inital = {
       current_idx = 1,
       images = {},
       images_dir = wezterm.config_dir .. '/backdrops/',
       focus_color = colors.background,
       focus_on = false,
-      auto_rotate_enabled = saved.auto_rotate_enabled ~= false,
+      auto_rotate_enabled = true,
       auto_rotate_interval = 30,
       _rotate_generation = 0,
-      overlay_opacity = type(saved.overlay_opacity) == 'number' and saved.overlay_opacity or 0.70,
+      overlay_opacity = 0.70,
       _browse_gen = 0,
       _browse_active = false,
       categories = {},
@@ -216,6 +214,22 @@ function BackDrops:_set_opt(window, background_opts)
          },
       }
    end
+   -- Memoize per-window: set_config_overrides triggers a config reload that
+   -- can disrupt key-table dispatch. Skip the call when nothing changed.
+   local img = (background_opts[1] and background_opts[1].source) or {}
+   local sig = string.format(
+      '%s|%s|%s|%s|%s|%s',
+      tostring(img.File or img.Color or ''),
+      tostring(self.overlay_opacity),
+      tostring(opacity),
+      tostring(oled_on),
+      tostring(override.enable_tab_bar),
+      tostring(override.tab_bar_at_bottom)
+   )
+   self._last_sig = self._last_sig or {}
+   local key = tostring(window:window_id())
+   if self._last_sig[key] == sig then return end
+   self._last_sig[key] = sig
    window:set_config_overrides(override)
 end
 
@@ -348,7 +362,6 @@ function BackDrops:toggle_auto_rotate()
    else
       self:start_auto_rotate()
    end
-   state.update('auto_rotate_enabled', self.auto_rotate_enabled)
    self:_trigger_status_update()
    return self
 end
@@ -393,6 +406,19 @@ function BackDrops:_schedule_rotate(gen)
          return
       end
 
+      -- skip rotation while any window has a non-default key table active —
+      -- a background set_config_overrides during a key-table session can
+      -- corrupt keymap dispatch (see oled-mode.lua and tab-title.lua notes).
+      local gui = wezterm.gui
+      if gui then
+         for _, win in ipairs(gui.gui_windows()) do
+            if win:active_key_table() ~= nil or win:leader_is_active() then
+               self:_schedule_rotate(gen)
+               return
+            end
+         end
+      end
+
       -- cycle forward through the list
       if self.current_idx == #self.images then
          self.current_idx = 1
@@ -401,7 +427,6 @@ function BackDrops:_schedule_rotate(gen)
       end
 
       -- apply to all open windows
-      local gui = wezterm.gui
       if gui then
          for _, window in ipairs(gui.gui_windows()) do
             self:_set_opt(window, self:_create_opts())
@@ -429,24 +454,30 @@ function BackDrops:stop_auto_rotate()
    return self
 end
 
----Force-exit browse mode if active: invalidates pending timers, pops the key
----table, and clears the active flag. Safe to call with or without a window;
----when `window` is nil, pops on all GUI windows.
+---Force-exit browse mode if active: invalidates pending timers and pops the
+---key table only when `browse_backdrop` is actually on top of the stack
+---(`_browse_active` alone is unreliable — the 30s key-table timeout pops
+---the table without ever calling our exit paths). Safe to call with or
+---without a window; when `window` is nil, checks all GUI windows.
 ---@private
 ---@param window any? WezTerm Window
 function BackDrops:_exit_browse_if_active(window)
    if not self._browse_active then return end
    self._browse_active = false
    self._browse_gen = self._browse_gen + 1
+   local function pop_if_browse(win)
+      if win:active_key_table() == 'browse_backdrop' then
+         win:perform_action(wezterm.action.PopKeyTable, win:active_tab():active_pane())
+      end
+   end
    if window then
-      local pane = window:active_tab():active_pane()
-      window:perform_action(wezterm.action.PopKeyTable, pane)
+      pop_if_browse(window)
       return
    end
    local gui = wezterm.gui
    if gui then
       for _, win in ipairs(gui.gui_windows()) do
-         win:perform_action(wezterm.action.PopKeyTable, win:active_tab():active_pane())
+         pop_if_browse(win)
       end
    end
 end
@@ -531,7 +562,6 @@ end
 function BackDrops:adjust_overlay_opacity(window, delta)
    if self.focus_on then return end
    self.overlay_opacity = math.floor(math.max(0.0, math.min(1.0, self.overlay_opacity + delta)) * 100 + 0.5) / 100
-   state.update('overlay_opacity', self.overlay_opacity)
    self:_set_opt(window, self:_create_opts())
 end
 

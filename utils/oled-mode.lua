@@ -1,5 +1,4 @@
 local wezterm = require('wezterm')
-local state = require('utils.state')
 
 ---@class OledMode
 ---@field enabled boolean whether OLED mode is active
@@ -15,9 +14,7 @@ local OLED_ACCENT_DIM = '#6c5238' -- darker variant for separators / inactive
 
 ---@private
 function OledMode:init()
-   local saved = state.read()
-   local enabled = type(saved.oled_enabled) == 'boolean' and saved.oled_enabled or false
-   return setmetatable({ enabled = enabled }, self)
+   return setmetatable({ enabled = false }, self)
 end
 
 ---Return the static palette table consumed by event handlers.
@@ -34,7 +31,6 @@ end
 ---@param window any WezTerm Window from the keybinding callback (unused)
 function OledMode:toggle(window)
    self.enabled = not self.enabled
-   state.update('oled_enabled', self.enabled)
 
    -- Repaint every window so backdrops' _set_opt re-evaluates OLED-aware
    -- knobs (window opacity, split color). Pick the right bg layer based on
