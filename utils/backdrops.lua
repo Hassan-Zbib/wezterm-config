@@ -144,17 +144,20 @@ function BackDrops:_create_opts()
    }
 end
 
----Create the `background` options for focus mode. Layer opacity is OLED-aware:
----  oled off -> 0.6 (heavy glass; Acrylic blurs desktop through the dark tint)
----  oled on  -> 1.0 (fully opaque black; no lit subpixels behind, OLED-safe)
+---Create the `background` options for focus mode. Always fully opaque so the
+---theme base color paints as a solid background — no DWM backdrop to blend
+---against now that Acrylic/Mica are off (incompatible with dGPU rendering).
+---OLED on overrides the color to pure black for burn-in safety.
 ---@private
 ---@return table
 function BackDrops:_create_focus_opts()
    local ok, oled = pcall(require, 'utils.oled-mode')
-   local layer_opacity = (ok and oled and oled.enabled) and 1.0 or 0.4
+   local oled_on = ok and oled and oled.enabled
+   local layer_opacity = 1.0
+   local color = oled_on and '#000000' or self.focus_color
    return {
       {
-         source = { Color = self.focus_color },
+         source = { Color = color },
          height = '120%',
          width = '120%',
          vertical_offset = '-10%',
@@ -190,10 +193,7 @@ end
 function BackDrops:_set_opt(window, background_opts)
    local ok, oled = pcall(require, 'utils.oled-mode')
    local oled_on = ok and oled and oled.enabled
-   local opacity = 0.80
-   if self.focus_on then
-      opacity = oled_on and 1.0 or 0.75
-   end
+   local opacity = 1.0
    local effective = window:effective_config()
    local override = {
       background = background_opts,
