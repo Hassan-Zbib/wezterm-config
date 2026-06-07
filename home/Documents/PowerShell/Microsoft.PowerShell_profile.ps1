@@ -17,27 +17,31 @@ Invoke-Expression (&starship init powershell)
 # ---- WezTerm Shell Integration ----
 # Wrap starship's prompt to add OSC 7 (CWD) and OSC 133 (prompt markers)
 # so WezTerm can track the working directory and prompt boundaries.
-$__starshipPrompt = $function:prompt
+# Skip under Warp: it runs its own prompt/Blocks integration (Warpify), and
+# these duplicate OSC markers corrupt Warp's command Blocks.
+if ($env:TERM_PROGRAM -ne "WarpTerminal") {
+    $__starshipPrompt = $function:prompt
 
-function prompt {
-    $esc = [char]27
-    $bel = [char]7
+    function prompt {
+        $esc = [char]27
+        $bel = [char]7
 
-    # OSC 133;D — mark end of previous command output
-    [Console]::Write("${esc}]133;D${bel}")
+        # OSC 133;D — mark end of previous command output
+        [Console]::Write("${esc}]133;D${bel}")
 
-    # OSC 7 — report current working directory
-    $cwd = (Get-Location).Path.Replace('\', '/')
-    if ($cwd -match '^([A-Z]):(.*)') {
-        $cwd = '/' + $Matches[1].ToLower() + $Matches[2]
+        # OSC 7 — report current working directory
+        $cwd = (Get-Location).Path.Replace('\', '/')
+        if ($cwd -match '^([A-Z]):(.*)') {
+            $cwd = '/' + $Matches[1].ToLower() + $Matches[2]
+        }
+        [Console]::Write("${esc}]7;file://localhost${cwd}${bel}")
+
+        # OSC 133;A — mark prompt start
+        [Console]::Write("${esc}]133;A${bel}")
+
+        # Run starship prompt
+        & $__starshipPrompt
     }
-    [Console]::Write("${esc}]7;file://localhost${cwd}${bel}")
-
-    # OSC 133;A — mark prompt start
-    [Console]::Write("${esc}]133;A${bel}")
-
-    # Run starship prompt
-    & $__starshipPrompt
 }
 
 # ---- ~/bin on PATH ----

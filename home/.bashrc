@@ -39,18 +39,24 @@ __wezterm_command_finished() {
 
 # ---- Skip heavy init when running inside Claude Code ----
 if [[ -z "$CLAUDECODE" ]]; then
-   # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
-   [[ $- == *i* ]] && bind '"\e[13;2u": "\n"'
-
    # ---- Starship Prompt ----
    eval "$(starship init bash)"
 
-   # Append WezTerm integration after starship sets up PROMPT_COMMAND
-   # OSC 133;D (command finished) + OSC 7 (cwd) + OSC 133;A (prompt start)
-   PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_command_finished; __wezterm_set_cwd; __wezterm_prompt_mark"
+   # ---- WezTerm Shell Integration ----
+   # Skip under Warp: it runs its own prompt/Blocks integration, and the OSC
+   # 7 / OSC 133 markers plus the Shift+Enter bind corrupt Warp's command
+   # Blocks (BIND configs also trigger Warp's double-ENTER bug).
+   if [[ "$TERM_PROGRAM" != "WarpTerminal" ]]; then
+      # ---- Readline: Shift+Enter inserts newline (multi-line editing) ----
+      [[ $- == *i* ]] && bind '"\e[13;2u": "\n"'
 
-   # OSC 133;C: mark where command output begins (fires on every Enter)
-   trap '__wezterm_output_start' DEBUG
+      # Append WezTerm integration after starship sets up PROMPT_COMMAND
+      # OSC 133;D (command finished) + OSC 7 (cwd) + OSC 133;A (prompt start)
+      PROMPT_COMMAND="${PROMPT_COMMAND:+$PROMPT_COMMAND; }__wezterm_command_finished; __wezterm_set_cwd; __wezterm_prompt_mark"
+
+      # OSC 133;C: mark where command output begins (fires on every Enter)
+      trap '__wezterm_output_start' DEBUG
+   fi
 fi
 
 # ---- Yazi File Manager with Auto-cd ----
