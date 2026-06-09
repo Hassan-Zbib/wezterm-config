@@ -58,7 +58,7 @@ function cc { claude --allow-dangerously-skip-permissions @args }
 # ---- eza aliases ----
 function ls { eza --icons --group-directories-first --git-repos --color-scale=all @args }
 function la { eza --icons --all --group-directories-first --git-repos --color-scale=all @args }
-function ll { eza --icons -l --git --git-repos --header --group-directories-first --color-scale=all @args }
+function ll { eza --icons -l --all --git --git-repos --header --group-directories-first --color-scale=all @args }
 function lt { eza --icons --tree --level=2 @args }
 
 # ---- zoxide (smart cd) ----

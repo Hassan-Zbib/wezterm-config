@@ -325,7 +325,7 @@ The `.bashrc` configures the following aliases:
 |-------|-------------|
 | `ls` | List with icons, dirs first, git repo status, color-scaled |
 | `la` | Same as `ls` but includes hidden files |
-| `ll` | Long format with git status per file, header, dirs first |
+| `ll` | Long format with git status per file, header, dirs first, includes hidden files |
 | `lt` | Tree view (2 levels deep) |
 | `lg` | Lazygit — terminal UI for Git |
 | `btop` | btop4win — interactive system monitor |
