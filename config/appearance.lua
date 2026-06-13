@@ -6,10 +6,12 @@ local colors = require('colors.custom')
 return {
    max_fps = 120,
    front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
-   webgpu_power_preference = 'HighPerformance',
-   webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
+   -- Render on the iGPU: it's always present, so GHelper powering the dGPU
+   -- down on battery (Optimized mode) can't pull the device out from under us.
+   webgpu_power_preference = 'LowPower',
+   webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
+   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'), -- crashes when dGPU powers off on battery
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu'),
-   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Gl', 'Other'),
    underline_thickness = '1.5pt',
    warn_about_missing_glyphs = false,
