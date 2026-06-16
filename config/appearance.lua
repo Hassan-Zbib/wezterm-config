@@ -5,14 +5,16 @@ local colors = require('colors.custom')
 
 return {
    max_fps = 120,
-   front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
-   -- Render on the iGPU: it's always present, so GHelper powering the dGPU
-   -- down on battery (Optimized mode) can't pull the device out from under us.
-   webgpu_power_preference = 'LowPower',
-   webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
+   -- OpenGL over WebGpu: WebGpu on the iGPU stalls on every backdrop swap
+   -- (it rebuilds the background texture on each set_config_overrides), and
+   -- WebGpu pinned to the dGPU crashes when GHelper powers it off on battery.
+   -- OpenGL auto-selects the iGPU in Optimized mode, swaps backdrops smoothly,
+   -- and survives the GPU power transition without crashing.
+   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   -- webgpu_* options below are ignored while front_end = 'OpenGL'; kept for reference.
+   -- webgpu_power_preference = 'LowPower',
+   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'), -- crashes when dGPU powers off on battery
-   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu'),
-   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Gl', 'Other'),
    underline_thickness = '1.5pt',
    warn_about_missing_glyphs = false,
 
