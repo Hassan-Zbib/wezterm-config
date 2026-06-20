@@ -298,7 +298,10 @@ _VIEWERS = (
         row('fastfetch · ff',  'System info panel')     +
         blank() +
         sub('UniGetUI') +
-        row('pkgs',            'Open package manager')
+        row('pkgs',            'Open package manager')   +
+        blank() +
+        sub('Claude Code') +
+        row('ccp',             'Switch creds profile')
 )
 
 _LAZY_TOOLS = (

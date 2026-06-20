@@ -71,6 +71,14 @@ function yy() {
     rm -f -- "$tmp"
 }
 
+# ---- Claude Code Profile Switcher ----
+# Runs the PowerShell switcher from git bash; args pass through to its params.
+# e.g. ccp -List | ccp -Status | ccp -Profile MBV_Solutions | ccp (interactive)
+function ccp() {
+    powershell.exe -NoProfile -ExecutionPolicy Bypass \
+        -File 'C:\Users\hassa\Desktop\GitHub\Claude-Switch\switch.ps1' "$@"
+}
+
 # ---- PATH ----
 export PATH="$HOME/bin:$PATH"
 
