@@ -177,7 +177,7 @@ show_milliseconds = true
 format = " in $duration "
 style = "bold fg:overlay0"
 disabled = false
-show_notifications = true
+show_notifications = false
 min_time_to_notify = 45000
 
 [shell]
