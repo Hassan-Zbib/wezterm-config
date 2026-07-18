@@ -65,6 +65,10 @@ function yy() {
     local tmp
     tmp="$(mktemp)"
     yazi "$@" --cwd-file="$tmp"
+    # WezTerm on Windows doesn't repaint the primary screen after a TUI app
+    # leaves the alternate screen, so yazi's frame stays painted on exit.
+    # Clear the screen + restore the cursor to redraw a clean prompt.
+    [[ "$TERM_PROGRAM" == "WezTerm" ]] && printf '\033[2J\033[H\033[?25h'
     if cwd="$(cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
         builtin cd -- "$cwd"
     fi
@@ -96,4 +100,8 @@ alias cc='claude --allow-dangerously-skip-permissions'
 alias ff='fastfetch'
 
 # ---- zoxide (smart cd) ----
+# Warp manages PROMPT_COMMAND itself (its Blocks/prompt integration runs after
+# this rc file) and drops zoxide's hook, tripping the doctor false-positive.
+# zoxide still works; just silence the diagnostic under Warp.
+[[ "$TERM_PROGRAM" == "WarpTerminal" ]] && export _ZO_DOCTOR=0
 eval "$(zoxide init bash)"
