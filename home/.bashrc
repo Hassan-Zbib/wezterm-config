@@ -97,6 +97,7 @@ alias lt='eza --icons --tree --level=2'
 alias btop='btop4win'
 alias cls='clear'
 alias cc='claude --allow-dangerously-skip-permissions'
+alias cca='claude agents --allow-dangerously-skip-permissions'
 alias ff='fastfetch'
 
 # ---- zoxide (smart cd) ----
