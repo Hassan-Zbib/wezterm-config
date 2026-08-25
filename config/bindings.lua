@@ -120,6 +120,11 @@ local keys = {
    -- (C-u), which wiped the whole line -- unrecoverable in Claude Code, which
    -- has no kill ring. Ctrl+U still does the line-wide kill.
    { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{1b}\u{7f}' },
+   -- Ctrl+Shift+Backspace clears the whole line, matching Warp's
+   -- editor_view:clear_buffer. Sends C-e then C-u (end-of-line, then kill to
+   -- line start) so it wipes the line regardless of cursor position -- C-u
+   -- alone would only kill backwards from the cursor.
+   { key = 'Backspace',  mods = 'CTRL|SHIFT',  action = act.SendString '\u{5}\u{15}' },
 
    -- copy/paste --
    { key = 'c',          mods = 'CTRL|SHIFT',  action = act.CopyTo('Clipboard') },

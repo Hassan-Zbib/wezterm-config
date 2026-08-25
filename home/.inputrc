@@ -21,3 +21,8 @@ set bell-style audible
 #   Ctrl+w                          unix-word-rubout     back to whitespace
 #   Ctrl+u                          unix-line-discard    back to line start
 "\C-h": backward-kill-word
+
+# Alt+Delete deletes the next word forward, matching Warp's
+# editor:delete_word_right. readline already binds Ctrl+Delete (\e[3;5~) and
+# Alt+d to kill-word, but leaves Alt+Delete (\e[3;3~) unbound.
+"\e[3;3~": kill-word

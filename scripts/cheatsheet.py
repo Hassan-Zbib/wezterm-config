@@ -199,6 +199,9 @@ _CURSOR = (
         row('Ctrl+w',          'Delete to whitespace')  +
         row('Ctrl+u',          'Delete to line start')  +
         row('Alt+Backspace',   'Delete word')           +
+        row('Ctrl+Del',        'Delete word right')     +
+        row('Alt+Del',         'Delete word right')     +
+        row('Ctrl+Shift+Bksp', 'Clear whole line')      +
         row('Shift+Enter',     'Newline w/o submit')    +
         blank() +
         sub('Clipboard') +
