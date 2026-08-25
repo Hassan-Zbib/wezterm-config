@@ -111,9 +111,20 @@ local keys = {
    },
 
    -- cursor movement --
+   -- Alt+Left/Right send SS3 Home/End; readline maps \eOH/\eOF to
+   -- beginning-of-line / end-of-line.
    { key = 'LeftArrow',  mods = mod.SUPER,     action = act.SendString '\u{1b}OH' },
    { key = 'RightArrow', mods = mod.SUPER,     action = act.SendString '\u{1b}OF' },
-   { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{15}' },
+   -- Alt+Backspace sends Meta-DEL (\e\x7f) = backward-kill-word, matching bash,
+   -- Claude Code and Warp's editor:delete_word_left. It previously sent \x15
+   -- (C-u), which wiped the whole line -- unrecoverable in Claude Code, which
+   -- has no kill ring. Ctrl+U still does the line-wide kill.
+   { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{1b}\u{7f}' },
+   -- Ctrl+Shift+Backspace clears the whole line, matching Warp's
+   -- editor_view:clear_buffer. Sends C-e then C-u (end-of-line, then kill to
+   -- line start) so it wipes the line regardless of cursor position -- C-u
+   -- alone would only kill backwards from the cursor.
+   { key = 'Backspace',  mods = 'CTRL|SHIFT',  action = act.SendString '\u{5}\u{15}' },
 
    -- copy/paste --
    { key = 'c',          mods = 'CTRL|SHIFT',  action = act.CopyTo('Clipboard') },
@@ -125,12 +136,17 @@ local keys = {
    -- tabs --
    -- tabs: spawn+close
    { key = 't',          mods = mod.SUPER,     action = act.SpawnTab('DefaultDomain') },
-   { key = 't',          mods = mod.SUPER_REV, action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }) },
+   -- Alt+Ctrl+t is left free to match Warp's "reopen closed session"; WSL fish moves to +Shift
+   { key = 't',          mods = mod.SUPER_REV .. '|SHIFT', action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }) },
    { key = 'w',          mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
 
    -- tabs: navigation
    { key = '[',          mods = mod.SUPER,     action = act.ActivateTabRelative(-1) },
    { key = ']',          mods = mod.SUPER,     action = act.ActivateTabRelative(1) },
+
+   -- tabs: reorder (matches Warp's workspace:move_tab_left/right)
+   { key = 'LeftArrow',  mods = 'CTRL|SHIFT',  action = act.MoveTabRelative(-1) },
+   { key = 'RightArrow', mods = 'CTRL|SHIFT',  action = act.MoveTabRelative(1) },
 
    -- workspaces: cycle
    { key = '[',          mods = mod.SUPER_REV, action = act.SwitchWorkspaceRelative(-1) },

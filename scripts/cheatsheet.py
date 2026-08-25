@@ -106,12 +106,14 @@ _TABS = (
     header('📑 Tabs') +
         sub('Lifecycle') +
         row('Alt+t',       'New tab')                   +
-        row('Alt+Ctrl+t',  'New tab (WSL fish)')        +
+        row('Alt+Ctrl+Shift+t', 'New tab (WSL fish)')   +
         row('Alt+Ctrl+w',  'Close tab')                 +
         blank() +
         sub('Navigation') +
         row('Alt+[',       'Previous tab')              +
         row('Alt+]',       'Next tab')                  +
+        row('Ctrl+Shift+←', 'Move tab left')            +
+        row('Ctrl+Shift+→', 'Move tab right')           +
         blank() +
         sub('Title & Bar') +
         row('Alt+0',       'Rename tab')                +
@@ -191,7 +193,15 @@ _CURSOR = (
         sub('Line editing (sent to shell)') +
         row('Alt+←',           'Jump to line start')    +
         row('Alt+→',           'Jump to line end')      +
-        row('Alt+Backspace',   'Clear line (Git Bash)') +
+        row('Ctrl+←',          'Jump word left')        +
+        row('Ctrl+→',          'Jump word right')       +
+        row('Ctrl+Backspace',  'Delete word')           +
+        row('Ctrl+w',          'Delete to whitespace')  +
+        row('Ctrl+u',          'Delete to line start')  +
+        row('Alt+Backspace',   'Delete word')           +
+        row('Ctrl+Del',        'Delete word right')     +
+        row('Alt+Del',         'Delete word right')     +
+        row('Ctrl+Shift+Bksp', 'Clear whole line')      +
         row('Shift+Enter',     'Newline w/o submit')    +
         blank() +
         sub('Clipboard') +
