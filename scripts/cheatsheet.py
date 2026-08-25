@@ -198,7 +198,7 @@ _CURSOR = (
         row('Ctrl+Backspace',  'Delete word')           +
         row('Ctrl+w',          'Delete to whitespace')  +
         row('Ctrl+u',          'Delete to line start')  +
-        row('Alt+Backspace',   'Clear line (Git Bash)') +
+        row('Alt+Backspace',   'Delete word')           +
         row('Shift+Enter',     'Newline w/o submit')    +
         blank() +
         sub('Clipboard') +

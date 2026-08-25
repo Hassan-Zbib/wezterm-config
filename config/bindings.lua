@@ -111,9 +111,15 @@ local keys = {
    },
 
    -- cursor movement --
+   -- Alt+Left/Right send SS3 Home/End; readline maps \eOH/\eOF to
+   -- beginning-of-line / end-of-line.
    { key = 'LeftArrow',  mods = mod.SUPER,     action = act.SendString '\u{1b}OH' },
    { key = 'RightArrow', mods = mod.SUPER,     action = act.SendString '\u{1b}OF' },
-   { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{15}' },
+   -- Alt+Backspace sends Meta-DEL (\e\x7f) = backward-kill-word, matching bash,
+   -- Claude Code and Warp's editor:delete_word_left. It previously sent \x15
+   -- (C-u), which wiped the whole line -- unrecoverable in Claude Code, which
+   -- has no kill ring. Ctrl+U still does the line-wide kill.
+   { key = 'Backspace',  mods = mod.SUPER,     action = act.SendString '\u{1b}\u{7f}' },
 
    -- copy/paste --
    { key = 'c',          mods = 'CTRL|SHIFT',  action = act.CopyTo('Clipboard') },
