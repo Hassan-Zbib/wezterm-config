@@ -106,12 +106,14 @@ _TABS = (
     header('📑 Tabs') +
         sub('Lifecycle') +
         row('Alt+t',       'New tab')                   +
-        row('Alt+Ctrl+t',  'New tab (WSL fish)')        +
+        row('Alt+Ctrl+Shift+t', 'New tab (WSL fish)')   +
         row('Alt+Ctrl+w',  'Close tab')                 +
         blank() +
         sub('Navigation') +
         row('Alt+[',       'Previous tab')              +
         row('Alt+]',       'Next tab')                  +
+        row('Ctrl+Shift+←', 'Move tab left')            +
+        row('Ctrl+Shift+→', 'Move tab right')           +
         blank() +
         sub('Title & Bar') +
         row('Alt+0',       'Rename tab')                +

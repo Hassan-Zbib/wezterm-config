@@ -125,12 +125,17 @@ local keys = {
    -- tabs --
    -- tabs: spawn+close
    { key = 't',          mods = mod.SUPER,     action = act.SpawnTab('DefaultDomain') },
-   { key = 't',          mods = mod.SUPER_REV, action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }) },
+   -- Alt+Ctrl+t is left free to match Warp's "reopen closed session"; WSL fish moves to +Shift
+   { key = 't',          mods = mod.SUPER_REV .. '|SHIFT', action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }) },
    { key = 'w',          mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
 
    -- tabs: navigation
    { key = '[',          mods = mod.SUPER,     action = act.ActivateTabRelative(-1) },
    { key = ']',          mods = mod.SUPER,     action = act.ActivateTabRelative(1) },
+
+   -- tabs: reorder (matches Warp's workspace:move_tab_left/right)
+   { key = 'LeftArrow',  mods = 'CTRL|SHIFT',  action = act.MoveTabRelative(-1) },
+   { key = 'RightArrow', mods = 'CTRL|SHIFT',  action = act.MoveTabRelative(1) },
 
    -- workspaces: cycle
    { key = '[',          mods = mod.SUPER_REV, action = act.SwitchWorkspaceRelative(-1) },
