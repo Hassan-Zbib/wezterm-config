@@ -92,7 +92,6 @@ _QUICK_ACTIONS = (
         row('F5',          'Switch workspace')         +
         row('Shift+F5',    'New workspace')            +
         row('Ctrl+F5',     'Rename workspace')         +
-        row('F6',          'Toggle OLED mode')         +
         row('F7',          'SSH host picker')          +
         row('F8',          'Command palette')          +
         row('F9',          'Save session')             +
@@ -208,7 +207,7 @@ _CURSOR = (
 )
 
 _BACKGROUND = (
-    header('🖼️  Background & OLED') +
+    header('🖼️  Background') +
         sub('Image') +
         row('Alt+/',           'Random image')          +
         row('Alt+Ctrl+/',      'Browse (live preview)') +
@@ -220,7 +219,6 @@ _BACKGROUND = (
         row('Alt+b',           'Toggle focus mode')     +
         row('Alt+,',           'Overlay opacity −')     +
         row('Alt+.',           'Overlay opacity +')     +
-        row('F6',              'Toggle OLED (pure black)') +
         blank() +
         note('Browse: ←/→ next  ·  Enter confirm') +
         note('        Esc/q cancel')

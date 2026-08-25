@@ -1,7 +1,7 @@
 local wezterm = require('wezterm')
 local Cells = require('utils.cells')
 local backdrops = require('utils.backdrops')
-local oled = require('utils.oled-mode')
+local p = require('colors.palette')
 
 local nf = wezterm.nerdfonts
 local attr = Cells.attr
@@ -15,8 +15,8 @@ local GLYPH_KEY = nf.md_key --[[ '󰌆' ]]
 
 ---@type table<string, Cells.SegmentColors>
 local colors = {
-   default = { bg = '#fab387', fg = '#1c1b19' },
-   scircle = { bg = '#1e1e2e', fg = '#fab387' },
+   default = { bg = p.peach, fg = p.crust },
+   scircle = { bg = p.base, fg = p.peach },
 }
 
 local cells = Cells:new()
@@ -28,34 +28,34 @@ cells
    :add_segment(4, GLYPH_SEMI_CIRCLE_RIGHT, colors.scircle, attr(attr.intensity('Bold')))
 
 local hints = {
-   { fg = '#89b4fa', text = ' F1:help ' },
+   { fg = p.blue, text = ' F1:help ' },
 }
 
 local copy_mode_hint_items = {
-   { fg = '#a6e3a1', text = '  ←↑↓→ ' },
-   { fg = '#cdd6f4', text = 'move' },
-   { fg = '#6e738d', text = '  ·  ' },
-   { fg = '#a6e3a1', text = 'Ctrl+←→/wb ' },
-   { fg = '#cdd6f4', text = 'word' },
-   { fg = '#6e738d', text = '  ·  ' },
-   { fg = '#f9e2af', text = 'v/V/^v ' },
-   { fg = '#cdd6f4', text = 'select' },
-   { fg = '#6e738d', text = '  ·  ' },
-   { fg = '#89b4fa', text = 'y ' },
-   { fg = '#cdd6f4', text = 'copy' },
-   { fg = '#6e738d', text = '  ·  ' },
-   { fg = '#cba6f7', text = '/ ' },
-   { fg = '#cdd6f4', text = 'search' },
-   { fg = '#6e738d', text = '  ·  ' },
-   { fg = '#f38ba8', text = 'q ' },
-   { fg = '#cdd6f4', text = 'exit  ' },
+   { fg = p.green,    text = '  ←↑↓→ ' },
+   { fg = p.text,     text = 'move' },
+   { fg = p.overlay0, text = '  ·  ' },
+   { fg = p.green,    text = 'Ctrl+←→/wb ' },
+   { fg = p.text,     text = 'word' },
+   { fg = p.overlay0, text = '  ·  ' },
+   { fg = p.yellow,   text = 'v/V/^v ' },
+   { fg = p.text,     text = 'select' },
+   { fg = p.overlay0, text = '  ·  ' },
+   { fg = p.blue,     text = 'y ' },
+   { fg = p.text,     text = 'copy' },
+   { fg = p.overlay0, text = '  ·  ' },
+   { fg = p.mauve,    text = '/ ' },
+   { fg = p.text,     text = 'search' },
+   { fg = p.overlay0, text = '  ·  ' },
+   { fg = p.red,      text = 'q ' },
+   { fg = p.text,     text = 'exit  ' },
 }
 
 local function build_hints()
    local result = {}
    for _, h in ipairs(hints) do
       table.insert(result, { Foreground = { Color = h.fg } })
-      table.insert(result, { Background = { Color = '#1e1e2e' } })
+      table.insert(result, { Background = { Color = p.base } })
       table.insert(result, { Attribute = { Intensity = 'Bold' } })
       table.insert(result, { Text = h.text })
    end
@@ -66,7 +66,7 @@ local function build_copy_mode_hints()
    local result = {}
    for _, h in ipairs(copy_mode_hint_items) do
       table.insert(result, { Foreground = { Color = h.fg } })
-      table.insert(result, { Background = { Color = '#1e1e2e' } })
+      table.insert(result, { Background = { Color = p.base } })
       table.insert(result, { Attribute = { Intensity = 'Bold' } })
       table.insert(result, { Text = h.text })
    end
@@ -98,11 +98,6 @@ M.setup = function()
       if window:leader_is_active() then
          cells:update_segment_text(2, GLYPH_KEY):update_segment_text(3, ' ')
          window:set_left_status(wezterm.format(cells:render_all()))
-         return
-      end
-
-      if oled.enabled then
-         window:set_left_status('')
          return
       end
 

@@ -11,6 +11,30 @@ math.random()
 
 local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 
+-- Backdrop legibility.
+--
+-- Terminal text is drawn directly onto the background layers — a cell with the
+-- default background paints nothing of its own — so how readable the text is
+-- depends entirely on what the image still carries underneath it. Two knobs,
+-- applied in this order:
+--
+--   1. IMAGE_HSB crushes the image before anything is drawn over it.
+--      `brightness` scales multiplicatively, so it pulls bright regions (the
+--      ones that swallow light-on-dark text) down much further than dark ones.
+--      That narrows the spread of contrast ratios the same text hits as
+--      different images rotate past, which is the real problem — a uniform
+--      scrim raises the floor but leaves the peaks intact.
+--      `saturation` keeps a colourful image from competing with the syntax
+--      colours in the foreground.
+--   2. `overlay_opacity` then flattens what is left under a scrim of the theme
+--      background colour. Adjustable live (see config/bindings.lua) and shown
+--      as a percentage in the right status bar.
+local IMAGE_HSB = {
+   hue = 1.0,
+   saturation = 0.7,
+   brightness = 0.8,
+}
+
 ---@class BackDrops
 ---@field current_idx number index of current image
 ---@field images string[] background images
@@ -35,7 +59,7 @@ function BackDrops:init()
       auto_rotate_enabled = true,
       auto_rotate_interval = 30,
       _rotate_generation = 0,
-      overlay_opacity = 0.70,
+      overlay_opacity = 0.85,
       _browse_gen = 0,
       _browse_active = false,
       categories = {},
@@ -133,6 +157,7 @@ function BackDrops:_create_opts()
       {
          source = { File = self.images[self.current_idx] },
          horizontal_align = 'Center',
+         hsb = IMAGE_HSB,
       },
       {
          source = { Color = colors.background },
@@ -148,22 +173,17 @@ end
 ---Create the `background` options for focus mode. Always fully opaque so the
 ---theme base color paints as a solid background — no DWM backdrop to blend
 ---against now that Acrylic/Mica are off (incompatible with dGPU rendering).
----OLED on overrides the color to pure black for burn-in safety.
 ---@private
 ---@return table
 function BackDrops:_create_focus_opts()
-   local ok, oled = pcall(require, 'utils.oled-mode')
-   local oled_on = ok and oled and oled.enabled
-   local layer_opacity = 1.0
-   local color = oled_on and '#000000' or self.focus_color
    return {
       {
-         source = { Color = color },
+         source = { Color = self.focus_color },
          height = '120%',
          width = '120%',
          vertical_offset = '-10%',
          horizontal_offset = '-10%',
-         opacity = layer_opacity,
+         opacity = 1.0,
       },
    }
 end
@@ -183,47 +203,27 @@ function BackDrops:initial_options(focus_on)
 end
 
 ---Override the current window options for background.
----Picks window_background_opacity based on focus + OLED state:
----  focus off                    -> 0.80 (light desktop bleed under backdrops)
----  focus on,  oled off          -> 0.75 (heavy glass over Acrylic blur)
----  focus on,  oled on           -> 1.00 (pure black opaque, OLED-safe)
----When OLED is on, also dims the pane split line to near-black.
+---The window itself is always fully opaque — the backdrop image and its scrim
+---are drawn as background layers, so there is no reason to let the desktop
+---bleed through on top of that.
 ---@private
 ---@param window any WezTerm Window see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 ---@param background_opts table background option
 function BackDrops:_set_opt(window, background_opts)
-   local ok, oled = pcall(require, 'utils.oled-mode')
-   local oled_on = ok and oled and oled.enabled
-   local opacity = 1.0
    local effective = window:effective_config()
    local override = {
       background = background_opts,
       enable_tab_bar = effective.enable_tab_bar,
       tab_bar_at_bottom = effective.tab_bar_at_bottom,
-      window_background_opacity = opacity,
+      window_background_opacity = 1.0,
    }
-   if oled_on then
-      override.colors = {
-         split = '#1a1a1a',
-         -- Flatten the tab bar's trailing fill and new-tab button to pure black.
-         -- Defaults are rgba(0,0,0,0.4) and #1f1f28, which read as grey when the
-         -- desktop bleeds through (focus off) or even on top of pure black.
-         tab_bar = {
-            background = '#000000',
-            new_tab = { bg_color = '#000000', fg_color = '#cdd6f4' },
-            new_tab_hover = { bg_color = '#0a0a0a', fg_color = '#fab387' },
-         },
-      }
-   end
    -- Memoize per-window: set_config_overrides triggers a config reload that
    -- can disrupt key-table dispatch. Skip the call when nothing changed.
    local img = (background_opts[1] and background_opts[1].source) or {}
    local sig = string.format(
-      '%s|%s|%s|%s|%s|%s',
+      '%s|%s|%s|%s',
       tostring(img.File or img.Color or ''),
       tostring(self.overlay_opacity),
-      tostring(opacity),
-      tostring(oled_on),
       tostring(override.enable_tab_bar),
       tostring(override.tab_bar_at_bottom)
    )
@@ -409,7 +409,7 @@ function BackDrops:_schedule_rotate(gen)
 
       -- skip rotation while any window has a non-default key table active —
       -- a background set_config_overrides during a key-table session can
-      -- corrupt keymap dispatch (see oled-mode.lua and tab-title.lua notes).
+      -- corrupt keymap dispatch (see the note in events/tab-title.lua).
       local gui = wezterm.gui
       if gui then
          for _, win in ipairs(gui.gui_windows()) do

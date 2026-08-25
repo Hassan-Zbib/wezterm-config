@@ -16,13 +16,13 @@ local Config = require('config')
 local sessions = require('utils.sessions')
 
 local backdrops = require('utils.backdrops')
+local palette = require('colors.palette')
 backdrops
-   :set_focus('#121212')
+   -- Focus mode paints the darkest shade in the theme as a solid background.
+   :set_focus(palette.crust)
    :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/backdrops/')
    :set_images()
    :random()
-
-require('utils.oled-mode')
 
 require('events.left-status').setup()
 require('events.right-status').setup()

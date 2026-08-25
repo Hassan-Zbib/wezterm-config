@@ -4,7 +4,7 @@
 
 local wezterm = require('wezterm')
 local Cells = require('utils.cells')
-local oled = require('utils.oled-mode')
+local p = require('colors.palette')
 local OptsValidator = require('utils.opts-validator')
 
 ---
@@ -44,6 +44,7 @@ local M = {}
 
 local GLYPH_SCIRCLE_LEFT = '' --[[  ]]
 local GLYPH_SCIRCLE_RIGHT = '' --[[  ]]
+local GLYPH_BELL = nf.md_bell_ring
 local GLYPH_CIRCLE = nf.fa_circle --[[  ]]
 local GLYPH_ADMIN = nf.md_shield_half_full --[[ 󰞀 ]]
 local GLYPH_LINUX = nf.cod_terminal_linux --[[  ]]
@@ -82,55 +83,40 @@ local TITLE_INSET = {
    ICON = 8,
 }
 
-local RENDER_VARIANTS = {
-   { 'scircle_left', 'title', 'padding', 'scircle_right' },
-   { 'scircle_left', 'title', 'unseen_output', 'padding', 'scircle_right' },
-   { 'scircle_left', 'admin', 'title', 'padding', 'scircle_right' },
-   { 'scircle_left', 'admin', 'title', 'unseen_output', 'padding', 'scircle_right' },
-   { 'scircle_left', 'wsl', 'title', 'padding', 'scircle_right' },
-   { 'scircle_left', 'wsl', 'title', 'unseen_output', 'padding', 'scircle_right' },
-}
+-- Panes that have rung the bell since their tab was last focused, keyed by
+-- pane id. Populated by the `bell` event, drained when the owning tab becomes
+-- active. Agent CLIs ring the bell when they finish or need a decision, so this
+-- is what makes a backgrounded agent tab announce itself.
+---@type table<number, boolean>
+local bell_panes = {}
 
 
+-- Inactive tabs are light-on-dark (subtext1 over surface1/2); the active tab
+-- inverts to dark-on-sapphire so it reads as the selected pill. The `scircle_*`
+-- entries are the pill end-caps, so their fg must match the corresponding
+-- text bg.
 ---@type table<string, Cells.SegmentColors>
 -- stylua: ignore
 local colors = {
-   text_default          = { bg = '#45475A', fg = '#1C1B19' },
-   text_hover            = { bg = '#5D87A3', fg = '#1C1B19' },
-   text_active           = { bg = '#74c7ec', fg = '#11111B' },
+   text_default          = { bg = p.surface1, fg = p.subtext1 },
+   text_hover            = { bg = p.surface2, fg = p.text },
+   text_active           = { bg = p.sapphire, fg = p.crust },
 
-   unseen_output_default = { bg = '#45475A', fg = '#FFA066' },
-   unseen_output_hover   = { bg = '#5D87A3', fg = '#FFA066' },
-   unseen_output_active  = { bg = '#74c7ec', fg = '#FFA066' },
+   unseen_output_default = { bg = p.surface1, fg = p.peach },
+   unseen_output_hover   = { bg = p.surface2, fg = p.peach },
+   -- Peach on sapphire is near-invisible; the active pill needs a dark marker.
+   unseen_output_active  = { bg = p.sapphire, fg = p.crust },
 
-   scircle_default       = { bg = 'rgba(0, 0, 0, 0.4)', fg = '#45475A' },
-   scircle_hover         = { bg = 'rgba(0, 0, 0, 0.4)', fg = '#5D87A3' },
-   scircle_active        = { bg = 'rgba(0, 0, 0, 0.4)', fg = '#74C7EC' },
+   -- Red, so a tab waiting on you is distinguishable at a glance from a tab
+   -- that merely produced output (peach).
+   bell_default          = { bg = p.surface1, fg = p.red },
+   bell_hover            = { bg = p.surface2, fg = p.red },
+   bell_active           = { bg = p.sapphire, fg = p.crust },
+
+   scircle_default       = { bg = p.ui.status_bg, fg = p.surface1 },
+   scircle_hover         = { bg = p.ui.status_bg, fg = p.surface2 },
+   scircle_active        = { bg = p.ui.status_bg, fg = p.sapphire },
 }
-
--- Return either the base color or the OLED-mode equivalent for a given key.
--- In OLED mode, text/unseen segments use cycling accent on near-black bg, and
--- scircle segments mirror the corresponding text bg so the tab pill blends.
----@param key string e.g. 'text_default', 'scircle_active', 'unseen_output_hover'
----@return Cells.SegmentColors
-local function pick_color(key)
-   if not oled.enabled then return colors[key] end
-   local p = oled:current_palette()
-   local OLED_BG_ACTIVE   = '#1a1a1a'
-   local OLED_BG_INACTIVE = '#0a0a0a'
-   if key == 'text_default' or key == 'unseen_output_default' then
-      return { bg = OLED_BG_INACTIVE, fg = p.accent_dim }
-   elseif key == 'text_hover' or key == 'unseen_output_hover' then
-      return { bg = OLED_BG_ACTIVE, fg = p.accent }
-   elseif key == 'text_active' or key == 'unseen_output_active' then
-      return { bg = OLED_BG_ACTIVE, fg = p.accent }
-   elseif key == 'scircle_default' then
-      return { bg = 'rgba(0, 0, 0, 0.4)', fg = OLED_BG_INACTIVE }
-   elseif key == 'scircle_hover' or key == 'scircle_active' then
-      return { bg = 'rgba(0, 0, 0, 0.4)', fg = OLED_BG_ACTIVE }
-   end
-   return colors[key]
-end
 
 ---
 -- ================
@@ -212,6 +198,7 @@ end
 ---@field is_admin boolean
 ---@field unseen_output boolean
 ---@field unseen_output_count number
+---@field has_bell boolean
 ---@field is_active boolean
 local Tab = {}
 Tab.__index = Tab
@@ -226,6 +213,7 @@ function Tab:new()
       is_admin = false,
       unseen_output = false,
       unseen_output_count = 0,
+      has_bell = false,
    }
    return setmetatable(tab, self)
 end
@@ -247,8 +235,22 @@ function Tab:set_info(event_opts, tab, max_width)
       self.unseen_output, self.unseen_output_count = check_unseen_output(tab.panes)
    end
 
+   -- Focusing a tab is the acknowledgement — drop the bell for every pane it
+   -- owns. Otherwise surface a bell if any pane in the tab rang one.
+   self.has_bell = false
+   for _, pane in ipairs(tab.panes) do
+      if tab.is_active then
+         bell_panes[pane.pane_id] = nil
+      elseif bell_panes[pane.pane_id] then
+         self.has_bell = true
+      end
+   end
+
    local inset = (self.is_admin or self.is_wsl) and TITLE_INSET.ICON or TITLE_INSET.DEFAULT
    if self.unseen_output then
+      inset = inset + 2
+   end
+   if self.has_bell then
       inset = inset + 2
    end
 
@@ -279,6 +281,7 @@ function Tab:create_cells()
       :add_segment('admin', ' ' .. GLYPH_ADMIN)
       :add_segment('wsl', ' ' .. GLYPH_LINUX)
       :add_segment('title', ' ', nil, attr(attr.intensity('Bold')))
+      :add_segment('bell', ' ' .. GLYPH_BELL, nil, attr(attr.intensity('Bold')))
       :add_segment('unseen_output', ' ' .. GLYPH_CIRCLE)
       :add_segment('padding', ' ')
       :add_segment('scircle_right', GLYPH_SCIRCLE_RIGHT)
@@ -316,38 +319,50 @@ function Tab:update_cells(event_opts, is_active, hover)
       )
    end
 
-   -- Cache the last-applied (tab_state, oled_enabled). Skip the seven
-   -- update_segment_colors calls when nothing changed — format-tab-title
-   -- fires many times per render and stacking that work on top of focus
-   -- mode's set_config_overrides was causing keymap dispatch issues.
-   local oled_enabled = oled.enabled
-   if self._last_state == tab_state and self._last_oled == oled_enabled then
+   -- Cache the last-applied tab_state. Skip the eight update_segment_colors
+   -- calls when nothing changed — format-tab-title fires many times per render
+   -- and stacking that work on top of focus mode's set_config_overrides was
+   -- causing keymap dispatch issues.
+   if self._last_state == tab_state then
       return
    end
    self._last_state = tab_state
-   self._last_oled = oled_enabled
 
    self.cells
-      :update_segment_colors('scircle_left', pick_color('scircle_' .. tab_state))
-      :update_segment_colors('admin', pick_color('text_' .. tab_state))
-      :update_segment_colors('wsl', pick_color('text_' .. tab_state))
-      :update_segment_colors('title', pick_color('text_' .. tab_state))
-      :update_segment_colors('unseen_output', pick_color('unseen_output_' .. tab_state))
-      :update_segment_colors('padding', pick_color('text_' .. tab_state))
-      :update_segment_colors('scircle_right', pick_color('scircle_' .. tab_state))
+      :update_segment_colors('scircle_left', colors['scircle_' .. tab_state])
+      :update_segment_colors('admin', colors['text_' .. tab_state])
+      :update_segment_colors('wsl', colors['text_' .. tab_state])
+      :update_segment_colors('title', colors['text_' .. tab_state])
+      :update_segment_colors('bell', colors['bell_' .. tab_state])
+      :update_segment_colors('unseen_output', colors['unseen_output_' .. tab_state])
+      :update_segment_colors('padding', colors['text_' .. tab_state])
+      :update_segment_colors('scircle_right', colors['scircle_' .. tab_state])
 end
 
+---Assemble the pill left-to-right. Replaces a fixed variant table that would
+---have needed twelve entries once the bell indicator was added.
 ---@return FormatItem[] (ref: https://wezfurlong.org/wezterm/config/lua/wezterm/format.html)
 function Tab:render()
-   local variant_idx = self.is_admin and 3 or 1
+   local ids = { 'scircle_left' }
+
+   -- WSL wins over admin when both match, matching the previous variant table.
    if self.is_wsl then
-      variant_idx = 5
+      table.insert(ids, 'wsl')
+   elseif self.is_admin then
+      table.insert(ids, 'admin')
    end
 
-   if self.unseen_output then
-      variant_idx = variant_idx + 1
+   table.insert(ids, 'title')
+   if self.has_bell then
+      table.insert(ids, 'bell')
    end
-   return self.cells:render(RENDER_VARIANTS[variant_idx])
+   if self.unseen_output then
+      table.insert(ids, 'unseen_output')
+   end
+   table.insert(ids, 'padding')
+   table.insert(ids, 'scircle_right')
+
+   return self.cells:render(ids)
 end
 
 ---@type Tab[]
@@ -361,6 +376,14 @@ M.setup = function(opts)
       wezterm.log_error(err)
    end
 
+   -- BUILTIN EVENT
+   -- Mark the ringing pane. The tab it belongs to is resolved at render time
+   -- from `tab.panes`, so there is no pane -> tab lookup to keep in sync, and a
+   -- pane that is closed while still flagged simply stops being iterated over.
+   wezterm.on('bell', function(_window, pane)
+      bell_panes[pane:pane_id()] = true
+   end)
+
    -- CUSTOM EVENT
    -- Event listener to manually update the tab name
    -- Tab name will remain locked until the `reset-tab-title` is triggered
@@ -368,7 +391,7 @@ M.setup = function(opts)
       window:perform_action(
          wezterm.action.PromptInputLine({
             description = wezterm.format({
-               { Foreground = { Color = '#FFFFFF' } },
+               { Foreground = { Color = p.text } },
                { Attribute = { Intensity = 'Bold' } },
                { Text = 'Enter new name for tab' },
             }),

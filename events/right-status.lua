@@ -2,8 +2,8 @@ local wezterm = require('wezterm')
 local umath = require('utils.math')
 local Cells = require('utils.cells')
 local backdrops = require('utils.backdrops')
-local oled = require('utils.oled-mode')
 local platform = require('utils.platform')
+local p = require('colors.palette')
 local OptsValidator = require('utils.opts-validator')
 
 ---@alias Event.RightStatusOptions { date_format?: string }
@@ -29,8 +29,6 @@ local ICON_SEPARATOR = nf.oct_dash
 local ICON_DATE      = nf.fa_calendar
 local ICON_RAM       = nf.md_memory
 local ICON_CATEGORY  = nf.md_layers
-local ICON_OLED_ON   = nf.md_television
-local ICON_OLED_OFF  = nf.md_television_off
 
 ---@type string[]
 local discharging_icons = {
@@ -62,40 +60,17 @@ local charging_icons = {
 ---@type table<string, Cells.SegmentColors>
 -- stylua: ignore
 local colors = {
-   workspace     = { fg = '#b7bdf8', bg = 'rgba(0, 0, 0, 0.4)' },
-   date          = { fg = '#fab387', bg = 'rgba(0, 0, 0, 0.4)' },
-   battery       = { fg = '#f9e2af', bg = 'rgba(0, 0, 0, 0.4)' },
-   separator     = { fg = '#74c7ec', bg = 'rgba(0, 0, 0, 0.4)' },
-   focus_on      = { fg = '#cba6f7', bg = 'rgba(0, 0, 0, 0.4)' },
-   focus_off     = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
-   overlay       = { fg = '#89dceb', bg = 'rgba(0, 0, 0, 0.4)' },
-   rotate_on     = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
-   rotate_off    = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
-   ram           = { fg = '#94e2d5', bg = 'rgba(0, 0, 0, 0.4)' },
-   category      = { fg = '#cdd6f4', bg = 'rgba(0, 0, 0, 0.55)' },
-   oled_on       = { fg = '#a6e3a1', bg = 'rgba(0, 0, 0, 0.4)' },
-   oled_off      = { fg = '#6e738d', bg = 'rgba(0, 0, 0, 0.4)' },
-}
-
--- Segments whose fg should follow the OLED cycle accent.
--- The corresponding `colors` table entries above are the base values restored
--- when OLED mode is off.
-local CYCLE_FG_SEGMENTS = {
-   'workspace_icon', 'workspace_text',
-   'date_icon',      'date_text',
-   'ram_icon',       'ram_text',
-   'battery_icon',   'battery_text',
-   'focus_on',
-   'overlay_text',
-   'rotate_on',
-   'category_text',
-   'oled_on',
-}
-
--- Separator-style segments use the dimmer accent variant in OLED mode.
-local CYCLE_FG_SEGMENTS_DIM = {
-   'workspace_sep', 'separator', 'focus_sep', 'overlay_sep',
-   'rotate_sep', 'ram_sep', 'category_sep',
+   workspace     = { fg = p.lavender, bg = p.ui.status_bg },
+   date          = { fg = p.peach,    bg = p.ui.status_bg },
+   battery       = { fg = p.yellow,   bg = p.ui.status_bg },
+   separator     = { fg = p.sapphire, bg = p.ui.status_bg },
+   focus_on      = { fg = p.mauve,    bg = p.ui.status_bg },
+   focus_off     = { fg = p.overlay0, bg = p.ui.status_bg },
+   overlay       = { fg = p.sky,      bg = p.ui.status_bg },
+   rotate_on     = { fg = p.green,    bg = p.ui.status_bg },
+   rotate_off    = { fg = p.overlay0, bg = p.ui.status_bg },
+   ram           = { fg = p.teal,     bg = p.ui.status_bg },
+   category      = { fg = p.text,     bg = p.ui.status_bg_alt },
 }
 
 local cells = Cells:new()
@@ -122,9 +97,6 @@ cells
    :add_segment('battery_text', '', colors.battery, attr(attr.intensity('Bold')))
    :add_segment('category_text', '', colors.category, attr(attr.intensity('Bold')))
    :add_segment('category_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
-   :add_segment('oled_on', ICON_OLED_ON .. ' Oled', colors.oled_on, attr(attr.intensity('Bold')))
-   :add_segment('oled_off', ICON_OLED_OFF .. ' Oled', colors.oled_off)
-   :add_segment('oled_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('tail_pad', '   ', colors.separator)
 
 ---@return string, string
@@ -196,40 +168,7 @@ M.setup = function(opts)
       wezterm.log_error(err)
    end
 
-   -- Base fg colors used to restore the original palette when OLED mode is off.
-   local BASE_FG = {
-      workspace_icon = colors.workspace.fg,
-      workspace_text = colors.workspace.fg,
-      date_icon      = colors.date.fg,
-      date_text      = colors.date.fg,
-      ram_icon       = colors.ram.fg,
-      ram_text       = colors.ram.fg,
-      battery_icon   = colors.battery.fg,
-      battery_text   = colors.battery.fg,
-      focus_on       = colors.focus_on.fg,
-      overlay_text   = colors.overlay.fg,
-      rotate_on      = colors.rotate_on.fg,
-      category_text  = colors.category.fg,
-      oled_on        = colors.oled_on.fg,
-   }
-   local BASE_FG_DIM = {
-      workspace_sep = colors.separator.fg,
-      separator     = colors.separator.fg,
-      focus_sep     = colors.separator.fg,
-      overlay_sep   = colors.separator.fg,
-      rotate_sep    = colors.separator.fg,
-      ram_sep       = colors.separator.fg,
-      category_sep  = colors.separator.fg,
-   }
-
-   -- Apply OLED palette / restore base palette only when oled.enabled changes
-   -- — not on every status tick. Cycling has been removed; OLED-on uses a
-   -- single static dim palette.
-   local last_oled_enabled = nil
-
    wezterm.on('update-status', function(window, _pane)
-      oled:ensure_window(window)
-
       local battery_text, battery_icon = battery_info()
 
       local ram_text = get_ram_usage()
@@ -240,27 +179,6 @@ M.setup = function(opts)
          :update_segment_text('ram_text', ram_text)
          :update_segment_text('battery_icon', battery_icon)
          :update_segment_text('battery_text', battery_text)
-
-      local enabled = oled.enabled
-      if enabled ~= last_oled_enabled then
-         if enabled then
-            local p = oled:current_palette()
-            for _, id in ipairs(CYCLE_FG_SEGMENTS) do
-               cells:update_segment_colors(id, { fg = p.accent })
-            end
-            for _, id in ipairs(CYCLE_FG_SEGMENTS_DIM) do
-               cells:update_segment_colors(id, { fg = p.accent_dim })
-            end
-         else
-            for id, fg in pairs(BASE_FG) do
-               cells:update_segment_colors(id, { fg = fg })
-            end
-            for id, fg in pairs(BASE_FG_DIM) do
-               cells:update_segment_colors(id, { fg = fg })
-            end
-         end
-         last_oled_enabled = enabled
-      end
 
       local focus_off = not backdrops.focus_on
 
@@ -277,12 +195,6 @@ M.setup = function(opts)
       end
 
       local segments = { 'workspace_icon', 'workspace_text', 'workspace_sep' }
-      if oled.enabled then
-         table.insert(segments, 'oled_on')
-      else
-         table.insert(segments, 'oled_off')
-      end
-      table.insert(segments, 'oled_sep')
       if show_category then
          table.insert(segments, 'category_text')
          table.insert(segments, 'category_sep')

@@ -2,8 +2,13 @@ local wezterm = require('wezterm')
 local gpu_adapters = require('utils.gpu-adapter')
 local backdrops = require('utils.backdrops')
 local colors = require('colors.custom')
+local p = require('colors.palette')
 
 return {
+   -- The panel is 240Hz, so this is already a deliberate half-rate cap rather
+   -- than overshoot — dropping it to 60 would be a visible downgrade when
+   -- scrolling scrollback. It only costs anything while the screen is actually
+   -- changing, which for agent work means during streaming output.
    max_fps = 120,
    -- TESTING: WebGpu pinned to the Dx12 dGPU. Prior findings, kept for reference:
    -- WebGpu on the iGPU stalls on every backdrop swap (it rebuilds the
@@ -18,7 +23,15 @@ return {
    warn_about_missing_glyphs = false,
 
    -- cursor
-   animation_fps = 120,
+   -- NOTE: the three `cursor_blink_*` settings below only take effect for the
+   -- `Blinking*` cursor styles. They are inert while the style is `SteadyBlock`
+   -- — kept here so switching to `BlinkingBlock`/`BlinkingBar` just works.
+   --
+   -- `animation_fps` only drives easing effects (blinking cursor, blinking
+   -- text, the visual bell) — not general output rendering, which is `max_fps`.
+   -- With a steady cursor its only real consumer is the visual bell fade below,
+   -- and 60fps is already smooth for a 150ms fade.
+   animation_fps = 60,
    cursor_blink_ease_in = 'EaseOut',
    cursor_blink_ease_out = 'EaseOut',
    default_cursor_style = 'SteadyBlock',
@@ -29,6 +42,19 @@ return {
 
    -- background: pass in `true` if you want wezterm to start with focus mode on (no bg images)
    background = backdrops:initial_options(true),
+
+   -- Visual bell. Agent CLIs ring the terminal bell on completion and on
+   -- permission prompts, so this fires often — a short, dim pulse rather than a
+   -- full-brightness strobe. The flash colour is `colors.visual_bell`.
+   -- If a busy backdrop swallows the background flash, switch `target` to
+   -- 'CursorColor'; the cursor is always drawn, so it cannot be washed out.
+   visual_bell = {
+      fade_in_function = 'EaseOut',
+      fade_in_duration_ms = 75,
+      fade_out_function = 'EaseIn',
+      fade_out_duration_ms = 150,
+      target = 'BackgroundColor',
+   },
 
    -- scrollbar
    enable_scroll_bar = true,
@@ -43,15 +69,27 @@ return {
    switch_to_last_active_tab_when_closing_tab = true,
 
    -- command palette
-   command_palette_fg_color = '#b4befe',
-   command_palette_bg_color = '#11111b',
+   command_palette_fg_color = p.lavender,
+   command_palette_bg_color = p.crust,
    command_palette_font_size = 12,
    command_palette_rows = 25,
 
+   -- character selector
+   char_select_fg_color = p.lavender,
+   char_select_bg_color = p.crust,
+   char_select_font_size = 12,
+
+   -- pane selector (the big overlay digits)
+   pane_select_fg_color = p.crust,
+   pane_select_bg_color = p.peach,
+   pane_select_font_size = 36,
+
    -- window
+   -- NOTE: `right` must leave room for the scrollbar — it is drawn inside the
+   -- right padding, so `enable_scroll_bar` does nothing when this is 0.
    window_padding = {
-      left = 0,
-      right = 0,
+      left = 12,
+      right = 16,
       top = 10,
       bottom = 7.5,
    },
@@ -63,28 +101,31 @@ return {
    integrated_title_buttons = { 'Hide', 'Maximize', 'Close' },
    adjust_window_size_when_changing_font_size = false,
    window_close_confirmation = 'NeverPrompt',
+   -- stylua: ignore
    tab_bar_style = {
-      window_hide           = wezterm.format({ { Foreground = { Color = '#cdd6f4' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_minimize .. ' ' } }),
-      window_hide_hover     = wezterm.format({ { Foreground = { Color = '#fab387' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_minimize .. ' ' } }),
-      window_maximize       = wezterm.format({ { Foreground = { Color = '#cdd6f4' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_maximize .. ' ' } }),
-      window_maximize_hover = wezterm.format({ { Foreground = { Color = '#fab387' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_maximize .. ' ' } }),
-      window_close          = wezterm.format({ { Foreground = { Color = '#cdd6f4' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_close .. ' ' } }),
-      window_close_hover    = wezterm.format({ { Foreground = { Color = '#f38ba8' } }, { Text = ' ' .. wezterm.nerdfonts.md_window_close .. ' ' } }),
-      new_tab               = wezterm.format({ { Foreground = { Color = '#cdd6f4' } }, { Text = ' ' .. wezterm.nerdfonts.md_plus .. ' ' } }),
-      new_tab_hover         = wezterm.format({ { Foreground = { Color = '#a6e3a1' } }, { Text = ' ' .. wezterm.nerdfonts.md_plus .. ' ' } }),
+      window_hide           = wezterm.format({ { Foreground = { Color = p.text } },  { Text = ' ' .. wezterm.nerdfonts.md_window_minimize .. ' ' } }),
+      window_hide_hover     = wezterm.format({ { Foreground = { Color = p.peach } }, { Text = ' ' .. wezterm.nerdfonts.md_window_minimize .. ' ' } }),
+      window_maximize       = wezterm.format({ { Foreground = { Color = p.text } },  { Text = ' ' .. wezterm.nerdfonts.md_window_maximize .. ' ' } }),
+      window_maximize_hover = wezterm.format({ { Foreground = { Color = p.peach } }, { Text = ' ' .. wezterm.nerdfonts.md_window_maximize .. ' ' } }),
+      window_close          = wezterm.format({ { Foreground = { Color = p.text } },  { Text = ' ' .. wezterm.nerdfonts.md_window_close .. ' ' } }),
+      window_close_hover    = wezterm.format({ { Foreground = { Color = p.red } },   { Text = ' ' .. wezterm.nerdfonts.md_window_close .. ' ' } }),
+      new_tab               = wezterm.format({ { Foreground = { Color = p.text } },  { Text = ' ' .. wezterm.nerdfonts.md_plus .. ' ' } }),
+      new_tab_hover         = wezterm.format({ { Foreground = { Color = p.green } }, { Text = ' ' .. wezterm.nerdfonts.md_plus .. ' ' } }),
    },
    window_frame = {
-      active_titlebar_bg = '#000000',
-      inactive_titlebar_bg = '#000000',
-      button_bg = '#000000',
-      button_fg = '#cdd6f4',
-      button_hover_bg = '#1f1f28',
-      button_hover_fg = '#fab387',
+      active_titlebar_bg = p.ui.titlebar,
+      inactive_titlebar_bg = p.ui.titlebar,
+      button_bg = p.ui.titlebar,
+      button_fg = p.text,
+      button_hover_bg = p.base,
+      button_hover_fg = p.peach,
       font = wezterm.font({ family = 'JetBrainsMono Nerd Font', weight = 'Bold' }),
       font_size = 11.0,
    },
+   -- Enough dimming to read as "inactive" without turning the pane murky over
+   -- a backdrop image.
    inactive_pane_hsb = {
       saturation = 0.85,
-      brightness = 0.5,
+      brightness = 0.7,
    },
 }
