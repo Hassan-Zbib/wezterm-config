@@ -6,8 +6,15 @@ local colorscheme = {
    foreground = p.text,
    background = p.base,
    cursor_bg = p.rosewater,
-   cursor_border = p.rosewater,
    cursor_fg = p.crust,
+
+   -- Deliberately NOT `cursor_bg`. WezTerm forces the cursor in every inactive
+   -- pane to a hollow, non-blinking outline box drawn in `cursor_border` — any
+   -- shape, no config needed. While both were rosewater that built-in cue was
+   -- wasted: filled-rosewater vs hollow-rosewater is a weak read at a glance.
+   -- A neutral grey outline makes the active pane the only place a bright
+   -- rosewater block appears. Set back to `p.rosewater` to undo.
+   cursor_border = p.overlay2,
 
    -- Inverted highlight: dark text on a light accent. Much easier to spot than
    -- the upstream surface2/text pairing. To go back to the subtler upstream
@@ -96,9 +103,16 @@ local colorscheme = {
       [17] = p.rosewater,
    },
    scrollbar_thumb = p.surface2,
-   -- `overlay0` sits at only 2.3:1 against the near-black base — a divider you
-   -- have to hunt for. `overlay1` clears the 3:1 floor for non-text UI.
-   split = p.overlay1,
+   -- The pane divider. WezTerm has no per-pane borders and no active/inactive
+   -- divider variant — this is one global colour for every split line in the
+   -- tab — so the job here is just to make the boundaries themselves obvious,
+   -- and let the dimming/cursor cues say which side is live.
+   --
+   -- Grey (`overlay1`) reads as chrome and disappears into the text. Sapphire
+   -- is already the active-tab colour, so pane edges and the active tab pill
+   -- speak the same language. Its thickness is `underline_thickness` (see
+   -- config/appearance.lua) — there is no separate knob for it.
+   split = p.sapphire,
    compose_cursor = p.flamingo,
 }
 

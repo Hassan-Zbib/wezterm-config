@@ -19,7 +19,12 @@ return {
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
-   underline_thickness = '1.5pt',
+   -- Doubles as the pane split-line thickness: WezTerm draws dividers at
+   -- `underline_height` and exposes no separate setting for them. Bumped from
+   -- 1.5pt to give the sapphire divider enough weight to read as a boundary.
+   -- The side effect is chunkier text underlines — revert to '1.5pt' if that
+   -- bothers you more than thin dividers do.
+   underline_thickness = '2pt',
    warn_about_missing_glyphs = false,
 
    -- cursor
@@ -122,10 +127,35 @@ return {
       font = wezterm.font({ family = 'JetBrainsMono Nerd Font', weight = 'Bold' }),
       font_size = 11.0,
    },
-   -- Enough dimming to read as "inactive" without turning the pane murky over
-   -- a backdrop image.
+   -- Inactive panes. These are HSV multipliers (1.0 = unchanged), applied as a
+   -- per-quad GPU transform.
+   --
+   -- IMPORTANT: this dims a pane's *background rectangle* only when no window
+   -- background layer is set — WezTerm guards that fill with
+   -- `if self.window_background.is_empty()`. This config always sets
+   -- `background` layers (focus mode included, which paints a solid colour), so
+   -- these values reach glyphs and cell backgrounds ONLY. Pane regions are
+   -- always pixel-identical. That is why the previous 0.85/0.7 read as nothing.
+   --
+   -- Hence the harder numbers: with only text to work with, the whole
+   -- difference has to be carried by the text. The other two active-pane cues
+   -- are `colors.split` (the divider) and `colors.cursor_border` (WezTerm draws
+   -- inactive panes' cursors as a hollow box in that colour).
+   --
+   -- Two region-level approaches were built and dropped, so they do not get
+   -- retried:
+   --   1. Removing the focus-mode background layer, which lets the fill above
+   --      be drawn again. Works, but forces focus mode off pure black and does
+   --      nothing while a backdrop image is up, since the image is itself the
+   --      suppressing layer.
+   --   2. A Warp-style spotlight — a black rectangle layer positioned over the
+   --      active pane on a grey fill, which is the only way to get the active
+   --      pane DARKER than the others (this setting only multiplies downward).
+   --      Correct visually, but WezTerm has no pane-focus event, so it had to
+   --      repaint via `set_config_overrides` on every pane switch plus an
+   --      `update-status` poll. Too laggy to keep.
    inactive_pane_hsb = {
-      saturation = 0.85,
-      brightness = 0.7,
+      saturation = 0.55,
+      brightness = 0.5,
    },
 }
