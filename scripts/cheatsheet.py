@@ -193,6 +193,11 @@ _CURSOR = (
         sub('Line editing (sent to shell)') +
         row('Alt+←',           'Jump to line start')    +
         row('Alt+→',           'Jump to line end')      +
+        row('Ctrl+←',          'Jump word left')        +
+        row('Ctrl+→',          'Jump word right')       +
+        row('Ctrl+Backspace',  'Delete word')           +
+        row('Ctrl+w',          'Delete to whitespace')  +
+        row('Ctrl+u',          'Delete to line start')  +
         row('Alt+Backspace',   'Clear line (Git Bash)') +
         row('Shift+Enter',     'Newline w/o submit')    +
         blank() +
