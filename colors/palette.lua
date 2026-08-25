@@ -24,8 +24,8 @@
 -- a long session and worse on OLED.
 -- stylua: ignore
 local palette = {
-   crust     = '#000000', -- true black: dark text on light accents, focus mode
-   mantle    = '#070707',
+   crust     = '#000000', -- true black: dark text on light accents
+   mantle    = '#050505', -- focus-mode background; matches Warp's measured #050505
    base      = '#0d0d0d', -- terminal background
    surface0  = '#1a1a1a',
    surface1  = '#262626', -- inactive tab pill, ANSI black

@@ -18,8 +18,10 @@ local sessions = require('utils.sessions')
 local backdrops = require('utils.backdrops')
 local palette = require('colors.palette')
 backdrops
-   -- Focus mode paints the darkest shade in the theme as a solid background.
-   :set_focus(palette.crust)
+   -- Focus mode paints a solid background. Uses `mantle` (#050505), not
+   -- `crust` (#000000): pure black makes glyphs bloom -- the exact effect
+   -- palette.lua warns about -- and #050505 is what Warp renders.
+   :set_focus(palette.mantle)
    :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/backdrops/')
    :set_images()
    :random()
