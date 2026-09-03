@@ -8,6 +8,7 @@
 	autocrlf = false
 	eol = lf
 	ignorecase = false
+	longpaths = true
 [color]
 	ui = true
 [url "git@github.com:"]
@@ -21,3 +22,10 @@
 [credential "https://gist.github.com"]
 	helper = 
 	helper = !'C:\\Program Files\\GitHub CLI\\gh.exe' auth git-credential
+[delta]
+	# Read by delta itself, wherever it is invoked from — lazygit's diff
+	# panes pick these up. Inert for plain `git diff` unless core.pager
+	# is set to delta (deliberately not set; add it if you want delta
+	# for git on the command line too).
+	syntax-theme = Catppuccin Macchiato
+	line-numbers = true

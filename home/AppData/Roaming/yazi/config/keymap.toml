@@ -3,9 +3,13 @@
 # ============================================================
 # Managed by dotbot — run ./install from the repo to symlink.
 # Only overrides are listed here; all other defaults are kept.
+#
+# NOTE: the section is [mgr], not [manager]. Yazi renamed it and
+# silently ignores the old name — no error, the bindings just
+# never apply.
 # ============================================================
 
-[manager]
+[mgr]
 prepend_keymap = [
    # Replace Ctrl+U/D half-page scroll with Ctrl+PgUp/PgDn
    # (PageUp/PageDown bare are taken by WezTerm for terminal scroll)

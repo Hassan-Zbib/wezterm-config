@@ -1,0 +1,61 @@
+# ============================================================
+# Lazygit Config — Catppuccin Macchiato
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+#
+# Lives at ~/AppData/Local/lazygit/config.yml on Windows — note
+# Local (not Roaming), and not ~/.config like the other tools.
+# Confirm on any machine with:  lazygit --print-config-dir
+# ============================================================
+
+gui:
+   # Nerd Font glyphs for file / branch icons. Needs JetBrainsMono
+   # Nerd Font, which ./install already pulls in via winget.
+   nerdFontsVersion: "3"
+   showFileIcons: true
+
+   theme:
+      activeBorderColor:
+         - "#8bd5ca" # teal
+         - bold
+      inactiveBorderColor:
+         - "#a5adcb" # subtext0
+      searchingActiveBorderColor:
+         - "#eed49f" # yellow
+         - bold
+      optionsTextColor:
+         - "#8aadf4" # blue
+      selectedLineBgColor:
+         - "#363a4f" # surface0
+      inactiveViewSelectedLineBgColor:
+         - "#1e2030" # mantle
+      cherryPickedCommitFgColor:
+         - "#8aadf4" # blue
+      cherryPickedCommitBgColor:
+         - "#8bd5ca" # teal
+      markedBaseCommitFgColor:
+         - "#8aadf4" # blue
+      markedBaseCommitBgColor:
+         - "#eed49f" # yellow
+      unstagedChangesColor:
+         - "#ed8796" # red
+      defaultFgColor:
+         - "#cad3f5" # text
+
+   authorColors:
+      "*": "#b7bdf8" # lavender
+
+git:
+   # delta renders the diff panes.
+   #
+   # delta's OWN options (syntax theme, line numbers, ...) live in the
+   # [delta] section of ~/.gitconfig, deliberately not here: lazygit
+   # runs this command through cmd.exe on Windows, which mangles the
+   # quotes around a value containing a space, and the syntax theme is
+   # called "Catppuccin Macchiato". Keeping the command flag-free
+   # sidesteps that entirely.
+   diffRenderers:
+      - type: stdinFilter
+        name: delta
+        colorArg: always
+        command: delta --dark --paging=never

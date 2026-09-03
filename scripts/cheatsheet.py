@@ -331,6 +331,11 @@ _LAZY_TOOLS = (
         row('z',               'Undo (via reflog)')     +
         row('q',               'Quit')                  +
         blank() +
+        sub('delta (diff renderer)') +
+        note('Renders lazygit diffs:') +
+        note('syntax colours + line nums.') +
+        note('Tuned in ~/.gitconfig [delta].') +
+        blank() +
         sub('Lazyssh & LazySkills') +
         row('lazyssh / lssh',  'SSH manager')           +
         row('lazyskills',      'Manage agent skills')
