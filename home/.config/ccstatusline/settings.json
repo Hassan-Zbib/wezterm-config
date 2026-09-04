@@ -68,6 +68,15 @@
         "type": "separator"
       },
       {
+        "id": "b7f4c2a1-3e8d-4f6b-9c21-7a5e0d84f193",
+        "type": "fable-weekly-usage",
+        "color": "magenta"
+      },
+      {
+        "id": "d3a91c60-58b2-4e77-8f14-2c6b9ea70d85",
+        "type": "separator"
+      },
+      {
         "id": "ad87c596-654b-4ba7-8019-6ff98df66200",
         "type": "weekly-usage",
         "color": "green"
