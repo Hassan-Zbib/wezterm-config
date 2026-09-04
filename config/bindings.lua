@@ -2,6 +2,7 @@ local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
 local ssh_hosts = require('utils.ssh-hosts')
+local domain_manager = require('utils.domains')
 local act = wezterm.action
 
 local mod = {}
@@ -136,9 +137,31 @@ local keys = {
    -- tabs --
    -- tabs: spawn+close
    { key = 't',          mods = mod.SUPER,     action = act.SpawnTab('DefaultDomain') },
-   -- Alt+Ctrl+t is left free to match Warp's "reopen closed session"; WSL fish moves to +Shift
-   { key = 't',          mods = mod.SUPER_REV .. '|SHIFT', action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }) },
+   -- Alt+Ctrl+Shift+t spawns into WSL. WezTerm reports this as `ALT|CTRL T` --
+   -- an uppercase key name means the shifted form -- so it is a distinct binding
+   -- from the lowercase `ALT|CTRL t` further down, and the two do not collide.
+   -- Previously pointed at a domain named 'wsl:ubuntu-fish' that was never
+   -- declared in config/domains.lua, so pressing it did nothing.
+   { key = 't',          mods = mod.SUPER_REV .. '|SHIFT', action = act.SpawnTab({ DomainName = 'WSL:Ubuntu' }) },
    { key = 'w',          mods = mod.SUPER_REV, action = act.CloseCurrentTab({ confirm = false }) },
+
+   -- domains / mux --
+   -- Alt+Ctrl+m opens the manager (spawn into a domain, detach, restart the mux
+   -- server). Restart is destructive, so it sits behind a second confirmation
+   -- inside the menu rather than on a bare keystroke.
+   {
+      key = 'm',
+      mods = mod.SUPER_REV,
+      action = wezterm.action_callback(function(window, pane)
+         domain_manager.manager(window, pane)
+      end),
+   },
+   -- Escape hatch: a throwaway tab owned by the GUI, not the mux server. Dies
+   -- with the window, which is what you want for a quick one-off shell.
+   -- Sits next to Alt+t (new tab) deliberately: same gesture, disposable domain.
+   -- This claims the Alt+Ctrl+t slot that was previously held open to mirror
+   -- Warp's "reopen closed session" -- that Warp parity is now gone.
+   { key = 't',          mods = mod.SUPER_REV, action = act.SpawnCommandInNewTab({ domain = { DomainName = 'local' } }) },
 
    -- tabs: navigation
    { key = '[',          mods = mod.SUPER,     action = act.ActivateTabRelative(-1) },

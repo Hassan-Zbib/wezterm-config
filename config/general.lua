@@ -10,7 +10,21 @@ return {
    audible_bell = 'SystemBeep',
 
    scrollback_lines = 50000,
-   enable_kitty_keyboard = true,
+
+   -- The GUI and the mux server must agree on a workspace name, otherwise
+   -- `wezterm connect mux` attaches looking for "default", doesn't find it, and
+   -- spawns a second empty window alongside the one the server already built.
+   default_workspace = 'main',
+
+   -- Must stay false. WezTerm's kitty-protocol encoder sends the SHIFTED
+   -- codepoint for non-letter keys instead of the base one (wezterm#2546), so
+   -- Shift+/ arrives as `CSI 63;..u` rather than the spec's `CSI 47;2u` and any
+   -- TUI that negotiates the protocol -- Claude Code, Neovim -- never receives a
+   -- literal `?`. A plain bash prompt is unaffected because it never requests
+   -- the protocol, which is why this looks like "Shift is broken, but only
+   -- sometimes". Shift+Enter keeps working either way: it's an explicit
+   -- SendString in config/bindings.lua, which bypasses key encoding entirely.
+   enable_kitty_keyboard = false,
 
    hyperlink_rules = {
       -- Matches: a URL in parens: (URL)

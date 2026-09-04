@@ -33,7 +33,15 @@ GpuAdapters.AVAILABLE_BACKENDS = {
 }
 
 ---@type WeztermGPUAdapter[]
-GpuAdapters.ENUMERATED_GPUS = wezterm.gui.enumerate_gpus()
+---`wezterm.gui` is nil inside `wezterm-mux-server`, which evaluates this very
+---same config file. Calling `enumerate_gpus()` there raises while the config is
+---still being built, and WezTerm answers by discarding the ENTIRE config and
+---falling back to its built-in defaults -- silently, with nothing in the server
+---log. The visible symptom is `wezterm connect mux` handing you cmd.exe panes
+---in a workspace called "default" instead of your shell in "main".
+---An empty list is safe: `pick_manual`/`pick_best` already return nil (letting
+---WezTerm choose), and the mux server never renders anything anyway.
+GpuAdapters.ENUMERATED_GPUS = wezterm.gui and wezterm.gui.enumerate_gpus() or {}
 
 ---@return GpuAdapters
 ---@private

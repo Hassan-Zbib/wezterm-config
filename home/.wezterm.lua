@@ -23,8 +23,17 @@ backdrops
    -- palette.lua warns about -- and #050505 is what Warp renders.
    :set_focus(palette.mantle)
    :set_images_dir(wezterm.home_dir .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/backdrops/')
-   :set_images()
-   :random()
+
+-- `wezterm.gui` is nil inside `wezterm-mux-server`, and `:set_images()` calls
+-- `wezterm.glob`, which needs the GUI's main coroutine. Running it in the mux
+-- server throws while the config is still being evaluated, and WezTerm answers
+-- by silently discarding the ENTIRE config and falling back to its built-in
+-- defaults -- no error in the server log. Symptom: `wezterm connect mux` hands
+-- you cmd.exe panes in a workspace called "default" instead of Git Bash in
+-- "main". Backgrounds are a GUI-only concern anyway, so gate them here.
+if wezterm.gui then
+   backdrops:set_images():random()
+end
 
 require('events.left-status').setup()
 require('events.right-status').setup()

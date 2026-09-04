@@ -106,7 +106,8 @@ _TABS = (
     header('📑 Tabs') +
         sub('Lifecycle') +
         row('Alt+t',       'New tab')                   +
-        row('Alt+Ctrl+Shift+t', 'New tab (WSL fish)')   +
+        row('Alt+Ctrl+t',  'New tab (local, temp)')     +
+        row('Alt+Ctrl+Shift+t', 'New tab (WSL Ubuntu)') +
         row('Alt+Ctrl+w',  'Close tab')                 +
         blank() +
         sub('Navigation') +
@@ -148,7 +149,38 @@ _WORKSPACES = (
         row('Shift+F5',    'New workspace')             +
         row('Ctrl+F5',     'Rename current')            +
         row('Alt+Ctrl+[',  'Previous workspace')        +
-        row('Alt+Ctrl+]',  'Next workspace')
+        row('Alt+Ctrl+]',  'Next workspace')            +
+        blank() +
+        note('Switching never pauses a') +
+        note('workspace — builds and agents') +
+        note('keep running in the background.')
+)
+
+_MUX = (
+    header('🔌 Domains & Mux') +
+        row('Alt+Ctrl+m',  'Domain / mux manager')      +
+        row('Alt+Ctrl+t',  'New local tab (temp)')      +
+        row('Alt+Ctrl+Shift+t', 'New WSL Ubuntu tab')   +
+        row('F7',          'SSH host picker')           +
+        blank() +
+        note('WSL tabs open in ~ (ext4), not') +
+        note('/mnt/c — and persist like the') +
+        note('rest. Windows stays default.') +
+        blank() +
+        sub('Manager menu') +
+        row('<domain>',    'New tab in domain')         +
+        row('Attach "mux"','Reconnect persistent')      +
+        row('Detach',      'Leave, keep running')       +
+        row('Restart',     'Restart mux (confirm)')     +
+        blank() +
+        note('Tabs live in a background mux') +
+        note('server — closing the window') +
+        note('leaves agents running.') +
+        blank() +
+        note('Restart the mux after editing') +
+        note('default_prog or domains:') +
+        note('Ctrl+Shift+r reloads the GUI') +
+        note('only, not the server.')
 )
 
 _SESSIONS = (
@@ -158,7 +190,11 @@ _SESSIONS = (
         row('F10',         'Restore (fuzzy picker)')    +
         row('Ctrl+F10',    'Delete saved session')      +
         blank() +
-        note('Persists pane layout + workspace')
+        note('Saves the CURRENT window only:') +
+        note('pane layout + cwd, tagged with') +
+        note('the workspace NAME.') +
+        note('Does NOT save running programs,') +
+        note('or a workspace\'s other windows.')
 )
 
 _WINDOW = (
@@ -439,12 +475,12 @@ else:
     print()
     render_cols(_SCROLLING, _CURSOR, _BACKGROUND)
     print()
-    render_cols(_ADV_MODES, _COPY_MODE, [])
+    render_cols(_ADV_MODES, _COPY_MODE, _MUX)
 print()
 
 # ── Section: WezTerm Editing & Appearance (4-col only) ────────────────────────
 if NUM_COLS == 4:
-    render_cols(_CURSOR, _BACKGROUND, _ADV_MODES, [])
+    render_cols(_CURSOR, _BACKGROUND, _ADV_MODES, _MUX)
     print()
 
 # ── Section: CLI Tools ────────────────────────────────────────────────────────
