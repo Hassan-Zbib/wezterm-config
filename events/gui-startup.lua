@@ -8,7 +8,13 @@ local M = {}
 -- server, and maximizing at that instant resizes the OS window without the new
 -- dimensions ever reaching the remote pane: you get a full-screen window
 -- rendering an 80x25 pane with the remainder painted black.
-local MAXIMIZE_DELAY_SECS = 1
+--
+-- Measured on this machine: 0s leaves the pane stuck at 80x25, 0.1s already
+-- resizes correctly. 0.2s is that threshold with margin, and short enough that
+-- the snap is not the thing you notice -- `initial_cols`/`initial_rows` in
+-- config/appearance.lua do the real work of opening at the right size, so this
+-- only has to nudge an already-nearly-right window.
+local MAXIMIZE_DELAY_SECS = 0.2
 
 ---There are deliberately no `gui-startup` or `mux-startup` handlers here.
 ---

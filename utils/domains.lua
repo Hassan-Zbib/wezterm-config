@@ -12,6 +12,14 @@ local MUX_DOMAIN = 'mux'
 
 local SPAWN_PREFIX = 'spawn:'
 
+---Domains WezTerm creates for its own internal overlays -- the debug overlay,
+---InputSelector rendering, and friends. They are genuine MuxDomains and report
+---as Attached, so they show up in `all_domains()` alongside the real ones, but
+---opening a shell in one is meaningless. Keep them out of the menu.
+local INTERNAL_DOMAINS = {
+   TermWizTerminalDomain = true,
+}
+
 ---@type table<string, Cells.SegmentColors>
 local colors = {
    name = { fg = p.text },
@@ -59,16 +67,19 @@ function M.choices()
    local choices = {}
 
    for _, domain in ipairs(wezterm.mux.all_domains()) do
-      local state = domain_state(domain)
-      table.insert(choices, {
-         id = SPAWN_PREFIX .. domain:name(),
-         label = label(
-            domain:name(),
-            colors.name,
-            state,
-            state == 'Attached' and colors.attached or colors.detached
-         ),
-      })
+      local name = domain:name()
+      if not INTERNAL_DOMAINS[name] then
+         local state = domain_state(domain)
+         table.insert(choices, {
+            id = SPAWN_PREFIX .. name,
+            label = label(
+               name,
+               colors.name,
+               state,
+               state == 'Attached' and colors.attached or colors.detached
+            ),
+         })
+      end
    end
 
    table.sort(choices, function(a, b)

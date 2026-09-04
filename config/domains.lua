@@ -28,7 +28,12 @@ local options = {
    -- Caveat worth remembering: Ctrl+Shift+R reloads the GUI's config, but the
    -- mux server keeps the config it booted with. Changes to `default_prog`,
    -- domains, or the mux-side startup event need the server restarted.
-   default_gui_startup_args = { 'connect', 'mux' },
+   -- `--position` pins the first window to the top-left of the main monitor.
+   -- Without it the window lands wherever Windows decides, which combined with
+   -- the maximize in events/gui-startup.lua read as "opens somewhere odd, then
+   -- jumps". Paired with `initial_cols`/`initial_rows` in config/appearance.lua
+   -- the window now starts at roughly its final size and place.
+   default_gui_startup_args = { 'connect', 'mux', '--position', 'main:0,0' },
 }
 
 if platform.is_win then
