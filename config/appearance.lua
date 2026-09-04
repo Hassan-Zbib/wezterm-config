@@ -98,14 +98,6 @@ return {
       top = 10,
       bottom = 7.5,
    },
-   -- Open at (near enough) the maximized size instead of WezTerm's 80x24, so
-   -- the maximize in events/gui-startup.lua has almost nothing left to do and
-   -- there is no visible resize jump on startup. 211x51 is what this panel
-   -- measures maximized (2560x1600 @ 1.5x, 16"); WezTerm clamps to the screen,
-   -- so a smaller display just opens smaller and the maximize still corrects
-   -- it. Also applies to Alt+n windows, which now open large rather than tiny.
-   initial_cols = 211,
-   initial_rows = 51,
    window_background_opacity = 1.0,
    win32_system_backdrop = 'Disable',
    window_decorations = 'INTEGRATED_BUTTONS|RESIZE',

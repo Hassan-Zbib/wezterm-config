@@ -28,12 +28,19 @@ local options = {
    -- Caveat worth remembering: Ctrl+Shift+R reloads the GUI's config, but the
    -- mux server keeps the config it booted with. Changes to `default_prog`,
    -- domains, or the mux-side startup event need the server restarted.
-   -- `--position` pins the first window to the top-left of the main monitor.
-   -- Without it the window lands wherever Windows decides, which combined with
-   -- the maximize in events/gui-startup.lua read as "opens somewhere odd, then
-   -- jumps". Paired with `initial_cols`/`initial_rows` in config/appearance.lua
-   -- the window now starts at roughly its final size and place.
-   default_gui_startup_args = { 'connect', 'mux', '--position', 'main:0,0' },
+   --
+   -- Startup geometry is left entirely to WezTerm and Windows: no `--position`,
+   -- no `initial_cols`/`initial_rows`, and nothing maximizes the window for you.
+   -- Alt+Ctrl+Enter still toggles maximize by hand.
+   --
+   -- There are also no `gui-startup` or `mux-startup` handlers anywhere in this
+   -- config. That is deliberate, and easy to get wrong: `wezterm connect` always
+   -- spawns a tab of its own and never fires `gui-startup` at all, while
+   -- `wezterm start` falls back to WezTerm's built-in default window. Both paths
+   -- already produce exactly one window, so anything spawned from a startup
+   -- event is a duplicate -- which is what once left the GUI sitting on
+   -- "Checking server version" owning two panes.
+   default_gui_startup_args = { 'connect', 'mux' },
 }
 
 if platform.is_win then
