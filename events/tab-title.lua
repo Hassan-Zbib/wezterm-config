@@ -224,7 +224,19 @@ end
 function Tab:set_info(event_opts, tab, max_width)
    local process_name = clean_process_name(tab.active_pane.foreground_process_name)
 
-   self.is_wsl = process_name:match('^wsl') ~= nil
+   -- `foreground_process_name` is documented as "the path to the executable
+   -- image, or an empty string if unavailable", and it is ALWAYS unavailable
+   -- here: this config is mux-first, and WezTerm reports process info only for
+   -- local panes -- the mux wire protocol carries no process field at all. So
+   -- the old `process_name:match('^wsl')` test could never fire and WSL tabs
+   -- never got their glyph.
+   --
+   -- `domain_name` does cross the mux boundary, and WSL tabs are spawned into
+   -- the `WSL:Ubuntu` domain by name, so it is both reliable and exact. The
+   -- process-name test is kept as a fallback for a genuinely local pane that
+   -- ran wsl.exe directly.
+   local domain_name = tab.active_pane.domain_name or ''
+   self.is_wsl = domain_name:match('^WSL') ~= nil or process_name:match('^wsl') ~= nil
    self.is_admin = (
       tab.active_pane.title:match('^Administrator: ') or tab.active_pane.title:match('(Admin)')
    ) ~= nil
@@ -368,6 +380,24 @@ end
 ---@type Tab[]
 local tab_list = {}
 
+---Fetch (or lazily create) the Tab entry for a tab id.
+---
+---`tab_list` is only populated by `format-tab-title`, which never fires while
+---the tab bar is hidden. Alt+9 hides it, so "hide the bar, then Alt+0 to rename"
+---used to index a nil and raise. Creating the entry here keeps the rename, and
+---`create_cells` has to run too: `format-tab-title` takes its "already known"
+---branch for any id present in the table, and that branch calls `update_cells`,
+---which errors on a Cells with no segments.
+---@param id number
+---@return Tab
+local function tab_entry(id)
+   if not tab_list[id] then
+      tab_list[id] = Tab:new()
+      tab_list[id]:create_cells()
+   end
+   return tab_list[id]
+end
+
 ---@param opts? Event.TabTitleOptions Default: {unseen_icon = 'circle', hide_active_tab_unseen = true}
 M.setup = function(opts)
    local valid_opts, err = EVENT_OPTS.validator:validate(opts or {})
@@ -396,10 +426,9 @@ M.setup = function(opts)
                { Text = 'Enter new name for tab' },
             }),
             action = wezterm.action_callback(function(_window, _pane, line)
-               if line ~= nil then
+               if line ~= nil and line ~= '' then
                   local tab = window:active_tab()
-                  local id = tab:tab_id()
-                  tab_list[id]:update_and_lock_title(line)
+                  tab_entry(tab:tab_id()):update_and_lock_title(line)
                end
             end),
          }),
@@ -411,8 +440,7 @@ M.setup = function(opts)
    -- Event listener to unlock manually set tab name
    wezterm.on('tabs.reset-tab-title', function(window, _pane)
       local tab = window:active_tab()
-      local id = tab:tab_id()
-      tab_list[id].title_locked = false
+      tab_entry(tab:tab_id()).title_locked = false
    end)
 
    -- CUSTOM EVENT
