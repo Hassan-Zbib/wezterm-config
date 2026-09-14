@@ -8,3 +8,9 @@ backdrops-optimized/
 scripts/optimize-backdrops/
 .claude/settings.local.json
 /state.json
+
+# Python bytecode from scripts/
+__pycache__/
+
+# Rust debug symbols; only the .exe is linked by dotbot
+bin/*.pdb

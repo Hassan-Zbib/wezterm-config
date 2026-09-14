@@ -10,6 +10,10 @@
     ~/.wezterm.lua: home/.wezterm.lua
     ~/.bashrc: home/.bashrc
     ~/.bash_profile: home/.bash_profile
+    ~/.zshrc: home/.zshrc
+    ~/.zprofile: home/.zprofile
+    ~/.zshenv: home/.zshenv
+    ~/.zsh_plugins.txt: home/.zsh_plugins.txt
     ~/.inputrc: home/.inputrc
     ~/.gitconfig: home/.gitconfig
     ~/.vimrc: home/.vimrc
@@ -18,6 +22,7 @@
     ~/.config/fastfetch/config.jsonc: home/.config/fastfetch/config.jsonc
     ~/.config/eza/theme.yml: home/.config/eza/theme.yml
     ~/.config/ccstatusline/settings.json: home/.config/ccstatusline/settings.json
+    ~/.config/atuin/config.toml: home/.config/atuin/config.toml
     ~/AppData/Roaming/yazi/config/yazi.toml: home/AppData/Roaming/yazi/config/yazi.toml
     ~/AppData/Roaming/yazi/config/theme.toml: home/AppData/Roaming/yazi/config/theme.toml
     ~/AppData/Roaming/yazi/config/init.lua: home/AppData/Roaming/yazi/config/init.lua
@@ -27,6 +32,7 @@
     ~/.config/wsl/wezterm-integration.bash: home/.config/wsl/wezterm-integration.bash
     ~/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json: home/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json
     ~/bin/lazyssh.exe: bin/lazyssh.exe
+    ~/bin/ramload.exe: bin/ramload.exe
     ~/bin/git: bin/git
 
 - create:
@@ -46,14 +52,28 @@
     - JesseDuffield.lazygit
     - dandavison.delta
     - eza-community.eza
-    - aristocratos.btop4win
+    - sharkdp.bat
+    - rsteube.Carapace
     - charmbracelet.glow
     - Devolutions.UniGetUI
-    - tstack.lnav
     - ajeetdsouza.zoxide
     - junegunn.fzf
+    - Atuinsh.Atuin
 
 - shell:
+    # bin/ramload.exe is committed, so this only refreshes it when a Rust
+    # toolchain happens to be around. Never fail the install over it: if the
+    # rebuild is skipped the committed binary is still linked, and if the
+    # binary is missing entirely right-status.lua falls back to PowerShell.
+    - command: command -v rustc >/dev/null && rustc -O --edition 2021 scripts/ramload.rs -o bin/ramload.exe || true
+      description: Building ramload helper (status bar RAM readout)
+      quiet: true
+    - command: bash scripts/install-zsh.sh
+      description: Installing zsh into ~/.local/zsh
+      quiet: true
+    - command: bash scripts/install-zsh-plugins.sh
+      description: Installing antidote + zsh plugins
+      quiet: true
     - command: wsl -e bash -c "grep -q 'wezterm-integration.bash' ~/.bashrc 2>/dev/null || echo '[ -f /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash ] && source /mnt/c/Users/hassa/.config/wsl/wezterm-integration.bash' >> ~/.bashrc"
       description: Injecting WezTerm shell integration into WSL .bashrc
       quiet: true
