@@ -1,0 +1,85 @@
+# ============================================================
+# atuin — shell history
+# ============================================================
+# Managed by dotbot — run ./install from the repo to symlink.
+#
+# atuin resolves its config directory the XDG way even on Windows, so this
+# lands at ~/.config/atuin/config.toml rather than %APPDATA%\atuin. That is why
+# it sits under home/.config/ alongside starship.toml and eza/theme.yml.
+#
+# Only deliberate departures from the defaults are listed. Running atuin once
+# regenerates a fully commented reference config, so there is no value in
+# carrying 16k of upstream comments in the repo.
+# See https://docs.atuin.sh/latest/configuration/config
+# ============================================================
+
+# ---- Sync ----
+# Off. An Atuin Hub account exists purely because Atuin AI requires a login;
+# shell history is never uploaded. auto_sync gates the automatic push/pull that
+# would otherwise run while logged in, so this is the line doing the work --
+# simply not running `atuin sync` by hand would not be enough.
+auto_sync = false
+
+# No phone-home. atuin otherwise polls api.atuin.sh hourly for a release number.
+update_check = false
+
+# ---- Search ----
+# Ctrl+R searches everything; Up is scoped to the directory you are standing in.
+# Inside the TUI, Ctrl+R cycles the filter mode rather than re-opening.
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "directory"
+
+# Treat a git repo as a single directory, so Up inside src/ still finds commands
+# run at the repo root. Only meaningful because of the "directory" mode above.
+workspaces = true
+
+# Keep the UI inline instead of swallowing the pane. There is no syntax
+# highlighting available here regardless -- a documented Windows limitation.
+style = "compact"
+inline_height = 20
+keymap_mode = "emacs"
+
+# Enter puts the command on the prompt; it does not run it. atuin defaults this
+# to true, which would be a silent behaviour change from the fzf-history-widget
+# this replaces -- fzf fills the line and waits for a second Enter. Matching the
+# old muscle memory is worth more than saving the keystroke, given the selected
+# command may be an rm or a deploy.
+enter_accept = false
+
+# ---- Filtering ----
+# Refuse to record anything that looks like a credential (AWS keys, GitHub and
+# npm tokens, Slack webhooks, Stripe keys). On by default; stated explicitly
+# because it is the only thing standing between a mistyped export and a
+# permanent local record of it.
+#
+# Note this is separate from HIST_IGNORE_SPACE in ~/.zshrc: atuin honours the
+# leading-space convention natively on zsh, so ` command` stays out of both
+# stores. `history_filter` below is for commands to exclude *every* time.
+secrets_filter = true
+
+# history_filter = [
+#   "^ls$",
+# ]
+
+# ---- AI ----
+# Bound to `?` on an empty prompt (the widget checks $BUFFER, so `ls ?glob` is
+# unaffected). Requires a Hub login, which is the only reason the account above
+# exists.
+#
+# Reading command *output* is not available here: it needs pty-proxy, which is
+# unavailable on Windows. AI still sees history, cwd and the last command.
+[ai]
+enabled = true
+
+# ---- Daemon ----
+# Off. It would move the SQLite write off the command path, but `atuin daemon`
+# is still flagged *Experimental* upstream and this is already an unusual
+# platform (a native Windows binary driven from MSYS zsh).
+#
+# What it would save: _atuin_preexec runs `history start` synchronously to
+# capture the row id -- measured at ~50ms here against a ~35ms floor for any
+# native-binary fork under MSYS, so roughly 15ms of it is atuin's own work.
+# `history end` is already backgrounded by the init script and costs nothing.
+# Revisit if that 50ms starts to register.
+[daemon]
+enabled = false
