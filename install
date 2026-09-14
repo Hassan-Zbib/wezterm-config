@@ -5,4 +5,30 @@ BASEDIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$BASEDIR"
 
 git -C dotbot pull origin master || true
-"$BASEDIR/dotbot/bin/dotbot" -d "$BASEDIR" -p "$BASEDIR/dotbot-winget/winget.py" -c install.conf.yaml "$@"
+
+# dotbot vendors PyYAML as a nested submodule and puts lib/pyyaml/lib on
+# sys.path itself. The pull above moves the pin, and a fresh clone never had it,
+# so without this dotbot dies with `ModuleNotFoundError: No module named 'yaml'`.
+git -C dotbot submodule update --init --recursive || true
+
+# dotbot/bin/dotbot is a polyglot shim that re-execs itself under an
+# interpreter it finds by probing for `python3` then `python`. Neither exists on
+# a uv-managed machine -- the only Python is whatever `uv run` materialises --
+# and the shim's failure mode is a bare "error: cannot find python" that says
+# nothing about why. So resolve the interpreter here and invoke the script
+# directly rather than letting it exec itself.
+DOTBOT="$BASEDIR/dotbot/bin/dotbot"
+ARGS=(-d "$BASEDIR" -p "$BASEDIR/dotbot-winget/winget.py" -c install.conf.yaml "$@")
+
+if command -v python3 >/dev/null 2>&1; then
+   python3 "$DOTBOT" "${ARGS[@]}"
+elif command -v python >/dev/null 2>&1; then
+   python "$DOTBOT" "${ARGS[@]}"
+elif command -v uv >/dev/null 2>&1; then
+   # No pyproject.toml at the repo root, so this is an ephemeral env, not a
+   # project sync. dotbot's only dependency is the vendored PyYAML above.
+   uv run python "$DOTBOT" "${ARGS[@]}"
+else
+   echo "error: need python3, python or uv on PATH to run dotbot" >&2
+   exit 1
+fi
