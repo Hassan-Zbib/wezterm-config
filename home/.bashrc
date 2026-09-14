@@ -84,7 +84,11 @@ function ccp() {
 }
 
 # ---- PATH ----
-export PATH="$HOME/bin:$PATH"
+# zsh is installed outside the Git tree (scripts/install-zsh.sh), so its bin dir
+# is not on PATH by default -- append it to be able to just run `zsh` from here.
+# Appended, not prepended: the directory also holds msys-zsh-*.dll and a
+# versioned zsh-5.9.2.exe that nothing should pick up by accident.
+export PATH="$HOME/bin:$PATH:$HOME/.local/zsh/usr/bin"
 
 # ---- Aliases ----
 alias lg='lazygit'
@@ -94,7 +98,6 @@ alias ls='eza --icons --group-directories-first --git-repos --color-scale=all'
 alias la='eza --icons --all --group-directories-first --git-repos --color-scale=all'
 alias ll='eza --icons -l --all --git --git-repos --header --group-directories-first --color-scale=all'
 alias lt='eza --icons --tree --level=2'
-alias btop='btop4win'
 alias cls='clear'
 alias cc='claude --allow-dangerously-skip-permissions'
 alias cca='claude agents --allow-dangerously-skip-permissions'

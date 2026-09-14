@@ -1,0 +1,58 @@
+# ============================================================
+# Zsh plugins — declarative list, bundled by antidote
+# ============================================================
+# Managed by dotbot — symlinked to ~/.zsh_plugins.txt.
+# Installed by scripts/install-zsh-plugins.sh, which ./install runs.
+#
+# ~/.zshrc re-bundles automatically whenever this file is newer than the
+# cached bundle, so editing here is all that is needed to add or drop a plugin.
+#
+# ORDER MATTERS — antidote emits sources in the order listed below:
+#   1. fzf-tab has to come after anything else that binds Tab (^I). ~/.zshrc
+#      sources fzf's own completion integration before this bundle, and that
+#      binds ^I to fzf-completion, so fzf-tab must follow it.
+#   2. zsh-syntax-highlighting must stay LAST. It wraps every ZLE widget, so
+#      any widget bound after it loads goes unhighlighted.
+# ============================================================
+
+# Lets a plugin be loaded after the first prompt is drawn instead of before it.
+# Must come first so `kind:defer` below has it available.
+romkatv/zsh-defer
+
+# Replace zsh's completion menu with an fzf picker (previews configured in
+# ~/.zshrc via zstyle).
+Aloxaf/fzf-tab
+
+# REMOVED: MichaelAquilina/zsh-you-should-use (alias reminders).
+# It was the single most expensive line in the whole setup -- 93ms sourced
+# in-place, and startup dropped 105ms with it gone. That is more than
+# zsh-syntax-highlighting and fzf-tab cost combined, for a plugin that only
+# prints "you have an alias for that" after a command you already ran.
+#
+# If it ever comes back, note the `path:` was not optional on Windows: the repo
+# ships a symlink named zsh-you-should-use.plugin.zsh pointing at the real file,
+# and git here runs with core.symlinks=false, so that symlink is checked out as
+# a 25-byte text file containing the target's name. antidote picks it by repo
+# name, sources it, and zsh tries to run that name as a command:
+#     zsh: command not found: you-should-use.plugin.zsh
+# Naming the real file sidesteps the fake symlink entirely:
+#     MichaelAquilina/zsh-you-should-use path:you-should-use.plugin.zsh
+
+# Colours the command line as you type — keep this last of the eager plugins.
+zsh-users/zsh-syntax-highlighting
+
+# Ghost text of the most recent matching command; Right-arrow / End accepts it.
+#
+# Deferred on purpose. It is the only expensive plugin here -- it wraps every
+# ZLE widget at load time, which measured at ~240ms of the ~250ms all four cost
+# together. Deferring moves that work to just after the first prompt is drawn,
+# which measured ~500-700ms faster to a usable prompt with no loss of function
+# (ghost text still appears, verified in a pty).
+#
+# zcompile was tried first and made no measurable difference -- the cost is the
+# widget wrapping itself, not parsing the file.
+#
+# Loading it after zsh-syntax-highlighting is the order its README warns about,
+# but it was verified working here; if suggestions ever stop appearing, drop
+# the `kind:defer` and it goes back to eager loading.
+zsh-users/zsh-autosuggestions kind:defer
