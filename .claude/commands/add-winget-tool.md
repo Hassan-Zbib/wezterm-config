@@ -7,9 +7,8 @@ Extract the following from `$ARGUMENTS`:
 - **Display name** — e.g. `Lazygit` (derive from the ID if not given)
 - **Description** — short one-liner, e.g. `Terminal UI for Git`
 - **URL** — homepage or GitHub URL for README links
-- **Alias** — bash alias used to invoke it (e.g. `lg`), or omit if none
+- **Alias** — shell alias used to invoke it (e.g. `lg`), or omit if none
 - **Section** — `required` or `optional` (default: `optional`)
-- **Type** — `tui` if it's a terminal UI app that should be session-restorable, otherwise omit
 
 If the winget ID is missing, stop and ask. For anything else that can't be inferred, ask before editing.
 
@@ -29,31 +28,38 @@ Add the winget ID under the `- winget:` block:
 Link the tool name to its URL. The Install column should show the bare `winget install <ID>` command.
 If the tool has no alias, use `—` in that column.
 
-### 3. `scripts/cheatsheet.sh`
+### 3. `scripts/cheatsheet.py`
 
-Add a block to the tools column (COL_LEFT in the Row 3 section), following the existing style exactly:
+The sheet is an interactive tabbed pager. CLI tools live on the `CLI` group pages, whose
+panels are the `_FILE_TOOLS`, `_VIEWERS` and `_LAZY_TOOLS` constants. Add the tool to
+whichever panel fits, using the existing builder calls:
 
-```bash
-sec_blank
-sec_header "EMOJI  Tool Name"
-sec_row "alias or command"   "Description"
+```python
+        blank() +
+        sub('Tool Name') +
+        row('alias or command', 'Description')  +
 ```
 
-Pick an emoji that fits the tool's purpose. If the tool has multiple useful commands or flags worth showing, add multiple `sec_row` lines. Match the spacing/quoting style of the existing blocks.
+- `sub()` is the heading. Put the tool's real name in it — search indexes rows by the
+  `sub()` above them, so `sub('zoxide (smart cd)')` is what makes `z DIR` findable by
+  typing "zoxide".
+- `row(key, desc)` per useful command. Keep `desc` short: the key column is padded to 22
+  and the panel is 46 wide, and an over-long description silently corrupts the column grid.
+- `note()` for prose caveats. Match the surrounding alignment style.
 
-### 4. `utils/sessions.lua` (TUI tools only)
+Do not add a new panel without checking `PAGES` — pages are capped at three panels so each
+one stays a single screen at both 3 and 4 columns.
 
-If the tool type is `tui`, add an entry to the `M.tuis` table. The key is the process basename
-(lowercase, no `.exe`) as it appears in the process list. The value is the launch command string.
-If the winget package installs under a different executable name than the display name, use the
-actual executable name as the key (e.g. `btop4win = 'btop'`).
+**Verify after editing:**
 
-Follow the existing `-- stylua: ignore` alignment style — pad with spaces so the `=` signs line up
-with the other entries.
+```sh
+uv run python scripts/cheatsheet.py --selftest
+```
 
 ## Rules
 
 - Read each target file before editing it
-- Do not add bash aliases to `.bashrc` — that's out of scope
+- Do not add shell aliases to `.zshrc` or `.bashrc` — that's out of scope
 - Do not add a cheatsheet entry if the tool has no meaningful CLI usage to show
+- Run the cheatsheet `--selftest` after editing it
 - After all edits, print a one-line summary per file changed
