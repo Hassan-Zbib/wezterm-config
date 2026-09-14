@@ -43,7 +43,7 @@ Install all of the following before cloning.
 
 ### Optional CLI Tools
 
-These tools are pre-configured with aliases in `.bashrc`. Install whichever you want:
+These tools are pre-configured with aliases in `.bashrc` and `.zshrc`. Install whichever you want. A few (atuin, fzf-tab, carapace) are wired into zsh only — the Alias column lists the key binding where a tool has no command alias:
 
 | Tool | Install | Alias | Description |
 |------|---------|-------|-------------|
@@ -56,6 +56,7 @@ These tools are pre-configured with aliases in `.bashrc`. Install whichever you 
 | [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
 | [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
+| [atuin](https://atuin.sh) | `winget install Atuinsh.Atuin` | `Ctrl+R`, `↑` | Shell history in SQLite — one store for every shell, with exit code, duration and directory per command |
 | [LazySkills](https://lazyskills.xyz/) | `npm install -g lazyskills` or `scoop install alpha-innovation-labs/lazyskills` | `lazyskills` | TUI for discovering and managing coding agent skills |
 
 ---
@@ -163,7 +164,7 @@ wezterm-config/
 │
 ├── backdrops/                      # Background wallpaper images
 ├── scripts/
-│   └── cheatsheet.py               # F1 keyboard shortcut reference (Python)
+│   └── cheatsheet.py               # F1 shortcut reference — interactive tabbed pager (Python)
 │
 ├── dotbot/                         # Dotbot submodule (symlink manager)
 ├── install                         # Bootstrap script — run to set up symlinks
@@ -177,25 +178,28 @@ wezterm-config/
 
 > **Windows key mapping:** `Super` = `Alt` · `Super+Rev` = `Alt+Ctrl`
 
-Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all commands by name.
+Press `F1` to open the full cheat sheet inside WezTerm, or `F8` to search all commands by name.
+
+The cheat sheet is a tabbed pager — one section per screen. `←`/`→` (or `h`/`l`, `Tab`) cycles, `1`–`9` jumps straight to a section, `↑`/`↓` scrolls a long page, and `q` or `Esc` closes the tab.
+
+Press `/` to search every shortcut at once. Results are filtered as you type and show the section, panel, key and description; `↑`/`↓` picks one and `Enter` jumps to the section it lives in. Tool names work too — searching `lazygit`, `eza` or `zoxide` finds the rows under those headings.
 
 ### Quick Actions
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
 | `F1` | Cheat Sheet | `F11` | Fullscreen |
-| `F2` | Command Palette | `F12` | Debug Overlay |
-| `F3` | Launcher Menu | `F6` | Toggle Agent Notifications |
-| `F4` | Fuzzy Tabs | `F7` | SSH Host Selector |
-| `F5` | Search / switch workspace | `F8` | Copy Mode |
+| `F2` | Copy Mode | `F12` | Debug Overlay |
+| `F3` | Launcher Menu | `F7` | SSH Host Selector |
+| `F4` | Fuzzy Tabs | `F8` | Command Palette |
+| `F5` | Search / switch workspace | `F6` | *(unbound)* |
 | `Shift+F5` | New workspace | `Ctrl+F5` | Rename workspace |
 | `F9` | Save Session | `F10` | Restore Session |
-| `Shift+F9` | Toggle Auto-Save | `Shift+F10` | Save Session (Named) |
-| `Ctrl+F10` | Delete Session | | |
+| `Shift+F10` | Save Session (Named) | `Ctrl+F10` | Delete Session |
 | `Alt+f` | Search | `Alt+Ctrl+u` | Open URL |
 | `Ctrl+Shift+C` | Copy | `Ctrl+Shift+V` | Paste |
 | `Middle-click` | Copy | `Right-click` | Paste |
-| `Alt+Shift+V` | Paste image as file path | | |
+| `Alt+Shift+V` | Paste image as file path | `Ctrl+Shift+R` | Reload config |
 
 ### Cursor Movement
 
@@ -204,16 +208,19 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 | `Alt+←` | Jump to line start |
 | `Alt+→` | Jump to line end |
 | `Shift+Enter` | New line without submitting |
-| `Alt+Backspace` | Clear line (Git Bash only) |
+| `Alt+Backspace` | Delete word left |
+| `Ctrl+Shift+Backspace` | Clear whole line |
 
 ### Tabs
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `Alt+t` | New Tab (Git Bash) | `Alt+[` | Previous Tab |
-| `Alt+Ctrl+t` | New Tab (WSL) | `Alt+]` | Next Tab |
-| `Alt+Ctrl+w` | Close Tab | `Alt+0` | Rename Tab |
-| `Alt+Ctrl+0` | Undo Rename | `Alt+9` | Toggle Tab Bar |
+| `Alt+t` | New Tab (default domain) | `Alt+[` | Previous Tab |
+| `Alt+Ctrl+t` | New Tab (local, throwaway) | `Alt+]` | Next Tab |
+| `Alt+Ctrl+Shift+t` | New Tab (WSL Ubuntu) | `Ctrl+Shift+←` | Move Tab Left |
+| `Alt+Ctrl+w` | Close Tab | `Ctrl+Shift+→` | Move Tab Right |
+| `Alt+0` | Rename Tab | `Alt+Ctrl+0` | Reset Tab Title |
+| `Alt+9` | Toggle Tab Bar | `Alt+8` | Flip Tab Bar (top/bottom) |
 
 ### Workspaces
 
@@ -227,28 +234,42 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `Alt+\` | Split Vertical | `Alt+Ctrl+↑` | Focus Up |
-| `Alt+Ctrl+\` | Split Horizontal | `Alt+Ctrl+↓` | Focus Down |
+| `Alt+\` | Split Down (pane below) | `Alt+Ctrl+↑` | Focus Up |
+| `Alt+Ctrl+\` | Split Right (pane beside) | `Alt+Ctrl+↓` | Focus Down |
 | `Alt+w` | Close Pane | `Alt+Ctrl+←` | Focus Left |
 | `Alt+Enter` | Zoom Pane | `Alt+Ctrl+→` | Focus Right |
-| `Alt+Ctrl+p` | Swap Panes | | |
+| `Alt+Ctrl+p` | Swap Panes | `Alt+Shift+↑↓←→` | Resize 2 cells |
 
 ### Scrolling
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `Alt+u` | Scroll Up 5 lines | `Alt+d` | Scroll Down 5 lines |
-| `Page Up` | Scroll Page Up | `Page Down` | Scroll Page Down |
-| `End` | Scroll to Bottom | | |
-| `Shift+↑` | Jump to Previous Prompt | `Shift+↓` | Jump to Next Prompt |
+| `Shift+PgUp` | Scroll Page Up | `Shift+PgDn` | Scroll Page Down |
+| `Alt+PgUp` | Scroll Up 5 lines | `Alt+PgDn` | Scroll Down 5 lines |
+| `Shift+Home` | Scroll to Top | `Shift+End` | Scroll to Bottom |
+
+> Scrolling lives on a modifier. Bare `PgUp` / `PgDn` / `Home` / `End` are left
+> unbound on purpose so they reach the application — Claude Code's transcript,
+> yazi, vim, less, and zsh's own line-start / line-end.
+>
+> This used to be decided at runtime by asking whether the pane had scrollback,
+> on the theory that full-screen apps run on the alternate screen and so have
+> none. Claude Code breaks that theory: it renders inline on the primary screen,
+> so the pane always had scrollback and `PgUp` always went to WezTerm instead.
+> A modifier is deterministic and matches the xterm convention.
+>
+> `Shift+↑` / `Shift+↓` prompt jumping is unavailable: `ScrollToPrompt` walks
+> OSC 133 semantic zones, which do not cross the mux boundary
+> ([wezterm#2880](https://github.com/wezterm/wezterm/issues/2880)).
 
 ### Background Images
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `Alt+/` | Random Image | `Alt+,` | Previous Image |
-| `Alt+Ctrl+/` | Browse & Select | `Alt+.` | Next Image |
-| `Alt+b` | Toggle Background On/Off | | |
+| `Alt+/` | Random Image | `Alt+Ctrl+/` | Browse & Select (live preview) |
+| `Alt+Ctrl+,` | Previous Category | `Alt+Ctrl+.` | Next Category |
+| `Alt+,` | Overlay Opacity − | `Alt+.` | Overlay Opacity + |
+| `Alt+b` | Toggle Focus Mode (solid bg) | `Alt+r` | Toggle Auto-Rotate |
 
 ### Font & Window
 
@@ -256,12 +277,17 @@ Press `F1` to open the full cheat sheet inside WezTerm, or `F2` to search all co
 |-----|--------|-----|--------|
 | `Alt+=` | Grow Window | `Alt+n` | New Window |
 | `Alt+-` | Shrink Window | `Alt+Ctrl+Enter` | Maximize |
+| `F11` | Fullscreen | `Ctrl+Shift+R` | Reload Config |
+
+Font size lives behind the leader key — see [Advanced Modes](#advanced-modes).
 
 ### File Manager (yazi)
 
-| Key | Action |
-|-----|--------|
-| `Alt+e` | Open yazi (auto-cd to selected directory on quit) |
+Run `yy` at a shell prompt — a wrapper around `yazi` that auto-cds to the
+selected directory when you quit. It is also in the command palette
+(`F8`) as **Open File Manager (yazi)**. There is no dedicated
+keybinding: a binding could only type `yy` into the pane, which is junk input
+anywhere other than a prompt.
 
 Themed with Catppuccin Macchiato. Plugins: `git.yazi` (git status in file list), `starship.yazi` (starship status bar).
 
@@ -272,6 +298,7 @@ Themed with Catppuccin Macchiato. Plugins: `git.yazi` (git status in file list),
 | `↑`/`k` | Move up | `↓`/`j` | Move down |
 | `←`/`h` | Go to parent | `→`/`l` | Enter / open |
 | `gg` | Top of list | `G` | Bottom of list |
+| `PgUp` | Full page up | `PgDn` | Full page down |
 | `Ctrl+PgUp` | Half page up | `Ctrl+PgDn` | Half page down |
 | `H` | History back | `L` | History forward |
 | `~` | Go to home | | |
