@@ -61,8 +61,21 @@ return {
       target = 'BackgroundColor',
    },
 
-   -- scrollbar
-   enable_scroll_bar = true,
+   -- Scrollbar: off. It carries no useful signal here. Full-screen TUIs
+   -- (yazi, lazygit) run on the alternate screen, which has no scrollback, so
+   -- the thumb fills the whole track and just reads as a stripe down the right
+   -- edge; Claude Code renders inline on the primary screen, so its thumb
+   -- tracks a transcript you scroll with the app's own keys, not WezTerm's.
+   --
+   -- Hiding it only in those cases is NOT possible in this config: the GUI is a
+   -- mux client (`default_gui_startup_args` in config/domains.lua), every pane
+   -- is a `ClientPane`, and `ClientPane:is_alt_screen_active()` is hardcoded to
+   -- `false` because the mux protocol carries no alt-screen field. See the
+   -- longer note above the scroll bindings in config/bindings.lua.
+   --
+   -- Scrolling is unaffected -- it lives on Shift+PgUp/PgDn, Shift+Home/End and
+   -- Alt+PgUp/PgDn.
+   enable_scroll_bar = false,
 
    -- tab bar
    enable_tab_bar = true,
@@ -90,11 +103,13 @@ return {
    pane_select_font_size = 36,
 
    -- window
-   -- NOTE: `right` must leave room for the scrollbar — it is drawn inside the
-   -- right padding, so `enable_scroll_bar` does nothing when this is 0.
+   -- `left`/`right` are symmetric because the scrollbar is off. It used to be
+   -- 16 on the right: the scrollbar is drawn INSIDE the right padding, so that
+   -- reserved room for it. Restore the wider `right` alongside any future
+   -- `enable_scroll_bar = true` — at 0 the bar has nowhere to render at all.
    window_padding = {
       left = 12,
-      right = 16,
+      right = 12,
       top = 10,
       bottom = 7.5,
    },

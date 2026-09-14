@@ -102,7 +102,6 @@ local colorscheme = {
       [16] = p.peach,
       [17] = p.rosewater,
    },
-   scrollbar_thumb = p.surface2,
    -- The pane divider. WezTerm has no per-pane borders and no active/inactive
    -- divider variant — this is one global colour for every split line in the
    -- tab — so the job here is just to make the boundaries themselves obvious,
