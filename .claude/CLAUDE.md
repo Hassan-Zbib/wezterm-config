@@ -43,9 +43,26 @@ Events use `OptsValidator` for schema validation and register handlers via `wezt
 
 ### Cheatsheet
 
-`scripts/cheatsheet.py` is the F1 keyboard shortcut reference displayed in a dedicated tab. It is a standalone Python script (no dependencies beyond stdlib) that prints a 3-column layout using ANSI colors.
+`scripts/cheatsheet.py` is the F1 keyboard shortcut reference displayed in a dedicated tab. It is a standalone Python script (no dependencies beyond stdlib), rendered as an **interactive tabbed pager**: one section per screen, `←/→` or `h`/`l` to cycle, `1`–`9` to jump, `↑/↓` to scroll, `/` to search, `q`/`Esc` to quit. It draws on the alternate screen buffer and reflows when the pane is resized.
 
-**Keep it in sync:** whenever you add a new keybinding to `config/bindings.lua` or `home/.wezterm.lua`, or add/remove a CLI tool from the setup, update the relevant section in `cheatsheet.py`. Use the existing `row()`, `header()`, `blank()`, and `note()` builder calls — do not change the layout structure or `three_cols()` function without good reason.
+Structure:
+
+- **Panels** — `_QUICK_ACTIONS`, `_TABS`, … Each is a list of lines built from `header()`, `row()`, `sub()`, `blank()` and `note()`.
+- **`PAGES`** — `(group, tab label, panels)`. Groups (`WEZTERM`, `SHELL`, `CLI`) are only a label on the tab strip; navigation is flat.
+- **Cap pages at three panels.** A four-panel page wraps to a second row below 209 columns and forces scrolling. Three keeps every page one screen at both 3 and 4 columns.
+- **`INDEX` / `search()`** — panels are pre-coloured strings, so `header()`, `sub()`, `row()` and `note()` record their raw text into `_ROWS`/`_NOTES` as a side effect while the panels are built. `_build_index()` joins those to `PAGES` via the panel title, and **raises if a panel is not placed in `PAGES`** — that assertion is the guard against a panel being defined and forgotten.
+- Rows inherit the `sub()` heading above them, so tool names that only ever appear as a heading (`lazygit`, `eza`, `zoxide`) still match. Queries are AND over whitespace-separated tokens, ranked key → description → sub-heading. When nothing matches a row, `search()` falls back to matching whole panels via their `note()` prose and returns entries with `key is None`.
+
+**Keep it in sync:** whenever you add a new keybinding to `config/bindings.lua` or `home/.wezterm.lua`, or add/remove a CLI tool from the setup, update the relevant panel. Use the existing builder calls and don't restructure the layout without good reason.
+
+**Verify after editing** — there is no test runner in this repo, so the script checks itself:
+
+```sh
+uv run python scripts/cheatsheet.py --selftest   # layout invariants at 6 terminal sizes
+uv run python scripts/cheatsheet.py --all        # non-interactive dump of every page
+```
+
+`--selftest` asserts each frame — page view *and* search view — exactly fills the terminal and that no composed line overruns the width (the columns are laid out with absolute-column `CSI G` escapes, so an over-long `row()` description silently wraps and corrupts the grid). Piping stdout also triggers the `--all` dump, since the pager needs a tty.
 
 ### Platform Modifier Convention
 
