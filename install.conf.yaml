@@ -68,8 +68,13 @@
     - command: command -v rustc >/dev/null && rustc -O --edition 2021 scripts/ramload.rs -o bin/ramload.exe || true
       description: Building ramload helper (status bar RAM readout)
       quiet: true
+    # Unpacks into C:\Program Files\Git, so this step needs an elevated shell.
+    # Deliberately not `|| true`: on an already-provisioned machine the script
+    # exits 0 immediately, so this only fails when zsh is genuinely missing --
+    # a fresh machine, or a Git for Windows upgrade that wiped it -- and that
+    # is worth stopping for rather than silently continuing without a shell.
     - command: bash scripts/install-zsh.sh
-      description: Installing zsh into ~/.local/zsh
+      description: Installing zsh into the Git for Windows tree (needs admin)
       quiet: true
     - command: bash scripts/install-zsh-plugins.sh
       description: Installing antidote + zsh plugins

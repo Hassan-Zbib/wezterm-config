@@ -234,10 +234,11 @@ ccp() {
 }
 
 # ---- PATH ----
-# Keep zsh's own bin dir on PATH so `zsh` resolves from inside zsh too, matching
-# what ~/.bashrc does. Appended so the versioned zsh-5.9.2.exe beside it is
-# never picked up by accident.
-export PATH="$HOME/bin:$PATH:$HOME/.local/zsh/usr/bin"
+# zsh's own bin dir used to be appended here: a portable install under
+# ~/.local/zsh was on no standard path, so `zsh` did not resolve from inside
+# zsh. The --system install puts zsh.exe in /usr/bin, which /etc/profile
+# already puts on PATH, so only ~/bin needs adding.
+export PATH="$HOME/bin:$PATH"
 
 # ---- Aliases ----
 alias lg='lazygit'

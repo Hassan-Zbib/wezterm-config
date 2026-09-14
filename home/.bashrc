@@ -84,11 +84,11 @@ function ccp() {
 }
 
 # ---- PATH ----
-# zsh is installed outside the Git tree (scripts/install-zsh.sh), so its bin dir
-# is not on PATH by default -- append it to be able to just run `zsh` from here.
-# Appended, not prepended: the directory also holds msys-zsh-*.dll and a
-# versioned zsh-5.9.2.exe that nothing should pick up by accident.
-export PATH="$HOME/bin:$PATH:$HOME/.local/zsh/usr/bin"
+# zsh's bin dir used to be appended here: it was installed outside the Git tree
+# (~/.local/zsh) and so was on no standard path. The --system install puts
+# zsh.exe in /usr/bin, which Git Bash already has on PATH, so `zsh` resolves
+# from here with nothing added.
+export PATH="$HOME/bin:$PATH"
 
 # ---- Aliases ----
 alias lg='lazygit'

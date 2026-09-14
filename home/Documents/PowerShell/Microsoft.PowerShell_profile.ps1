@@ -75,28 +75,25 @@ $binPath = "$HOME\bin"
 $env:PATH = (($env:PATH -split ';' | Where-Object { $_ -and $_ -ine $binPath }) -join ';') + ";$binPath"
 
 # ---- zsh reachable from pwsh ----
-# zsh lives in a portable prefix that nothing else puts on PATH. A pwsh started
-# *from* zsh inherits it and `zsh` works by accident; a pwsh opened straight
-# from the WezTerm launch menu does not, and `zsh` is simply not found. Append
-# it so shell hopping works from any starting point. Appended rather than
-# prepended, and nothing else on PATH is named zsh, so this shadows nothing.
+# zsh.exe lives in Git\usr\bin (scripts/install-zsh.sh --system), and only
+# Git\cmd is on the Windows PATH by default -- so a pwsh opened straight from
+# the WezTerm launch menu cannot find `zsh` at all. A pwsh started *from* zsh
+# inherits a usable PATH and works by accident. Appending the directory makes
+# shell hopping work from any starting point.
 #
-# Git's usr\bin has to come along too. zsh.exe is an MSYS binary and links
-# against msys-2.0.dll, which lives there -- and only Git\cmd is on the Windows
-# PATH, not Git\usr\bin. Without it zsh resolves but dies instantly with
-# 0xC0000135 (STATUS_DLL_NOT_FOUND) and no message. WezTerm happens to inject
-# that directory for its own sessions, so this only bites a pwsh started
-# somewhere else; adding it here makes the profile self-sufficient.
+# One entry now does two jobs. zsh.exe is an MSYS binary linking against
+# msys-2.0.dll, which sits in that same directory, so the loader resolves it
+# beside the executable -- no second path needed. Back when zsh was installed
+# portably under ~/.local\zsh, that prefix had to be appended as well, and
+# omitting Git\usr\bin made zsh resolve but die instantly with 0xC0000135
+# (STATUS_DLL_NOT_FOUND) and no message.
 #
-# Both are APPENDED, never prepended: Git\usr\bin is full of MSYS coreutils
-# (find.exe, sort.exe ...) that would shadow the Windows ones and break
-# scripts expecting Windows semantics. Appended, the Windows versions win.
-$zshBin = "$HOME\.local\zsh\usr\bin"
+# APPENDED, never prepended: Git\usr\bin is full of MSYS coreutils (find.exe,
+# sort.exe ...) that would shadow the Windows ones and break scripts expecting
+# Windows semantics. Appended, the Windows versions win.
 $msysBin = "$env:ProgramFiles\Git\usr\bin"
-foreach ($p in @($msysBin, $zshBin)) {
-    if ((Test-Path $p) -and (($env:PATH -split ';') -inotcontains $p)) {
-        $env:PATH = "$env:PATH;$p"
-    }
+if ((Test-Path $msysBin) -and (($env:PATH -split ';') -inotcontains $msysBin)) {
+    $env:PATH = "$env:PATH;$msysBin"
 }
 Set-Alias lssh lazyssh
 function cc { claude --allow-dangerously-skip-permissions @args }

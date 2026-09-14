@@ -23,7 +23,7 @@ set -euo pipefail
 
 ANTIDOTE_DIR="$HOME/.local/antidote"
 ANTIDOTE_URL="https://github.com/mattmc3/antidote.git"
-ZSH_BIN="$HOME/.local/zsh/usr/bin/zsh.exe"
+ZSH_BIN="/c/Program Files/Git/usr/bin/zsh.exe"
 
 FORCE=0
 [[ "${1:-}" == "--force" ]] && FORCE=1
@@ -51,10 +51,12 @@ fi
 # list is newer than the cached bundle, so this is only a warm-up.
 if [[ -x "$ZSH_BIN" && -r "$HOME/.zsh_plugins.txt" ]]; then
    echo "==> cloning plugins from ~/.zsh_plugins.txt"
-   # antidote shells out to `zsh` internally. A non-login `zsh -c` only reads
-   # .zshenv, which deliberately does not touch PATH, so the zsh bin dir has to
-   # be put there explicitly or antidote fails with "command not found: zsh".
-   PATH="$PATH:$HOME/.local/zsh/usr/bin" \
+   # antidote shells out to `zsh` internally, so `zsh` has to be resolvable from
+   # inside the shell it starts. With the --system install that is automatic:
+   # zsh.exe lives in /usr/bin, which is on PATH here, and ~/.zshenv prepends
+   # the MSYS directories anyway for any parent that did not. The portable
+   # install needed the bin dir spliced in explicitly or antidote failed with
+   # "command not found: zsh".
    "$ZSH_BIN" -c '
       source "$HOME/.local/antidote/antidote.zsh"
       cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"

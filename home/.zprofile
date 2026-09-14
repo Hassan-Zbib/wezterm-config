@@ -7,9 +7,13 @@
 # It has a dedicated ZSH_VERSION branch, so it is safe to source from zsh; the
 # `emulate sh` wrapper is needed because the file is POSIX sh, not zsh.
 #
-# This mirrors the /etc/zsh/zprofile that the MSYS2 zsh package ships. A
-# portable install puts that file under ~/.local/zsh/etc, where zsh never
-# looks for it.
+# This REPLACES the /etc/zsh/zprofile that the MSYS2 zsh package ships, which
+# is a single uncached `emulate sh -c 'source /etc/profile'`. zsh reads the
+# global zprofile before this file, so leaving it installed would pay the full
+# ~101ms measured below on every login shell and then consult the cache here
+# for nothing. scripts/install-zsh.sh deletes it after unpacking for exactly
+# that reason -- under the old portable install the file landed in
+# ~/.local/zsh/etc, where zsh never looked, and the clash never arose.
 # ============================================================
 # ---- Cached ----
 # /etc/profile measured at ~101ms, the largest single item in startup. There is
