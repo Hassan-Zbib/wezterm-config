@@ -11,8 +11,11 @@
 
 [mgr]
 prepend_keymap = [
-   # Replace Ctrl+U/D half-page scroll with Ctrl+PgUp/PgDn
-   # (PageUp/PageDown bare are taken by WezTerm for terminal scroll)
+   # Replace Ctrl+U/D half-page scroll with Ctrl+PgUp/PgDn.
+   # Bare PageUp/PageDown keep yazi's default full-page scroll: WezTerm leaves
+   # them unbound on purpose and puts its own scrolling on Shift/Alt (see the
+   # "panes: scroll pane" block in config/bindings.lua), so yazi always sees
+   # them.
    { on = ["<C-u>"],        run = "noop" },
    { on = ["<C-d>"],        run = "noop" },
    { on = ["<C-PageUp>"],   run = "arrow -50%", desc = "Scroll up half page" },

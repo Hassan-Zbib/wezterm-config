@@ -27,3 +27,17 @@ max_height     = 900
 edit = [
    { run = 'vim %s', block = true, desc = "vim" },
 ]
+
+# Required by the git plugin (yazi-rs/plugins:git). Calling
+# require("git"):setup() in init.lua is not enough on its own —
+# without these fetchers the status signs never appear, and yazi
+# gives no error. Two entries: files ("*") and directories ("*/").
+[[plugin.prepend_fetchers]]
+url   = "*"
+run   = "git"
+group = "git"
+
+[[plugin.prepend_fetchers]]
+url   = "*/"
+run   = "git"
+group = "git"
