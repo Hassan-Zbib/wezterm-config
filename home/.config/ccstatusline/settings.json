@@ -33,6 +33,42 @@
         "id": "3",
         "type": "session-clock",
         "color": "brightBlack"
+      },
+      {
+        "id": "6f2a1b94-7c3d-4e58-9a10-2b8c5d6e0f71",
+        "type": "separator"
+      },
+      {
+        "id": "b7f547a7-198e-420b-8512-9e58438b8f53",
+        "type": "git-origin-repo"
+      },
+      {
+        "id": "93457570-b364-47e3-ac39-6ccc0f6826c4",
+        "type": "separator"
+      },
+      {
+        "id": "8c4d2e71-5f9a-4b03-8e26-1a7f3c9d5b48",
+        "type": "git-branch",
+        "color": "magenta",
+        "metadata": {
+          "hide": "no-git"
+        }
+      },
+      {
+        "id": "478a923d-c9ce-4eb8-876d-4bf63b40f737",
+        "type": "separator"
+      },
+      {
+        "id": "2c8eba16-1b45-46fe-9581-c6fc5b9eed7b",
+        "type": "git-status"
+      },
+      {
+        "id": "324131f5-4851-474f-939d-bf6e32065472",
+        "type": "separator"
+      },
+      {
+        "id": "47590e69-dc0d-4762-8d67-6596b83a4ca9",
+        "type": "git-changes"
       }
     ],
     [
@@ -92,9 +128,10 @@
       }
     ]
   ],
-  "flexMode": "full-minus-40",
+  "flexMode": "full",
   "compactThreshold": 60,
   "colorLevel": 2,
+  "defaultPaddingSide": "both",
   "inheritSeparatorColors": false,
   "globalBold": false,
   "gitCacheTtlSeconds": 5,
