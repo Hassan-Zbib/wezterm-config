@@ -3,6 +3,8 @@ local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
 local ssh_hosts = require('utils.ssh-hosts')
 local domain_manager = require('utils.domains')
+local sessions = require('utils.sessions')
+local workspaces = require('utils.workspaces')
 local act = wezterm.action
 
 local mod = {}
@@ -35,40 +37,27 @@ local keys = {
    { key = 'F2', mods = 'NONE', action = 'ActivateCopyMode' },
    { key = 'F3', mods = 'NONE', action = act.ShowLauncher },
    { key = 'F4', mods = 'NONE', action = act.ShowLauncherArgs({ flags = 'FUZZY|TABS' }) },
+   -- F5 opens the Workspaces & Sessions hub: switch/new/rename a workspace and
+   -- every session action, in one menu. A workspace is live state and a session
+   -- is a saved snapshot of one, so they belong together -- this replaces what
+   -- used to be F5 / Shift+F5 / Ctrl+F5 / F10 across two separate menus.
    {
       key = 'F5',
       mods = 'NONE',
-      action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
-   },
-   {
-      key = 'F5',
-      mods = 'SHIFT',
-      action = act.PromptInputLine({
-         description = 'New workspace name:',
-         action = wezterm.action_callback(function(window, pane, line)
-            if line and line ~= '' then
-               window:perform_action(act.SwitchToWorkspace({ name = line }), pane)
-            end
-         end),
-      }),
-   },
-   {
-      key = 'F5',
-      mods = 'CTRL',
       action = wezterm.action_callback(function(window, pane)
-         local current = window:active_workspace()
-         window:perform_action(act.PromptInputLine({
-            description = 'Rename workspace "' .. current .. '" to:',
-            action = wezterm.action_callback(function(win, p, line)
-               if line and line ~= '' then
-                  wezterm.mux.rename_workspace(current, line)
-                  wezterm.emit('update-status', win, p)
-               end
-            end),
-         }), pane)
+         workspaces.hub(window, pane)
       end),
    },
-   -- F6 is unbound (previously OLED mode).
+   -- F6 quick-saves the current workspace over the session it is attached to,
+   -- prompting for a name only the first time. Everything else is behind F5,
+   -- so the two session keys sit next to each other.
+   {
+      key = 'F6',
+      mods = 'NONE',
+      action = wezterm.action_callback(function(window, pane)
+         sessions.save(window, pane)
+      end),
+   },
    {
       key = 'F7',
       mods = 'NONE',
@@ -87,7 +76,8 @@ local keys = {
       end),
    },
    { key = 'F8', mods = 'NONE', action = act.ActivateCommandPalette },
-   -- F9/F10 session bindings are added in home/.wezterm.lua
+   -- F9 and F10 are unbound. F9 was the session quick-save (now F6, next to the
+   -- F5 hub); F10 was the session manager, now folded into that hub.
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
@@ -187,11 +177,14 @@ local keys = {
 
    -- window --
    -- window: spawn windows
+   -- Spawns a plain window. It used to also type the `ff` shell alias, which
+   -- made the binding depend on a shell definition that nothing here declares:
+   -- if the alias were missing or renamed you got a stray command instead of a
+   -- clean prompt, and the cheatsheet said only "New window".
    {
       key = 'n', mods = mod.SUPER,
       action = wezterm.action_callback(function(_window, _pane)
-         local _, new_pane, _ = wezterm.mux.spawn_window({})
-         new_pane:send_text('ff\n')
+         wezterm.mux.spawn_window({})
       end),
    },
 
@@ -235,9 +228,6 @@ local keys = {
          end
       end)
    },
-
-   -- file manager --
-   { key = 'e', mods = mod.SUPER, action = act.SendString('yy\n') },
 
    -- paste image from clipboard as file path (for Claude Code) --
    {
@@ -367,16 +357,61 @@ local keys = {
    { key = 'RightArrow', mods = 'ALT|SHIFT', action = act.AdjustPaneSize({ 'Right', 2 }) },
 
    -- panes: scroll pane
+   --
+   -- Scrolling lives on a modifier, and the BARE keys are deliberately left
+   -- UNBOUND so they reach the application. `disable_default_key_bindings` is
+   -- on, so unbound really means unbound.
+   --
+   -- They used to be bound to a `scroll_or_send` callback that scrolled when
+   -- `scrollback_rows > viewport_rows` and forwarded the key otherwise, using
+   -- "no scrollback" as a stand-in for "a full-screen app is running". That
+   -- holds for alternate-screen TUIs (yazi, vim, less) but NOT for Claude
+   -- Code, which renders inline on the primary screen -- that is why its
+   -- transcript survives in the scrollback after you quit. So the pane always
+   -- had scrollback, the predicate always said "scroll", and PageUp dragged
+   -- WezTerm's scrollbar instead of scrolling Claude Code's transcript. It
+   -- only ever appeared to work in a freshly spawned pane, before ~10 lines
+   -- had scrolled off the top.
+   --
+   -- The predicate cannot be repaired from the GUI side either. Every pane
+   -- here is a `ClientPane` -- the GUI is a mux client -- and `ClientPane`
+   -- hardcodes `is_alt_screen_active()` to `false` (the mux protocol carries
+   -- no alt-screen field) and reports no process info. So nothing tells "zsh
+   -- with history" apart from "Claude Code with history" without a shell-side
+   -- OSC 1337 user var. A modifier is deterministic, costs nothing, and
+   -- matches the xterm convention where Shift+PgUp is the terminal's own
+   -- scroll.
+   --
+   -- Bare Home/End are freed for the same reason, which also hands them back
+   -- to zle/readline for line-start and line-end.
+   { key = 'PageUp',   mods = 'SHIFT',   action = act.ScrollByPage(-0.75) },
+   { key = 'PageDown', mods = 'SHIFT',   action = act.ScrollByPage(0.75) },
+   { key = 'Home',     mods = 'SHIFT',   action = act.ScrollToTop },
+   { key = 'End',      mods = 'SHIFT',   action = act.ScrollToBottom },
    { key = 'PageUp',   mods = 'ALT',     action = act.ScrollByLine(-5) },
    { key = 'PageDown', mods = 'ALT',     action = act.ScrollByLine(5) },
-   { key = 'PageUp',   mods = 'NONE',    action = act.ScrollByPage(-0.75) },
-   { key = 'PageDown', mods = 'NONE',    action = act.ScrollByPage(0.75) },
-   { key = 'Home',     mods = 'NONE',    action = act.ScrollToTop },
-   { key = 'End',      mods = 'NONE',    action = act.ScrollToBottom },
 
-   -- panes: jump between prompts (requires shell integration)
-   { key = 'UpArrow',   mods = 'SHIFT',  action = act.ScrollToPrompt(-1) },
-   { key = 'DownArrow', mods = 'SHIFT',  action = act.ScrollToPrompt(1) },
+   -- Shift+Up / Shift+Down are deliberately UNBOUND.
+   --
+   -- They used to be ScrollToPrompt(-1/+1) -- jump to the previous/next shell
+   -- prompt -- which cannot work here. ScrollToPrompt walks OSC 133 semantic
+   -- zones, and `ClientPane` does not implement `get_semantic_zones` at all: it
+   -- falls through to the trait default, which is empty. Every pane in this
+   -- config is a ClientPane because the GUI is a mux client, so the action had
+   -- nothing to jump between and the keys silently did nothing.
+   --
+   -- The shells are not at fault. zsh and bash both emit the marks correctly --
+   -- verified by reading 3 Prompt + 3 Output zones back from a live pane of
+   -- each. It is wezterm#2880, open since Dec 2022; PR #8078 would carry
+   -- semantic zones over the mux protocol but is still unreviewed. A Lua
+   -- reimplementation is equally impossible, because `pane:get_semantic_zones()`
+   -- is empty client-side for exactly the same reason.
+   --
+   -- They are left unbound rather than repointed at a scroll action: the two
+   -- tiers below (¾ page on the bare keys, 5 lines on Alt) already cover
+   -- scrolling, and a third tier would just be Alt+PgUp with a different
+   -- number. Leaving them free also hands the keys to zsh, which is where
+   -- zsh-history-substring-search expects them if that ever gets installed.
 
    -- key-tables --
    -- resizes fonts
@@ -389,16 +424,9 @@ local keys = {
          timeout_milliseconds = 1000,
       }),
    },
-   -- resize panes
-   {
-      key = 'p',
-      mods = 'LEADER',
-      action = act.ActivateKeyTable({
-         name = 'resize_pane',
-         one_shot = false,
-         timeout_milliseconds = 1000,
-      }),
-   },
+   -- There is no `LEADER p` pane-resize mode: the flat Alt+Shift+arrows above
+   -- already resize panes, and two gestures for one job is how you end up
+   -- remembering neither.
 }
 
 -- stylua: ignore
@@ -409,14 +437,6 @@ local key_tables = {
       { key = 'r',         action = act.ResetFontSize },
       { key = 'Escape',    action = 'PopKeyTable' },
       { key = 'q',         action = 'PopKeyTable' },
-   },
-   resize_pane = {
-      { key = 'UpArrow',    action = act.AdjustPaneSize({ 'Up', 1 }) },
-      { key = 'DownArrow',  action = act.AdjustPaneSize({ 'Down', 1 }) },
-      { key = 'LeftArrow',  action = act.AdjustPaneSize({ 'Left', 1 }) },
-      { key = 'RightArrow', action = act.AdjustPaneSize({ 'Right', 1 }) },
-      { key = 'Escape',     action = 'PopKeyTable' },
-      { key = 'q',          action = 'PopKeyTable' },
    },
    copy_mode = {
       -- movement: arrow keys

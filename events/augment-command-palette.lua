@@ -3,6 +3,7 @@ local act = wezterm.action
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
 local sessions = require('utils.sessions')
+local workspaces = require('utils.workspaces')
 local ssh_hosts = require('utils.ssh-hosts')
 
 local mod = {}
@@ -51,9 +52,30 @@ M.setup = function()
             action = act.ShowLauncherArgs({ flags = 'FUZZY|TABS' }),
          },
          {
-            brief = 'Fuzzy Workspace Search  [F5]',
+            brief = 'Workspaces & Sessions  [F5]',
             icon = 'cod_window',
+            action = wezterm.action_callback(function(win, p)
+               workspaces.hub(win, p)
+            end),
+         },
+         {
+            brief = 'Fuzzy Workspace Search',
+            icon = 'md_magnify',
             action = act.ShowLauncherArgs({ flags = 'FUZZY|WORKSPACES' }),
+         },
+         {
+            brief = 'New Workspace',
+            icon = 'md_plus_box_outline',
+            action = wezterm.action_callback(function(win, p)
+               workspaces.new_workspace(win, p)
+            end),
+         },
+         {
+            brief = 'Rename Workspace',
+            icon = 'md_form_textbox',
+            action = wezterm.action_callback(function(win, p)
+               workspaces.rename_workspace(win, p)
+            end),
          },
          {
             brief = 'SSH Host Connect  [F7]',
@@ -89,38 +111,42 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Save Session  [F9]',
+            brief = 'Save Session  [F6]',
             icon = 'md_content_save',
             action = wezterm.action_callback(function(win, p)
                sessions.save(win, p)
             end),
          },
          {
-            brief = 'Save Session (Named)  [Shift+F10]',
+            brief = 'Save Session (Named)',
             icon = 'md_content_save_edit',
             action = wezterm.action_callback(function(win, p)
-               sessions.save_with_name(win, p)
+               sessions.save_as(win, p)
             end),
          },
          {
-            brief = 'Restore Session  [F10]',
+            brief = 'Restore Session',
             icon = 'md_backup_restore',
             action = wezterm.action_callback(function(win, p)
-               win:perform_action(act.InputSelector({
-                  title = 'Restore Session',
-                  choices = sessions.choices(),
-                  fuzzy = true,
-                  fuzzy_description = 'Select Session: ',
-                  action = wezterm.action_callback(function(inner_win, inner_pane, id)
-                     if id then
-                        sessions.restore(inner_win, inner_pane, id)
-                     end
-                  end),
-               }), p)
+               sessions.restore_picker(win, p)
             end),
          },
          {
-            brief = 'Delete Session  [Ctrl+F10]',
+            brief = 'Restore Session Into Another Workspace',
+            icon = 'md_content_duplicate',
+            action = wezterm.action_callback(function(win, p)
+               sessions.restore_as(win, p)
+            end),
+         },
+         {
+            brief = 'Rename Session',
+            icon = 'md_rename',
+            action = wezterm.action_callback(function(win, p)
+               sessions.rename(win, p)
+            end),
+         },
+         {
+            brief = 'Delete Session',
             icon = 'md_delete',
             action = wezterm.action_callback(function(win, p)
                sessions.delete(win, p)
@@ -168,9 +194,9 @@ M.setup = function()
             action = act.SpawnTab('DefaultDomain'),
          },
          {
-            brief = 'New WSL Tab  [' .. key.SR .. '+T]',
+            brief = 'New WSL Tab  [' .. key.SR .. '+Shift+T]',
             icon = 'linux_tux',
-            action = act.SpawnTab({ DomainName = 'wsl:ubuntu-fish' }),
+            action = act.SpawnTab({ DomainName = 'WSL:Ubuntu' }),
          },
          {
             brief = 'Close Tab  [' .. key.SR .. '+W]',
@@ -297,7 +323,7 @@ M.setup = function()
 
          -- tools
          {
-            brief = 'Open File Manager (yazi)  [' .. key.S .. '+E]',
+            brief = 'Open File Manager (yazi)',
             icon = 'md_folder',
             action = act.SendString('yy\n'),
          },
