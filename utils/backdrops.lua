@@ -26,9 +26,11 @@ local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 --      scrim raises the floor but leaves the peaks intact.
 --      `saturation` keeps a colourful image from competing with the syntax
 --      colours in the foreground.
---   2. `overlay_opacity` then flattens what is left under a scrim of the theme
---      background colour. Adjustable live (see config/bindings.lua) and shown
---      as a percentage in the right status bar.
+--   2. `overlay_opacity` then flattens what is left under a scrim of
+--      `focus_color` — the same near-black focus mode paints, not the lighter
+--      terminal `background`, which read as a grey wash over the image.
+--      Adjustable live (see config/bindings.lua) and shown as a percentage in
+--      the right status bar.
 local IMAGE_HSB = {
    hue = 1.0,
    saturation = 0.7,
@@ -167,7 +169,7 @@ function BackDrops:_create_opts()
          hsb = IMAGE_HSB,
       },
       {
-         source = { Color = colors.background },
+         source = { Color = self.focus_color },
          height = '120%',
          width = '120%',
          vertical_offset = '-10%',
