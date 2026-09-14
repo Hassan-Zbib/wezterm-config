@@ -57,7 +57,14 @@ function BackDrops:init()
       focus_color = colors.background,
       focus_on = false,
       auto_rotate_enabled = true,
-      auto_rotate_interval = 30,
+      -- Every rotation onto an image not seen before in this session costs a
+      -- decoded RGBA frame on disk (W x H x 4 -- ~18.7MB at 2880x1620) in
+      -- WezTerm's `wezterm-blob-lease-*` cache, which has no size cap and is
+      -- only cleaned up on a clean exit. Cost scales with how many DISTINCT
+      -- images get touched, so the interval is the dial: at 30s a 12h session
+      -- walks the whole 611-image library (~11GB written); at 120s it reaches
+      -- ~360 (~6.7GB). Nothing is lost but the speed of the cycle.
+      auto_rotate_interval = 120,
       _rotate_generation = 0,
       overlay_opacity = 0.85,
       _browse_gen = 0,
@@ -439,9 +446,9 @@ function BackDrops:_schedule_rotate(gen)
 end
 
 ---Start auto-rotating backdrops at the given interval
----@param seconds? number rotation interval in seconds (default: 30)
+---@param seconds? number rotation interval in seconds (default: 120)
 function BackDrops:start_auto_rotate(seconds)
-   self.auto_rotate_interval = seconds or 30
+   self.auto_rotate_interval = seconds or 120
    self.auto_rotate_enabled = true
    self._rotate_generation = self._rotate_generation + 1
    self:_schedule_rotate(self._rotate_generation)

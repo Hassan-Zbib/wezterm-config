@@ -9,7 +9,10 @@ return {
    status_update_interval = 1000,
    audible_bell = 'SystemBeep',
 
-   scrollback_lines = 50000,
+   -- Per-pane, so this multiplies across every split. 50k lines held roughly
+   -- five times the memory of this for no practical gain -- searching back that
+   -- far is what the shell's own history is for.
+   scrollback_lines = 10000,
 
    -- The GUI and the mux server must agree on a workspace name, otherwise
    -- `wezterm connect mux` attaches looking for "default", doesn't find it, and
