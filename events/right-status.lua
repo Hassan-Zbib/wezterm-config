@@ -118,32 +118,57 @@ local function battery_info()
    return charge, icon .. ' '
 end
 
-local ram_cache = { value = '', last_check = 0 }
-local RAM_CACHE_TTL = 5
+-- `update-status` is synchronous -- WezTerm only schedules the next tick once
+-- this handler returns -- so whatever the RAM probe costs is paid by every
+-- other segment in the bar too. Two probes, very different price tags:
+--
+--   * `bin/ramload.exe` (source in scripts/ramload.rs) calls
+--     GlobalMemoryStatusEx and costs ~6ms.
+--   * PowerShell + `Get-CimInstance` costs ~220ms, and is only here so the bar
+--     still shows a number on a machine where the helper was never built.
+--     (`wmic` is not an option any more: Windows 24H2 removed it.)
+--
+-- The TTL is therefore chosen per source rather than fixed: the helper is cheap
+-- enough to re-run almost every tick, while the fallback needs to be throttled
+-- hard or it visibly stalls the status bar.
+local RAM_TTL_FAST = 2
+local RAM_TTL_SLOW = 30
+
+local ram_cache = { value = '', last_check = 0, ttl = RAM_TTL_FAST }
 
 ---@return string RAM usage percentage string e.g. "62%"
 local function get_ram_usage()
    local now = os.time()
-   if now - ram_cache.last_check < RAM_CACHE_TTL then
+   if now - ram_cache.last_check < ram_cache.ttl then
       return ram_cache.value
    end
    ram_cache.last_check = now
 
    if platform.is_win then
-      local ok, stdout = wezterm.run_child_process({
+      -- Absolute path rather than a bare name: Dotbot links the helper into
+      -- ~/bin, but WezTerm inherits the Windows PATH, not the shell's.
+      local ok, stdout = wezterm.run_child_process({ wezterm.home_dir .. '/bin/ramload.exe' })
+      local pct = ok and stdout and stdout:match('(%d+)')
+      if pct then
+         ram_cache.value = pct .. '%'
+         ram_cache.ttl = RAM_TTL_FAST
+         return ram_cache.value
+      end
+
+      ram_cache.ttl = RAM_TTL_SLOW
+      local ps_ok, ps_stdout = wezterm.run_child_process({
          'powershell',
          '-NoProfile',
          '-Command',
          '$os = Get-CimInstance Win32_OperatingSystem; "FreePhysicalMemory=$($os.FreePhysicalMemory)`nTotalVisibleMemorySize=$($os.TotalVisibleMemorySize)"',
       })
-      if ok and stdout then
-         local total = stdout:match('TotalVisibleMemorySize=(%d+)')
-         local free = stdout:match('FreePhysicalMemory=(%d+)')
+      if ps_ok and ps_stdout then
+         local total = ps_stdout:match('TotalVisibleMemorySize=(%d+)')
+         local free = ps_stdout:match('FreePhysicalMemory=(%d+)')
          if total and free then
             total = tonumber(total)
             free = tonumber(free)
-            local pct = math.floor(((total - free) / total) * 100 + 0.5)
-            ram_cache.value = pct .. '%'
+            ram_cache.value = math.floor(((total - free) / total) * 100 + 0.5) .. '%'
          end
       end
    else
@@ -151,8 +176,7 @@ local function get_ram_usage()
       if ok and stdout then
          local total, used = stdout:match('Mem:%s+(%d+)%s+(%d+)')
          if total and used then
-            local pct = math.floor((tonumber(used) / tonumber(total)) * 100 + 0.5)
-            ram_cache.value = pct .. '%'
+            ram_cache.value = math.floor((tonumber(used) / tonumber(total)) * 100 + 0.5) .. '%'
          end
       end
    end
