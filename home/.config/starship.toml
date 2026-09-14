@@ -1,166 +1,258 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# ============================================================
+# Catppuccin Macchiato, "classic" bar + powerlevel10k frame.
+# ============================================================
+# Layout:
+#   ╭─ [ os user shell lvl | directory | git | runtimes ]  ......  right
+#   ╰─❯
+#
+# One muted background (surface0) runs the whole left bar; groups are divided
+# by thin  glyphs rather than by colour changes, so an empty group can
+# never leave a stray coloured wedge the way a multi-colour powerline does.
+#
+# $fill expands to push the right-hand group to the terminal edge. It is used
+# instead of `right_format` on purpose: only the zsh init passes --right, so a
+# real right prompt would be invisible in bash and powershell. $fill lives in
+# the main format string and therefore behaves identically in all three.
+#
+# GLYPHS: generated from codepoints, each verified present in
+# JetBrainsMonoNerdFont with fontTools. Four git_status symbols are overridden
+# below because starship's defaults for them (U+2718 U+21E1 U+21E3 U+21D5) are
+# NOT in this font and would fall back to another face at a different width.
+# ============================================================
+
+# Raised from the 30ms default: ~/.cache/starship/*.log was recording
+# "Scanning current directory timed out." once per session on this machine.
+# A ceiling, not a delay -- warm scans finish in ~1ms and never reach it.
+scan_timeout = 100
+
+# Default is 500ms. Spawning any process on Windows measured at a ~28ms floor
+# here before the program does anything, so version probes get more headroom.
+command_timeout = 1000
+
 format = """
-[](red)\
-$os\
-$username\
-$shell\
-[](bg:peach fg:red)\
+[╭─](fg:surface2)\
+[](fg:surface0)\
+$os$username$shell$shlvl\
+[](fg:overlay0 bg:surface0)\
 $directory\
-[](bg:yellow fg:peach)\
-$git_branch\
-$git_status\
-[](fg:yellow bg:green)\
-$c\
-$rust\
-$golang\
-$nodejs\
-$php\
-$java\
-$kotlin\
-$haskell\
-$python\
-$aws\
-$kubernetes\
-$terraform\
-[](fg:green)\
-$cmd_duration\
+[](fg:overlay0 bg:surface0)\
+$git_branch$git_status$git_state$git_commit\
+$package$rust$nodejs$python$deno$dotnet$docker_context$aws$kubernetes\
+[](fg:surface0)\
+$fill\
+$hostname$container$status$jobs$cmd_duration\
 $line_break\
-$character"""
+[╰─](fg:surface2)$character"""
 
 palette = 'catppuccin_macchiato'
 
+# Expands to fill the line, pushing the right-hand group to the edge.
+[fill]
+symbol = "─"
+style = "fg:surface1"
+
 [os]
 disabled = false
-style = "bg:red fg:crust"
-
+style = "bg:surface0 fg:subtext1"
 [os.symbols]
 Windows = ""
-Ubuntu = "󰕈"
-SUSE = ""
-Raspbian = "󰐿"
-Mint = "󰣭"
-Macos = "󰀵"
-Manjaro = ""
-Linux = "󰌽"
-Gentoo = "󰣨"
-Fedora = "󰣛"
-Alpine = ""
-Amazon = ""
-Android = ""
-AOSC = ""
-Arch = "󰣇"
-Artix = "󰣇"
-CentOS = ""
-Debian = "󰣚"
-Redhat = "󱄛"
-RedHatEnterprise = "󱄛"
 
 [username]
 show_always = true
-style_user = "bg:red fg:crust"
-style_root = "bg:red fg:crust"
+style_user = "bg:surface0 fg:subtext1"
+style_root = "bg:surface0 fg:red"
 format = '[ $user]($style)'
 
-[directory]
-style = "bg:peach fg:crust"
-format = "[ $path ]($style)"
-truncation_length = 3
-truncation_symbol = "…/"
+[shell]
+disabled = false
+bash_indicator = " bash"
+zsh_indicator = " zsh"
+powershell_indicator = " pwsh"
+cmd_indicator = " cmd"
+unknown_indicator = " sh"
+format = '[ $indicator ]($style)'
+style = "bg:surface0 fg:overlay2"
 
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = "󰝚 "
-"Pictures" = " "
-"Developer" = "󰲋 "
+# How many shells deep you are. threshold = 1 means it is always shown, so a
+# plain WezTerm tab reads 1 and each nested shell counts up -- zsh -> bash ->
+# pwsh stacks up quickly and it is easy to forget an exit only drops you one
+# level. Always-on also means a missing number is unambiguous rather than
+# just meaning 'depth 1'.
+[shlvl]
+disabled = false
+threshold = 1
+symbol = ""
+repeat = false
+format = '[$symbol $shlvl ]($style)'
+style = "bg:surface0 fg:mauve"
+
+# truncate_to_repo is off so the path *above* the repo stays visible; that is
+# what makes the repo-root emphasis below meaningful.
+[directory]
+style = "bg:surface0 fg:blue"
+before_repo_root_style = "bg:surface0 fg:overlay1"
+repo_root_style = "bg:surface0 bold fg:blue"
+format = '[ $path ]($style)'
+repo_root_format = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path ]($style)'
+truncation_length = 4
+truncation_symbol = "…/"
+truncate_to_repo = false
 
 [git_branch]
 symbol = ""
-style = "bg:yellow"
-format = '[[ $symbol $branch ](fg:crust bg:yellow)]($style)'
+style = "bg:surface0 fg:yellow"
+format = '[ $symbol $branch]($style)'
 
 [git_status]
-style = "bg:yellow"
-format = '[[($all_status$ahead_behind )](fg:crust bg:yellow)]($style)'
+# DISABLED: measured at 60ms of a 143ms prompt in a small repo -- the single
+# largest module cost. git_branch still shows the branch name for <1ms; what
+# is lost is the dirty/ahead/stash indicators. The use_git_executable trade
+# documented below only matters while this module is enabled.
+disabled = true
+# Shell out to git.exe instead of starship's built-in git implementation.
+# Measured full-prompt medians, interleaved, 31 samples each:
+#                       built-in     git.exe
+#   OpenEMR (7169 files)   236.6ms  ->  131.7ms
+#   this repo (24 files)   103.9ms  ->  156.6ms
+# It is a straight trade: shelling out costs a ~28ms process spawn that
+# dominates small repos, but git's own status walk is far faster than the
+# built-in one on a large tree. Chosen deliberately to make the big work
+# repos bearable. Output is byte-identical either way -- verified against a
+# dirty, ahead-of-remote repo ([<deleted><modified><untracked><ahead>] both).
+use_git_executable = true
+style = "bg:surface0 fg:maroon"
+format = '([ $all_status$ahead_behind]($style))'
+deleted = "󰩹"
+ahead = "󰜷${count}"
+behind = "󰜮${count}"
+diverged = "󰹹${ahead_count}/${behind_count}"
+
+# REBASING 2/5, MERGING, CHERRY-PICKING, BISECTING.
+[git_state]
+style = "bg:surface0 fg:mauve"
+format = '[ \($state( $progress_current/$progress_total)\)]($style)'
+
+# Only when HEAD is detached -- mid-bisect, or a tag/SHA checked out directly.
+# Explains why the branch segment has gone blank.
+[git_commit]
+only_detached = true
+commit_hash_length = 7
+style = "bg:surface0 fg:peach"
+format = '[  $hash$tag]($style)'
+
+[package]
+symbol = ""
+style = "bg:surface0 fg:overlay2"
+format = '[ $symbol $version]($style)'
 
 [nodejs]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
-[c]
-symbol = " "
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+style = "bg:surface0 fg:green"
+format = '[ $symbol $version]($style)'
 
 [rust]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
+style = "bg:surface0 fg:peach"
+format = '[ $symbol $version]($style)'
 
-[golang]
-symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
-[php]
-symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
-[java]
-symbol = " "
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
-[kotlin]
-symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
-[haskell]
-symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version) ](fg:crust bg:green)]($style)'
-
+# Detection deliberately narrowed. The default fires on any *.py file, and
+# since there is no python on PATH the module then costs ~18ms to render a
+# bare logo with no version -- measured at 18ms in the OpenEMR checkout.
+# Restricted to real project markers, and shows the virtualenv name when one
+# is active, which is the only part that carries information here.
 [python]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $version)(\(#$virtualenv\)) ](fg:crust bg:green)]($style)'
+style = "bg:surface0 fg:yellow"
+format = '[ $symbol( $version)( \($virtualenv\))]($style)'
+detect_extensions = []
+detect_files = ["pyproject.toml", ".python-version", "requirements.txt"]
+detect_folders = [".venv"]
+
+[deno]
+symbol = "󰟄"
+style = "bg:surface0 fg:teal"
+format = '[ $symbol $version]($style)'
+
+[dotnet]
+symbol = ""
+style = "bg:surface0 fg:mauve"
+format = '[ $symbol $tfm]($style)'
+
+# Only shows a non-default docker context.
+[docker_context]
+symbol = ""
+style = "bg:surface0 fg:sapphire"
+format = '[ $symbol $context]($style)'
 
 [aws]
 symbol = ""
-style = "bg:green"
-format = '[[ $symbol( $profile)( ($region)) ](fg:crust bg:green)]($style)'
+style = "bg:surface0 fg:peach"
+format = '[ $symbol $profile($region)]($style)'
 
 [kubernetes]
 symbol = "󰇣"
 disabled = false
-style = "bg:green"
-format = '[[ $symbol( $context)(:$namespace) ](fg:crust bg:green)]($style)'
+style = "bg:surface0 fg:sapphire"
+format = '[ $symbol $context(:$namespace)]($style)'
 
-[terraform]
-symbol = "󱢢"
-style = "bg:green"
-format = '[[ $symbol( $version)( $workspace) ](fg:crust bg:green)]($style)'
+# ---- right-hand group ----------------------------------------------------
+# No background: these sit on the terminal background past the $fill.
 
-[docker_context]
-symbol = ""
-style = "bg:sapphire"
-format = '[[ $symbol( $context) ](fg:crust bg:sapphire)]($style)'
+# ssh_only, so this is invisible on this machine and appears the moment the
+# shell is on a remote host.
+[hostname]
+disabled = false
+ssh_only = true
+style = "fg:yellow"
+format = '[  $hostname]($style)'
 
-[conda]
-symbol = "  "
-style = "fg:crust bg:sapphire"
-format = '[$symbol$environment ]($style)'
-ignore_base = false
+# Invisible unless the shell is running inside a container.
+[container]
+disabled = false
+style = "fg:teal"
+format = '[  $name]($style)'
 
-[time]
-disabled = true
-time_format = "%R"
-style = "bg:lavender"
-format = '[[  $time ](fg:crust bg:lavender)]($style)'
+# starship disables $status by default, so a failure used to recolour only the
+# prompt character. map_symbol + recognize_signal_code turn the raw number into
+# something meaningful for signals: 130 -> "130 INT", 139 -> "139 SEGV".
+# 127 and 126 are deliberately left as bare numbers -- the shell already prints
+# "command not found" / "permission denied" for those, so naming them twice is
+# noise. pipestatus shows every stage of a pipeline (1|0|0) rather than just
+# the last; only the zsh init passes --pipestatus, and it degrades to the plain
+# status in bash and powershell.
+[status]
+disabled = false
+map_symbol = true
+recognize_signal_code = true
+pipestatus = true
+symbol = ""
+not_executable_symbol = ""
+not_found_symbol = ""
+sigint_symbol = ""
+signal_symbol = ""
+format = '[ $symbol $status( $signal_name)]($style)'
+pipestatus_format = '[ $symbol $pipestatus]($style)'
+# Without this each stage repeats the symbol: " 1| 0| 1".
+pipestatus_segment_format = '[$status]($style)'
+style = "bold fg:red"
+
+# Suspended / backgrounded jobs (Ctrl+Z, or `cmd &`).
+[jobs]
+symbol = ""
+symbol_threshold = 1
+number_threshold = 1
+format = '[ $symbol$number]($style)'
+style = "bold fg:mauve"
+
+[cmd_duration]
+show_milliseconds = true
+format = '[  $duration]($style)'
+style = "fg:overlay1"
+disabled = false
+show_notifications = false
+min_time_to_notify = 45000
 
 [line_break]
 disabled = false
@@ -171,21 +263,6 @@ success_symbol = '[❯](bold fg:green)'
 error_symbol = '[❯](bold fg:red)'
 vimcmd_symbol = '[❮](bold fg:green)'
 vimcmd_visual_symbol = '[❮](bold fg:yellow)'
-
-[cmd_duration]
-show_milliseconds = true
-format = " in $duration "
-style = "bold fg:overlay0"
-disabled = false
-show_notifications = false
-min_time_to_notify = 45000
-
-[shell]
-powershell_indicator = " pwsh"
-bash_indicator = " bash"
-format = "[ $indicator]($style)"
-style = "bg:red fg:crust"
-disabled = false
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
