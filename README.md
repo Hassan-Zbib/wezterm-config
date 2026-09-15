@@ -50,7 +50,7 @@ These tools are pre-configured with aliases in `.bashrc` and `.zshrc`. Install w
 | [Lazygit](https://github.com/jesseduffield/lazygit) | `winget install JesseDuffield.lazygit` | `lg` | Terminal UI for Git |
 | [Lazyssh](https://github.com/Adembc/lazyssh) | Download from [releases](https://github.com/Adembc/lazyssh/releases/latest) → place in `bin/lazyssh.exe` | `lssh` | Terminal UI for SSH host management |
 | [eza](https://github.com/eza-community/eza) | `winget install eza-community.eza` | `ls`, `la`, `ll`, `lt` | Modern `ls` with icons, git status, and tree view |
-| [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop` | Interactive system monitor (CPU, RAM, disk, network) |
+| [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop`, `bt` | Interactive system monitor (CPU, RAM, disk, network) |
 | [Glow](https://github.com/charmbracelet/glow) | `winget install charmbracelet.glow` | `glow` | Render Markdown files in the terminal |
 | [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install Devolutions.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
 | [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
@@ -355,7 +355,7 @@ The `.bashrc` configures the following aliases:
 | `ll` | Long format with git status per file, header, dirs first, includes hidden files |
 | `lt` | Tree view (2 levels deep) |
 | `lg` | Lazygit — terminal UI for Git |
-| `btop` | btop4win — interactive system monitor |
+| `bt` | btop4win — interactive system monitor |
 | `pkgs` | UniGetUI — GUI package manager |
 | `glow` | Markdown viewer/browser |
 | `yy` | Yazi with auto-cd — cd to selected dir on quit |

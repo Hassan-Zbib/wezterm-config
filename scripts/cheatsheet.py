@@ -400,6 +400,16 @@ _VIEWERS = (
         sub('fastfetch') +
         row('fastfetch · ff',  'System info panel')     +
         blank() +
+        sub('btop (system monitor)') +
+        row('btop · bt',       'CPU · RAM · disk · net')+
+        row('F1 · h',          'Help — every key')      +
+        row('F2 · o',          'Options menu')          +
+        row('Esc · m',         'Main menu')             +
+        row('1 2 3 4',         'Toggle the four boxes') +
+        row('p / shift+p',     'Cycle view presets')    +
+        row('f · e · r',       'Filter · tree · sort')  +
+        row('t',               'Kill selected process') +
+        blank() +
         sub('UniGetUI') +
         row('pkgs',            'Open package manager')   +
         blank() +
@@ -1433,6 +1443,13 @@ def run():
 
 
 if __name__ == '__main__':
+    # Python picks the ANSI code page (cp1252 here) for stdout when it is not a
+    # console -- a pipe or a redirect to a file. Every page is built from box
+    # drawing characters and Nerd Font glyphs, none of which cp1252 can encode,
+    # so the --all dump died with UnicodeEncodeError exactly when it is most
+    # useful: piped into a pager or captured for a diff.
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
     if '--selftest' in sys.argv:
         sys.exit(selftest())
     if '--all' in sys.argv or not sys.stdout.isatty() or not sys.stdin.isatty():

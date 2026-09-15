@@ -102,6 +102,7 @@ alias cls='clear'
 alias cc='claude --allow-dangerously-skip-permissions'
 alias cca='claude agents --allow-dangerously-skip-permissions'
 alias ff='fastfetch'
+alias bt='btop'
 
 # ---- zoxide (smart cd) ----
 # Warp manages PROMPT_COMMAND itself (its Blocks/prompt integration runs after

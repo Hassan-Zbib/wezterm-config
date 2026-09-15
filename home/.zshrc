@@ -233,6 +233,7 @@ alias cls='clear'
 alias cc='claude --allow-dangerously-skip-permissions'
 alias cca='claude agents --allow-dangerously-skip-permissions'
 alias ff='fastfetch'
+alias bt='btop'
 
 # ---- fzf ----
 # Ctrl+t file picker, Alt+c cd picker, plus completion. This also binds Ctrl+r
