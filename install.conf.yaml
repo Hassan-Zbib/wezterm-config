@@ -23,6 +23,11 @@
     ~/.config/eza/theme.yml: home/.config/eza/theme.yml
     ~/.config/ccstatusline/settings.json: home/.config/ccstatusline/settings.json
     ~/.config/atuin/config.toml: home/.config/atuin/config.toml
+    # herdr writes to this file itself -- onboarding persists its answers here,
+    # and `herdr config reset-keys` backs the file up before rewriting it. Through
+    # the symlink those writes land in the repo, which is what we want, but if
+    # reset-keys ever replaces the link with a plain file, re-run ./install.
+    ~/AppData/Roaming/herdr/config.toml: home/AppData/Roaming/herdr/config.toml
     ~/AppData/Roaming/yazi/config/yazi.toml: home/AppData/Roaming/yazi/config/yazi.toml
     ~/AppData/Roaming/yazi/config/theme.toml: home/AppData/Roaming/yazi/config/theme.toml
     ~/AppData/Roaming/yazi/config/init.lua: home/AppData/Roaming/yazi/config/init.lua

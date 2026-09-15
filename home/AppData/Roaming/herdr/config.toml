@@ -1,0 +1,164 @@
+onboarding = false
+# herdr configuration
+#
+# Deliberately minimal: everything not set here is herdr's own default, so the
+# stock experience is what gets evaluated first. Print the full annotated
+# surface (374 lines) with `herdr --default-config`, validate edits with
+# `herdr config check`, and apply them to a running server with
+# `herdr server reload-config` (or prefix+shift+r).
+#
+# Do not let an editor add a UTF-8 BOM to this file: herdr issue #3678 reports
+# a BOM making every config read fall back to defaults, silently.
+
+[terminal]
+# MSYS zsh installed into the Git for Windows tree by scripts/install-zsh.sh,
+# matching WezTerm's default_prog. Forward slashes; herdr accepts them and they
+# avoid TOML escape noise.
+#
+# The server can be started from anywhere -- WezTerm, PowerShell, a service.
+# zsh.exe sits in /usr/bin beside msys-2.0.dll, so the Windows loader resolves
+# it with no PATH preparation, and ~/.zshenv prepends /usr/bin and /mingw64/bin
+# for the non-login case below.
+#
+# This was NOT true of the previous portable install under ~/.local/zsh, where
+# that directory held only msys-zsh-5.9.2.dll: herdr has no [env] section, panes
+# inherit the server's environment, and every zsh pane died instantly with exit
+# code 3221225781 (0xC0000135, STATUS_DLL_NOT_FOUND), respawning in a loop.
+default_shell = "C:/Program Files/Git/usr/bin/zsh.exe"
+
+# shell_mode is deliberately NOT set.
+#
+# Setting it to "login" makes herdr 0.9.0 on native Windows silently spawn
+# cmd.exe instead of the configured shell -- reproduced with both zsh and Git
+# bash, with no warning and nothing in herdr-server.log. Leaving it unset means
+# panes run a NON-login zsh: .zshrc is still sourced in full (starship, atuin,
+# antidote plugins, bindkeys, the cca alias), but /etc/profile is not -- which
+# is why home/.zshenv carries an MSYS PATH guard that prepends /usr/bin and
+# /mingw64/bin when they are absent. Without it the pane has no coreutils at
+# all and compinit dies on its first `mv`.
+
+[keys]
+# Backtick: one key, above Tab, reachable with the left hand without a chord.
+# herdr's own default config names backtick as accepted punctuation, and it
+# validates -- note the spelling is "backtick"; "grave" is rejected.
+#
+# THE TRADE-OFF: herdr has no send-prefix-literally escape -- there is no
+# tmux-style "press it twice to send one" -- so a literal backtick can no longer
+# be typed inside any herdr pane. That is an accepted cost, not an oversight.
+# If it does bite, markdown fences in Claude Code prompts are the likely place,
+# and ctrl+g is the fallback: also left-handed, spread across two fingers, and
+# the only thing it displaces in zsh is send-break, which ctrl+c already covers.
+#
+# Shift+backtick (~) should still pass through, being a distinct chord that
+# produces a different character -- worth confirming with `cd ~` on first run.
+#
+# Two earlier candidates, and why they are not here:
+#   - ctrl+space never registered at all. Terminals encode it as NUL (0x00) or
+#     drop it outright. That is a terminal encoding limit rather than a config
+#     problem, so it is not worth retrying.
+#   - ctrl+b, herdr's stock default, works but collides twice over: Claude Code
+#     uses it to background commands and agents, and it is backward-char in
+#     emacs-mode zsh.
+#
+# Press prefix+? for the live list; it is authoritative over these comments.
+prefix = "backtick"
+
+# The bindings below are aligned to config/bindings.lua in the wezterm-config
+# repo so the same finger motion works at both layers. One rule generates all
+# of them: DROP `alt`, ADD THE PREFIX, AND KEEP `ctrl` WHERE WEZTERM HAD
+# `alt+ctrl`. So wezterm alt+t (new tab) becomes prefix+t, and wezterm
+# alt+ctrl+w (close tab) becomes prefix+ctrl+w. WezTerm's two tiers -- bare alt
+# for the common case, alt+ctrl for the larger-scope variant -- survive intact
+# as prefix vs prefix+ctrl.
+#
+# Nothing here can collide with WezTerm. WezTerm is the outer terminal and gets
+# every keystroke first, so anything it binds is invisible to herdr even in
+# prefix mode. That is also why the F-key half of the WezTerm scheme (F1-F8,
+# F11, F12) is NOT mirrored: those keys physically cannot reach herdr, so the
+# herdr actions they would correspond to keep their stock bindings instead.
+
+# -- panes --
+# wezterm alt+\ splits down and alt+ctrl+\ splits right. herdr names the same
+# two splits by their divider rather than their direction, so "horizontal"
+# is the stacked one.
+split_horizontal = "prefix+\\"
+split_vertical   = "prefix+ctrl+\\"
+# Arrows rather than herdr's stock h/j/k/l, matching wezterm's alt+ctrl+arrows.
+# hjkl is not lost -- it still moves between panes inside navigate mode
+# (prefix+g), which is where a multiplexer user would reach for it anyway.
+focus_pane_left  = "prefix+left"
+focus_pane_down  = "prefix+down"
+focus_pane_up    = "prefix+up"
+focus_pane_right = "prefix+right"
+zoom             = "prefix+enter"
+close_pane       = "prefix+w"
+#
+# resize_pane_* is deliberately NOT set: pane resizing stays on herdr's stock
+# resize mode (prefix+r). The obvious mirror of wezterm's flat alt+shift+arrows
+# would be a flat ctrl+shift+alt+arrows here -- that chord is genuinely free in
+# bindings.lua and does reach herdr -- but a four-key chord held repeatedly is
+# worse ergonomics than entering a mode once and tapping arrows.
+
+# -- tabs --
+new_tab      = "prefix+t"
+close_tab    = "prefix+ctrl+w"
+previous_tab = "prefix+["
+next_tab     = "prefix+]"
+# Stock already, but stated explicitly because bindings.lua now carries a
+# matching alt+1..9 so the two layers index tabs the same way.
+switch_tab   = "prefix+1..9"
+# wezterm groups tab naming on 0 (alt+0 rename, alt+ctrl+0 reset), so 0 means
+# "names" at both layers. This displaces stock prefix+shift+t.
+rename_tab   = "prefix+0"
+#
+# move_tab_previous/next stay unset. Their wezterm equivalent is
+# ctrl+shift+left/right, which wezterm binds and therefore swallows before
+# herdr can see it -- there is no mirror to make, and spending an unrelated key
+# on it would break the one-rule mapping for no gain.
+
+# -- workspaces --
+# Free wins: herdr leaves both unbound by default and the wezterm habit
+# (alt+ctrl+[ / ]) transfers exactly.
+previous_workspace = "prefix+ctrl+["
+next_workspace     = "prefix+ctrl+]"
+# Displaced from stock prefix+w by close_pane above. The rest of the workspace
+# verbs keep their stock bindings (prefix+shift+n new, prefix+shift+d close,
+# prefix+shift+g new worktree) because their wezterm counterparts all live
+# inside the F5 hub, and F5 cannot reach herdr.
+workspace_picker   = "prefix+shift+w"
+# In turn displaced from stock prefix+shift+w by the picker. Parks on ctrl+0
+# to stay inside the "0 means names" group established by rename_tab.
+rename_workspace   = "prefix+ctrl+0"
+
+# -- agents --
+# herdr-only; wezterm has no concept of an agent row, so there is no muscle
+# memory to match. This is the form herdr's own default config documents.
+focus_agent = "prefix+alt+1..9"
+
+[theme.custom]
+# Leaves pane backgrounds unpainted so the WezTerm backdrop still shows through
+# inside herdr, consistent with the rgba(0,0,0,0.4) status bars in
+# colors/palette.lua. Set to a hex color (or drop this section) if UI chrome
+# turns out to be hard to read over a busy wallpaper.
+panel_bg = "reset"
+
+[experimental]
+# Off is both herdr's default and its documented recommendation: enabling it
+# writes recent pane output to session-history.json in plaintext, and that
+# output "can include secrets, tokens, prompts, and command output" -- a real
+# concern when panes run agents with permissions bypassed. Layout still
+# restores after a server restart; only the visible scrollback does not.
+pane_history = false
+
+[theme]
+name = "dracula"
+auto_switch = false
+
+[ui.sound]
+enabled = true
+
+[ui]
+status_indicators = "symbols"
+
+[ui.toast]
+delivery = "herdr"

@@ -26,6 +26,12 @@ COL_W   = 46
 ANSI    = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')   # colours (m) and cursor moves (G)
 _SLOT_W = COL_W + 7            # width of one column slot (content + sep + gaps)
 
+# herdr's prefix key, which opens ~30 of the rows below. It is configured in
+# %APPDATA%\herdr\config.toml (symlinked from home/), and lives here as a single
+# constant so that changing it there is a one-line change here too rather than a
+# find-and-replace across every herdr panel.
+HERDR_PREFIX = '`'
+
 
 def num_cols(width):
     """How many panel columns fit in `width`. 4 needs >=209 chars, 3 needs >=156."""
@@ -144,14 +150,19 @@ _TABS = (
         sub('Navigation') +
         row('Alt+[',       'Previous tab')              +
         row('Alt+]',       'Next tab')                  +
+        row('Alt+1 – 9',   'Jump to tab N')             +
         row('Ctrl+Shift+←', 'Move tab left')            +
         row('Ctrl+Shift+→', 'Move tab right')           +
         blank() +
         sub('Title & Bar') +
         row('Alt+0',       'Rename tab')                +
         row('Alt+Ctrl+0',  'Reset tab title')           +
-        row('Alt+9',       'Toggle tab bar')            +
-        row('Alt+8',       'Flip tab bar (top/bottom)')
+        row('Alt+Ctrl+9',  'Toggle tab bar')            +
+        row('Alt+Ctrl+8',  'Flip bar (top/bottom)')     +
+        blank() +
+        note('Alt+1–9 matches herdr\'s') +
+        note(f'{HERDR_PREFIX} 1–9 — same digits,') +
+        note('prefix swapped for Alt.')
 )
 
 _PANES = (
@@ -687,6 +698,237 @@ _YAZI_MISC = (
         row('Q',                'Quit (no cd)')
 )
 
+# ─── WezTerm CLI ──────────────────────────────────────────────────────────────
+# `wezterm cli` talks to the running mux server over its socket, so these work
+# from any pane -- and from a script or an agent -- without touching the GUI.
+# Most subcommands default to $WEZTERM_PANE, which the GUI exports into every
+# pane, so the common case needs no --pane-id at all.
+
+_WEZ_CLI_PANES = (
+    header('🧰 wezterm cli — Panes') +
+        note('Every row below is prefixed') +
+        note('with `wezterm cli`.') +
+        blank() +
+        sub('Create (prints pane-id)') +
+        row('split-pane --right', 'Split rightward')     +
+        row('split-pane --bottom', 'Split downward')     +
+        row('  --cells <n>',    'Size in cells')         +
+        row('  --top-level',    'Split whole window')    +
+        row('spawn --new-window', 'New window')          +
+        row('spawn --cwd <dir>', 'New tab in a dir')     +
+        row('move-pane-to-new-tab', 'Pane becomes a tab')+
+        blank() +
+        sub('activate-pane-direction') +
+        row('left | right',     'Focus adjacent pane')   +
+        row('up | down',        'Focus adjacent pane')   +
+        blank() +
+        sub('Modify') +
+        row('kill-pane',        'Close a pane')          +
+        row('zoom-pane --toggle', 'Zoom / unzoom')       +
+        row('adjust-pane-size', 'Resize directionally')
+)
+
+_WEZ_CLI_QUERY = (
+    header('🧰 wezterm cli — Query & Text') +
+        sub('Inspect') +
+        row('list',             'Windows/tabs/panes')    +
+        row('list --format json', 'Machine readable')    +
+        row('list-clients',     'Attached clients')      +
+        blank() +
+        sub('Read pane text') +
+        row('get-text',         'Dump pane contents')    +
+        row('  --start-line -n', 'Into the scrollback')  +
+        row('  --escapes',      'Keep colours')          +
+        blank() +
+        sub('Write to a pane') +
+        row('send-text "<cmd>"', 'Paste into a pane')    +
+        row('  --no-paste',     'Send raw, unpasted')    +
+        blank() +
+        sub('Titles') +
+        row('set-tab-title',    'Rename a tab')          +
+        row('set-window-title', 'Rename a window')       +
+        row('rename-workspace', 'Rename a workspace')    +
+        blank() +
+        note('--pane-id targets any pane;') +
+        note('it defaults to $WEZTERM_PANE.')
+)
+
+_WEZ_CLI_TOP = (
+    header('🧰 wezterm — Top-level') +
+        note('Every row below is prefixed') +
+        note('with `wezterm`.') +
+        blank() +
+        sub('Launch') +
+        row('start -- <cmd>',   'GUI running a command') +
+        row('connect mux',      'Attach the mux')        +
+        row('ssh <host>',       'SSH without a domain')  +
+        row('serial <port>',    'Open a serial port')    +
+        blank() +
+        sub('Inspect') +
+        row('show-keys',        'Every key assignment')  +
+        row('show-keys --lua',  'Emit as Lua config')    +
+        row('ls-fonts',         'Font resolution')       +
+        row('  --list-system',  'All system fonts')      +
+        blank() +
+        sub('Terminal tricks') +
+        row('imgcat <file>',    'Show image inline')     +
+        row('record / replay',  'asciicast a session')   +
+        row('set-working-directory', 'Emit OSC 7')       +
+        row('shell-completion <sh>', 'Gen completions')  +
+        blank() +
+        sub('Config override') +
+        row('-n',               'Skip wezterm.lua')      +
+        row('--config <k=v>',   'Override one setting')
+)
+
+# ─── herdr ────────────────────────────────────────────────────────────────────
+# herdr is an agent-aware multiplexer that runs INSIDE a WezTerm pane, so both
+# layers are live at once. The bindings below are deliberately aligned to the
+# WezTerm ones above by a single rule: drop Alt, add the herdr prefix, and keep
+# Ctrl where WezTerm used Alt+Ctrl. They cannot collide -- WezTerm sees every
+# keystroke first, so anything it binds (all F-keys, every Alt chord) never
+# reaches herdr, which is also why the F-key half of the scheme is not mirrored.
+#
+# Config lives outside this repo at %APPDATA%\herdr\config.toml and is NOT
+# managed by dotbot.
+
+_HERDR_PANES = (
+    header('🐑 herdr — Panes') +
+        note(f'Prefix: tap {HERDR_PREFIX} (above Tab),') +
+        note('release, then press the key.') +
+        blank() +
+        sub('Split & Close') +
+        row(f'{HERDR_PREFIX}  \\',       'Split stacked')        +
+        row(f'{HERDR_PREFIX}  Ctrl+\\',  'Split side-by-side')   +
+        row(f'{HERDR_PREFIX}  w',        'Close pane')           +
+        row(f'{HERDR_PREFIX}  Enter',    'Toggle zoom')          +
+        blank() +
+        sub('Focus') +
+        row(f'{HERDR_PREFIX}  ↑↓←→',     'Focus pane')           +
+        row(f'{HERDR_PREFIX}  Tab',      'Cycle next pane')      +
+        row(f'{HERDR_PREFIX}  Shift+Tab', 'Cycle previous')      +
+        blank() +
+        sub('Resize & Misc') +
+        row(f'{HERDR_PREFIX}  r',        'Resize mode (arrows)') +
+        row(f'{HERDR_PREFIX}  Shift+P',  'Rename pane')          +
+        row(f'{HERDR_PREFIX}  e',        'Edit scrollback')
+)
+
+_HERDR_TABS = (
+    header('🐑 herdr — Tabs') +
+        sub('Lifecycle') +
+        row(f'{HERDR_PREFIX}  t',        'New tab')              +
+        row(f'{HERDR_PREFIX}  Ctrl+w',   'Close tab')            +
+        blank() +
+        sub('Navigation') +
+        row(f'{HERDR_PREFIX}  [',        'Previous tab')         +
+        row(f'{HERDR_PREFIX}  ]',        'Next tab')             +
+        row(f'{HERDR_PREFIX}  1 – 9',    'Jump to tab N')        +
+        blank() +
+        sub('Naming') +
+        row(f'{HERDR_PREFIX}  0',        'Rename tab')           +
+        blank() +
+        note('Mirrors the WezTerm tab keys') +
+        note('exactly: Alt+[ becomes') +
+        note(f'{HERDR_PREFIX} [, Alt+1–9 becomes') +
+        note(f'{HERDR_PREFIX} 1–9, and so on.') +
+        blank() +
+        note('Moving a tab has no herdr') +
+        note('binding — WezTerm already owns') +
+        note('Ctrl+Shift+←/→.')
+)
+
+_HERDR_WORKSPACES = (
+    header('🐑 herdr — Workspaces') +
+        sub('Switch') +
+        row(f'{HERDR_PREFIX}  Ctrl+[',   'Previous workspace')   +
+        row(f'{HERDR_PREFIX}  Ctrl+]',   'Next workspace')       +
+        row(f'{HERDR_PREFIX}  Shift+W',  'Workspace picker')     +
+        blank() +
+        sub('Manage') +
+        row(f'{HERDR_PREFIX}  Shift+N',  'New workspace')        +
+        row(f'{HERDR_PREFIX}  Ctrl+0',   'Rename workspace')     +
+        row(f'{HERDR_PREFIX}  Shift+D',  'Close workspace')      +
+        row(f'{HERDR_PREFIX}  Shift+G',  'New git worktree')     +
+        blank() +
+        sub('Agents') +
+        row(f'{HERDR_PREFIX}  b',        'Toggle sidebar')       +
+        row(f'{HERDR_PREFIX}  Alt+1 – 9', 'Focus agent row')     +
+        blank() +
+        note('Background claude agents (cca)') +
+        note('share one process, so the') +
+        note('sidebar shows a single row for') +
+        note('the whole fleet, not one each.')
+)
+
+_HERDR_SESSION = (
+    header('🐑 herdr — Session Keys') +
+        row(f'{HERDR_PREFIX}  ?',        'Help — all keybinds')  +
+        row(f'{HERDR_PREFIX}  s',        'Settings')             +
+        row(f'{HERDR_PREFIX}  g',        'Navigate mode')        +
+        row(f'{HERDR_PREFIX}  q',        'Detach, keep running') +
+        row(f'{HERDR_PREFIX}  Shift+R',  'Reload config')        +
+        row(f'{HERDR_PREFIX}  o',        'Open notification')    +
+        blank() +
+        sub('Inside navigate mode') +
+        row('h j k l',          'Move between panes')   +
+        row('↑ / ↓',            'Switch workspace')     +
+        row('1 – 9',            'Jump')                 +
+        row('Esc',              'Leave navigate mode')  +
+        blank() +
+        note(f'{HERDR_PREFIX} ? is authoritative — it') +
+        note('reads the live config, so it') +
+        note('never drifts from this page.')
+)
+
+_HERDR_CLI = (
+    header('🐑 herdr — CLI') +
+        note('Every row below is prefixed') +
+        note('with `herdr`.') +
+        blank() +
+        sub('Everyday') +
+        row('(no args)',        'Launch or attach')     +
+        row('--session <name>', 'Named session')        +
+        row('session attach <n>', 'Attach by name')     +
+        row('--remote <ssh>',   'Attach over SSH')      +
+        row('status',           'Client + server state')+
+        blank() +
+        sub('Setup & docs') +
+        row('completion zsh',   'Zsh completions')      +
+        row('--skill',          'Print agent skill')    +
+        row('--default-config', 'Dump full config')     +
+        blank() +
+        note('The server owns the PTYs and') +
+        note('outlives the client: detaching') +
+        note('or closing the window leaves') +
+        note('agents running.')
+)
+
+_HERDR_SERVER = (
+    header('🐑 herdr — Server & Config') +
+        note('Every row below is prefixed') +
+        note('with `herdr`.') +
+        blank() +
+        sub('Server') +
+        row('server stop',      'Stop the server')      +
+        row('server reload-config', 'Reload config.toml') +
+        blank() +
+        sub('Config') +
+        row('config check',     'Validate + report')    +
+        row('config reset-keys', 'Back up, drop keys')  +
+        blank() +
+        sub('Updates & extras') +
+        row('update',           'Install latest')       +
+        row('channel set <ch>', 'stable | preview')     +
+        row('integration install', 'Claude Code hooks') +
+        row('api <subcommand>', 'Socket API / state')   +
+        blank() +
+        note('Reload applies config.toml to a') +
+        note('running server — same as') +
+        note(f'{HERDR_PREFIX} Shift+R. A restart is') +
+        note('only needed for shell changes.')
+)
+
 # ── Pages ─────────────────────────────────────────────────────────────────────
 # (group, tab label, panels). One page is one screen. Groups are only a label
 # on the tab strip -- navigation is flat, 1..N.
@@ -701,6 +943,9 @@ PAGES = [
     ('WEZTERM', 'Workspace', [_WORKSPACES, _SESSIONS, _MUX]),
     ('WEZTERM', 'Editing',   [_CURSOR, _COPY_MODE, _SCROLLING]),
     ('WEZTERM', 'Look',      [_BACKGROUND, _WINDOW, _ADV_MODES]),
+    ('WEZTERM', 'CLI',       [_WEZ_CLI_PANES, _WEZ_CLI_QUERY, _WEZ_CLI_TOP]),
+    ('HERDR',   'Keys',      [_HERDR_PANES, _HERDR_TABS, _HERDR_WORKSPACES]),
+    ('HERDR',   'CLI',       [_HERDR_SESSION, _HERDR_CLI, _HERDR_SERVER]),
     ('SHELL',   'Zsh',       [_ZSH_FUZZY, _ZSH_GLOB, _ZSH_SHELL]),
     ('SHELL',   'Prompt',    [_PROMPT]),
     ('CLI',     'Tools',     [_FILE_TOOLS, _VIEWERS, _LAZY_TOOLS]),

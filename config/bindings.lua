@@ -170,10 +170,14 @@ local keys = {
    { key = '0',          mods = mod.SUPER_REV, action = act.EmitEvent('tabs.reset-tab-title') },
 
    -- tab: hide tab-bar
-   { key = '9',          mods = mod.SUPER,     action = act.EmitEvent('tabs.toggle-tab-bar'), },
+   -- Moved off Alt+9 (and Alt+8 below) to free the whole Alt+1..9 range for the
+   -- tab-index jumps appended after this table. Both are rare view toggles, so
+   -- they lose nothing by sitting one tier up, and Alt+Ctrl is where this config
+   -- already puts the larger-scope variant of an Alt binding.
+   { key = '9',          mods = mod.SUPER_REV, action = act.EmitEvent('tabs.toggle-tab-bar'), },
 
    -- tab: flip top <-> bottom
-   { key = '8',          mods = mod.SUPER,     action = act.EmitEvent('tabs.toggle-tab-bar-position'), },
+   { key = '8',          mods = mod.SUPER_REV, action = act.EmitEvent('tabs.toggle-tab-bar-position'), },
 
    -- window --
    -- window: spawn windows
@@ -428,6 +432,20 @@ local keys = {
    -- already resize panes, and two gestures for one job is how you end up
    -- remembering neither.
 }
+
+-- tabs: jump to index
+--
+-- Mirrors herdr's stock `prefix+1..9`, so tab indexing is the same gesture at
+-- both layers -- swap Alt for the herdr prefix and the digit is unchanged.
+-- Nothing occupied Alt+1..7 before this; Alt+8 and Alt+9 were the two tab-bar
+-- toggles and were moved up to Alt+Ctrl in the table above to make room.
+--
+-- Appended in a loop rather than written as nine literal rows: the table above
+-- is `-- stylua: ignore`d because its columns are hand-aligned, and nine
+-- near-identical entries gain nothing from that.
+for i = 1, 9 do
+   table.insert(keys, { key = tostring(i), mods = mod.SUPER, action = act.ActivateTab(i - 1) })
+end
 
 -- stylua: ignore
 local key_tables = {
