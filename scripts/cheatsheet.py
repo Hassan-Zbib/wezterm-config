@@ -63,13 +63,11 @@ def wlen(s):
     return w
 
 # ── Builders ──────────────────────────────────────────────────────────────────
-# Panels are plain lists of pre-coloured lines, which throws away the (key,
-# desc) pair that search needs. Rather than re-parse the rendered text, row()
-# records each pair as a side effect while the panels are being built. Panels
-# always open with header(), so the most recent title is the owning panel.
-# A row also inherits the sub() heading above it, so that the tool names that
-# only ever appear as a heading -- "lazygit", "eza", "zoxide", "carapace" --
-# still match. Without this, searching "lazygit" returns nothing.
+# Panels are pre-coloured lines, which throws away the (key, desc) pair search
+# needs, so row() records each pair as a side effect while panels are built.
+# Panels always open with header(), so the latest title owns the row. Rows also
+# inherit the sub() heading above them, so tool names that only appear as a
+# heading -- "lazygit", "eza", "zoxide" -- still match.
 _ROWS     = []         # (panel title, sub heading, key, desc) in definition order
 _NOTES    = {}         # panel title -> [note text]; searched as a fallback only
 _PANEL    = [None]
@@ -316,7 +314,7 @@ _BACKGROUND = (
     header('🖼️  Background') +
         sub('Image') +
         row('Alt+/',           'Random image')          +
-        row('Alt+Ctrl+/',      'Browse (live preview)') +
+        row('Alt+Ctrl+/',      'Browse & cull')         +
         row('Alt+Ctrl+,',      'Previous category')     +
         row('Alt+Ctrl+.',      'Next category')         +
         row('Alt+r',           'Toggle auto-rotate')    +
@@ -326,8 +324,10 @@ _BACKGROUND = (
         row('Alt+,',           'Overlay opacity −')     +
         row('Alt+.',           'Overlay opacity +')     +
         blank() +
-        note('Browse: ←/→ next  ·  Enter confirm') +
-        note('        Esc/q cancel')
+        note('Browse: ←/→/k next  ·  Enter keep') +
+        note('        Esc/q revert') +
+        note('Cull:   d/x recycle-bin  ·  u undo') +
+        note('        both exits commit')
 )
 
 _ADV_MODES = (
@@ -782,15 +782,13 @@ _WEZ_CLI_TOP = (
 )
 
 # ─── herdr ────────────────────────────────────────────────────────────────────
-# herdr is an agent-aware multiplexer that runs INSIDE a WezTerm pane, so both
-# layers are live at once. The bindings below are deliberately aligned to the
-# WezTerm ones above by a single rule: drop Alt, add the herdr prefix, and keep
-# Ctrl where WezTerm used Alt+Ctrl. They cannot collide -- WezTerm sees every
-# keystroke first, so anything it binds (all F-keys, every Alt chord) never
-# reaches herdr, which is also why the F-key half of the scheme is not mirrored.
+# herdr is an agent-aware multiplexer running INSIDE a WezTerm pane, so both
+# layers are live at once. Its bindings mirror the WezTerm ones above by one
+# rule: drop Alt, add the prefix, keep Ctrl where WezTerm used Alt+Ctrl. They
+# cannot collide -- WezTerm sees every keystroke first, which is also why the
+# F-key half of the scheme is not mirrored.
 #
-# Config lives outside this repo at %APPDATA%\herdr\config.toml and is NOT
-# managed by dotbot.
+# Config: home/AppData/Roaming/herdr/config.toml, symlinked by dotbot.
 
 _HERDR_PANES = (
     header('🐑 herdr — Panes') +
@@ -933,11 +931,9 @@ _HERDR_SERVER = (
 # (group, tab label, panels). One page is one screen. Groups are only a label
 # on the tab strip -- navigation is flat, 1..N.
 #
-# Pages are capped at three panels so that a page is a single row at 3 AND 4
-# columns. A four-panel page wraps to a second row below 209 columns, which
-# pushed the tallest pages to ~50 lines and forced scrolling on narrow windows;
-# splitting them keeps every page under ~27 lines at every supported width.
-# scripts/../ has no test runner, so `--selftest` guards this invariant.
+# Pages are capped at three panels so a page is a single row at 3 AND 4 columns.
+# A fourth wraps below 209 columns and forces scrolling. `--selftest` guards
+# this, since the repo has no test runner.
 PAGES = [
     ('WEZTERM', 'Core',      [_QUICK_ACTIONS, _TABS, _PANES]),
     ('WEZTERM', 'Workspace', [_WORKSPACES, _SESSIONS, _MUX]),

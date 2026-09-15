@@ -2,6 +2,7 @@ local wezterm = require('wezterm')
 local act = wezterm.action
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
+local cull = require('utils.cull')
 local sessions = require('utils.sessions')
 local workspaces = require('utils.workspaces')
 local ssh_hosts = require('utils.ssh-hosts')
@@ -249,14 +250,15 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Browse Backgrounds (Live Preview)  [' .. key.SR .. '+/]',
+            brief = 'Browse / Cull Backgrounds (Live Preview)  [' .. key.SR .. '+/]',
             icon = 'md_image_search',
             action = wezterm.action_callback(function(win, pane)
                backdrops:enter_browse_mode(win)
+               cull:begin()
                win:perform_action(act.ActivateKeyTable({
                   name = 'browse_backdrop',
                   one_shot = false,
-                  timeout_milliseconds = 30000,
+                  timeout_milliseconds = backdrops.BROWSE_TIMEOUT,
                }), pane)
             end),
          },

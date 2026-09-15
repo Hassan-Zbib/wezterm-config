@@ -80,7 +80,12 @@ M.setup = function()
       if name then
          local label = ' ' .. string.upper(name)
          if name == 'browse_backdrop' then
-            label = label .. '  [' .. backdrops.current_idx .. '/' .. #backdrops.images .. ']'
+            label = label
+               .. '  ['
+               .. backdrops.current_idx
+               .. '/'
+               .. #backdrops.images
+               .. ']  d bin  u undo'
          end
          cells
             :update_segment_text(2, GLYPH_KEY_TABLE)
