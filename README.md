@@ -53,7 +53,6 @@ These tools are pre-configured with aliases in `.bashrc` and `.zshrc`. Install w
 | [btop](https://github.com/aristocratos/btop4win) | `winget install aristocratos.btop4win` | `btop`, `bt` | Interactive system monitor (CPU, RAM, disk, network) |
 | [Glow](https://github.com/charmbracelet/glow) | `winget install charmbracelet.glow` | `glow` | Render Markdown files in the terminal |
 | [UniGetUI](https://github.com/marticliment/UniGetUI) | `winget install Devolutions.UniGetUI` | `pkgs` | GUI for managing winget/scoop/choco/pip/npm packages |
-| [lnav](https://lnav.org) | `winget install tstack.lnav` | `lnav` | Log file navigator and viewer |
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
 | [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
 | [atuin](https://atuin.sh) | `winget install Atuinsh.Atuin` | `Ctrl+R`, `↑` | Shell history in SQLite — one store for every shell, with exit code, duration and directory per command |
