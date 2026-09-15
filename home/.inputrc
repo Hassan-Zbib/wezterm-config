@@ -10,11 +10,9 @@ set bell-style audible
 # Shift+Enter inserts a newline without submitting (kitty keyboard protocol)
 "\e[13;2u": "\n"
 
-# Ctrl+Backspace deletes the previous word instead of a single character.
-# WezTerm sends 0x08 (C-h) for Ctrl+Backspace, and readline's default binding
-# for C-h is backward-delete-char -- making it a no-op duplicate of plain
-# Backspace. Plain Backspace is unaffected: it sends 0x7f (C-?), which keeps
-# its own separate binding to backward-delete-char.
+# Ctrl+Backspace deletes the previous word. WezTerm sends 0x08 (C-h) for it, and
+# readline binds C-h to backward-delete-char by default -- a no-op duplicate of
+# plain Backspace, which sends 0x7f and keeps its own binding.
 #
 # Deletion scope, narrowest to widest:
 #   Ctrl+Backspace / Alt+Backspace  backward-kill-word   alphanumeric word

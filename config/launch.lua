@@ -7,31 +7,21 @@ local options = {
 }
 
 if platform.is_win then
-   -- zsh is installed INTO the Git for Windows tree by scripts/install-zsh.sh
-   -- (--system), so zsh.exe sits beside msys-2.0.dll and shares Git's MSYS
-   -- root, mount table and /etc. Git Bash stays available from the launcher
-   -- (F3); swap default_prog back to it to revert.
-   --
-   -- The trade-off is that a Git for Windows upgrade can wipe files added under
-   -- C:\Program Files\Git. install-zsh.sh is idempotent and ./install re-runs
-   -- it, so recovering is a matter of running the installer again.
+   -- zsh is installed INTO the Git for Windows tree by scripts/install-zsh.sh,
+   -- so zsh.exe sits beside msys-2.0.dll and shares Git's MSYS root and /etc.
+   -- Git Bash stays available from the launcher (F3). A Git upgrade can wipe
+   -- it, but install-zsh.sh is idempotent and ./install re-runs it.
    local zsh = 'C:\\Program Files\\Git\\usr\\bin\\zsh.exe'
    local bash = 'C:\\Program Files\\Git\\bin\\bash.exe'
 
-   -- MSYSTEM is normally set by Git for Windows' own bash.exe launcher, which
-   -- WezTerm bypasses when it spawns zsh directly. Without it /etc/profile
-   -- falls back to MSYSTEM=MSYS and leaves /mingw64/bin off PATH entirely.
-   -- That is still true with zsh inside the Git tree -- verified by launching
-   -- `zsh -l` from a clean shell and reading MSYSTEM back as MSYS -- so this
-   -- assignment has to stay.
+   -- MSYSTEM is normally set by Git's own bash.exe launcher, which WezTerm
+   -- bypasses when it spawns zsh directly. Without it /etc/profile falls back to
+   -- MSYSTEM=MSYS and drops /mingw64/bin from PATH -- still true with zsh inside
+   -- the Git tree, verified by reading MSYSTEM back from a clean `zsh -l`.
    --
-   -- PATH used to be extended here with Git's usr/bin: a zsh.exe living outside
-   -- the Git tree could not resolve msys-2.0.dll and died with 0xC0000135
-   -- (STATUS_DLL_NOT_FOUND) before running a single line of config. The
-   -- --system install removes that need entirely -- the Windows loader finds
-   -- the DLL next to the executable -- so PATH is left alone, and the MSYS
-   -- tools in that directory (find.exe, sort.exe, ...) no longer shadow the
-   -- Windows ones for every program WezTerm spawns.
+   -- PATH is deliberately NOT extended with Git's usr/bin: the loader now finds
+   -- msys-2.0.dll beside zsh.exe, so the MSYS tools there (find.exe, sort.exe)
+   -- no longer shadow the Windows ones for everything WezTerm spawns.
    options.set_environment_variables = {
       MSYSTEM = 'MINGW64',
    }

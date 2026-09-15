@@ -5,12 +5,8 @@ local platform = require('utils.platform')
 local font_family = 'JetBrainsMono Nerd Font'
 -- local font_family = 'CartographCF Nerd Font'
 
--- Warp's appearance.text.font_size is 14, but that number is NOT points --
--- comparing characters-per-line in equal-width windows, Warp renders roughly
--- 10-10.5pt in WezTerm's units (it measures in CSS px: 14px ~= 10.5pt @96dpi).
--- Setting 14 here was visibly ~40% too large; 10 sits just above the 9.75 this
--- was before. Warp sets no weight, so it uses the family's Regular face --
--- matched below.
+-- 10pt, not 14: Warp's font_size is CSS px, so its 14 is ~10.5pt in WezTerm's
+-- units. Setting 14 here rendered ~40% too large. Regular weight, as Warp uses.
 local font_size = platform.is_mac and 12 or 10
 
 return {

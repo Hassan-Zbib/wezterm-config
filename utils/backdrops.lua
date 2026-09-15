@@ -11,26 +11,16 @@ math.random()
 
 local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 
--- Backdrop legibility.
---
--- Terminal text is drawn directly onto the background layers — a cell with the
--- default background paints nothing of its own — so how readable the text is
--- depends entirely on what the image still carries underneath it. Two knobs,
--- applied in this order:
---
---   1. IMAGE_HSB crushes the image before anything is drawn over it.
---      `brightness` scales multiplicatively, so it pulls bright regions (the
---      ones that swallow light-on-dark text) down much further than dark ones.
---      That narrows the spread of contrast ratios the same text hits as
---      different images rotate past, which is the real problem — a uniform
---      scrim raises the floor but leaves the peaks intact.
---      `saturation` keeps a colourful image from competing with the syntax
---      colours in the foreground.
---   2. `overlay_opacity` then flattens what is left under a scrim of
---      `focus_color` — the same near-black focus mode paints, not the lighter
---      terminal `background`, which read as a grey wash over the image.
---      Adjustable live (see config/bindings.lua) and shown as a percentage in
---      the right status bar.
+-- Backdrop legibility. Text paints directly onto the background layers, so
+-- readability depends on what the image still carries underneath. Two knobs, in
+-- order:
+--   1. IMAGE_HSB crushes the image first. `brightness` scales multiplicatively,
+--      pulling bright regions (the ones that swallow light text) down further
+--      than dark ones, which narrows the contrast spread across a rotating
+--      library. `saturation` keeps the image off the syntax colours.
+--   2. `overlay_opacity` then flattens the rest under a `focus_color` scrim --
+--      the near-black focus mode paints, not the lighter terminal `background`,
+--      which reads as a grey wash. Live-adjustable via config/bindings.lua.
 local IMAGE_HSB = {
    hue = 1.0,
    saturation = 0.7,
@@ -59,13 +49,10 @@ function BackDrops:init()
       focus_color = colors.background,
       focus_on = false,
       auto_rotate_enabled = true,
-      -- Every rotation onto an image not seen before in this session costs a
-      -- decoded RGBA frame on disk (W x H x 4 -- ~18.7MB at 2880x1620) in
-      -- WezTerm's `wezterm-blob-lease-*` cache, which has no size cap and is
-      -- only cleaned up on a clean exit. Cost scales with how many DISTINCT
-      -- images get touched, so the interval is the dial: at 30s a 12h session
-      -- walks the whole 611-image library (~11GB written); at 120s it reaches
-      -- ~360 (~6.7GB). Nothing is lost but the speed of the cycle.
+      -- Each DISTINCT image touched costs a decoded RGBA frame (~18.7MB at
+      -- 2880x1620) in WezTerm's uncapped `wezterm-blob-lease-*` cache, only
+      -- cleaned on clean exit. At 30s a 12h session writes ~11GB; at 120s,
+      -- ~6.7GB. The interval is the only dial.
       auto_rotate_interval = 120,
       _rotate_generation = 0,
       overlay_opacity = 0.85,
@@ -78,12 +65,8 @@ function BackDrops:init()
    return backdrops
 end
 
----Override the default `images_dir`
----Default `images_dir` is `wezterm.config_dir .. '/backdrops/'`
----
---- INFO:
----  This function must be invoked before `set_images()`
----
+---Override the default `images_dir` (`wezterm.config_dir .. '/backdrops/'`).
+---Must be called before `set_images()`.
 ---@param path string directory of background images
 function BackDrops:set_images_dir(path)
    self.images_dir = path
@@ -93,16 +76,12 @@ function BackDrops:set_images_dir(path)
    return self
 end
 
----MUST BE RUN BEFORE ALL OTHER `BackDrops` functions
----Sets the `images` after instantiating `BackDrops`.
----Automatically detects subdirectories as categories.
----Each subdirectory becomes its own category; all images combined form the "All" category.
+---MUST RUN BEFORE ALL OTHER `BackDrops` functions. Each subdirectory becomes a
+---category; all images together form "All".
 ---
---- INFO:
----   During the initial load of the config, this function can only invoked in `wezterm.lua`.
----   WezTerm's fs utility `glob` (used in this function) works by running on a spawned child process.
----   This throws a coroutine error if the function is invoked in outside of `wezterm.lua` in the -
----   initial load of the Terminal config.
+---Must be called from `wezterm.lua` during initial config load: it uses
+---`wezterm.glob`, which spawns a child process and throws a coroutine error
+---anywhere else.
 function BackDrops:set_images()
    local flat       = wezterm.glob(self.images_dir .. GLOB_PATTERN)
    local in_subdirs = wezterm.glob(self.images_dir .. '*/' .. GLOB_PATTERN)
@@ -464,11 +443,10 @@ function BackDrops:stop_auto_rotate()
    return self
 end
 
----Force-exit browse mode if active: invalidates pending timers and pops the
----key table only when `browse_backdrop` is actually on top of the stack
----(`_browse_active` alone is unreliable — the 30s key-table timeout pops
----the table without ever calling our exit paths). Safe to call with or
----without a window; when `window` is nil, checks all GUI windows.
+---Force-exit browse mode: invalidates pending timers and pops the key table
+---only when `browse_backdrop` is really on top -- `_browse_active` alone is
+---unreliable, since the 30s key-table timeout pops it without calling our exit
+---paths. With `window` nil, checks all GUI windows.
 ---@private
 ---@param window any? WezTerm Window
 function BackDrops:_exit_browse_if_active(window)
@@ -507,6 +485,12 @@ end
 ---Shared debounced navigation: updates index immediately, defers image load 150ms.
 ---@private
 local BROWSE_DELAY = 0.15
+
+-- Browse mode doubles as cull mode (see utils/cull.lua), and judging whether an
+-- image is actually readable means sitting on it and reading real text for a
+-- while. A 30s timeout drops the key table out from under that constantly.
+BackDrops.BROWSE_TIMEOUT = 3600000
+
 local function _browse_navigate(self, window, pane)
    self._browse_gen = self._browse_gen + 1
    local gen = self._browse_gen
@@ -514,7 +498,7 @@ local function _browse_navigate(self, window, pane)
    window:perform_action(wezterm.action.ActivateKeyTable({
       name = 'browse_backdrop',
       one_shot = false,
-      timeout_milliseconds = 30000,
+      timeout_milliseconds = BackDrops.BROWSE_TIMEOUT,
    }), pane)
    -- Deferred image load — only fires if no newer keypress arrives
    wezterm.time.call_after(BROWSE_DELAY, function()
@@ -523,7 +507,7 @@ local function _browse_navigate(self, window, pane)
       window:perform_action(wezterm.action.ActivateKeyTable({
          name = 'browse_backdrop',
          one_shot = false,
-         timeout_milliseconds = 30000,
+         timeout_milliseconds = BackDrops.BROWSE_TIMEOUT,
       }), pane)
    end)
 end
@@ -561,6 +545,19 @@ function BackDrops:browse_cancel(window, pane)
    self._browse_gen = self._browse_gen + 1
    self._browse_active = false
    self.current_idx = self._browse_start_idx or self.current_idx
+
+   -- Culling during the same browse session shortens `images` underneath us, so
+   -- the saved start index can now point past the end -- or at nothing at all if
+   -- the whole category went to the bin. Clamp rather than hand `_create_opts` a
+   -- nil path.
+   if #self.images == 0 then
+      self.current_idx = 1
+      self:_set_opt(window, self:_create_focus_opts())
+      window:perform_action(wezterm.action.PopKeyTable, pane)
+      return
+   end
+   self.current_idx = math.max(1, math.min(self.current_idx, #self.images))
+
    self:_set_opt(window, self:_create_opts())
    window:perform_action(wezterm.action.PopKeyTable, pane)
 end

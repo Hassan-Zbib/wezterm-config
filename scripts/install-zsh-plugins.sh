@@ -2,16 +2,14 @@
 # ============================================================
 # Install the antidote plugin manager for zsh
 # ============================================================
-# antidote is pure zsh -- no binary, no compiler, no package manager -- so it
-# is just a git clone. That matters here: there is no pacman on this machine,
-# and sheldon/zinit would mean either a Rust build or a large self-managing
-# system. antidote also supports *static bundling*: it flattens the plugin list
-# into one sourceable file, so shell startup pays no per-plugin cost.
+# antidote is pure zsh -- no binary, no compiler, no package manager -- so it is
+# just a git clone, which matters with no pacman on this machine. It also does
+# static bundling: the plugin list flattens into one sourceable file, so startup
+# pays no per-plugin cost.
 #
-# Which plugins get installed is NOT decided here -- it is declared in
-# home/.zsh_plugins.txt (symlinked to ~/.zsh_plugins.txt by dotbot). antidote
-# clones each one into ~/.cache/antidote on first use. Those are third-party
-# git repos, so they are deliberately not vendored into this repo.
+# The plugin list lives in home/.zsh_plugins.txt, not here. antidote clones each
+# into ~/.cache/antidote on first use; they are third-party repos and are
+# deliberately not vendored.
 #
 # Usage:
 #   ./install-zsh-plugins.sh          # install/update antidote, then bundle
@@ -51,12 +49,9 @@ fi
 # list is newer than the cached bundle, so this is only a warm-up.
 if [[ -x "$ZSH_BIN" && -r "$HOME/.zsh_plugins.txt" ]]; then
    echo "==> cloning plugins from ~/.zsh_plugins.txt"
-   # antidote shells out to `zsh` internally, so `zsh` has to be resolvable from
-   # inside the shell it starts. With the --system install that is automatic:
-   # zsh.exe lives in /usr/bin, which is on PATH here, and ~/.zshenv prepends
-   # the MSYS directories anyway for any parent that did not. The portable
-   # install needed the bin dir spliced in explicitly or antidote failed with
-   # "command not found: zsh".
+   # antidote shells out to `zsh` internally, so it must be resolvable from
+   # inside the shell it starts. Automatic here: zsh.exe is in /usr/bin, and
+   # ~/.zshenv prepends the MSYS directories for any parent that did not.
    "$ZSH_BIN" -c '
       source "$HOME/.local/antidote/antidote.zsh"
       cache="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"

@@ -1,26 +1,16 @@
 ---Workspace session save/restore.
 ---
----A "session" here is a whole workspace: every window in it, every tab in those
----windows, and the split layout + working directory + domain of every pane.
+---A "session" is a whole workspace: every window, every tab, and the split
+---layout + cwd + domain of every pane. Domains are captured, so a WSL:Ubuntu tab
+---comes back as WSL:Ubuntu; mixed-domain panes inside one tab work too.
 ---
----What is deliberately NOT captured, and why:
----  * scrollback text  -- `pane:inject_output()` only works on local panes, and
----    this config is mux-first (`default_gui_startup_args = {'connect','mux'}`),
----    so replaying output into a restored pane is impossible here.
----  * foreground process -- `get_foreground_process_info()` is documented as
----    local-panes-only, and the mux wire protocol carries no process field at
----    all. It is nil for every pane in this config. Restoring `nvim foo.lua` is
----    therefore not on the table, and neither is *displaying* it in the picker.
+---Not captured, because the mux protocol cannot carry it: scrollback
+---(`pane:inject_output()` is local-panes-only) and the foreground process
+---(`get_foreground_process_info()` is nil for every pane here, since this config
+---is mux-first via `default_gui_startup_args = {'connect','mux'}`).
 ---
----Domains ARE captured, so a WSL:Ubuntu tab comes back as WSL:Ubuntu rather
----than as the default shell sitting in a Linux path it cannot reach. Panes of
----different domains inside one tab are supported -- verified against a headless
----mux server, `pane:split{domain=...}` honours a domain different from the
----pane being split.
----
----Storage is one JSON file per session under ~/.config/wezterm/sessions, which
----is a directory `install.conf.yaml` already creates. One file per session
----means a corrupt file costs one session rather than all of them.
+---One JSON file per session under ~/.config/wezterm/sessions, so a corrupt file
+---costs one session rather than all of them.
 local wezterm = require('wezterm')
 local act = wezterm.action
 local Cells = require('utils.cells')
@@ -33,9 +23,9 @@ local SCHEMA_VERSION = 2
 ---How many distinct directory names to show as a hint in the picker.
 local MAX_CWD_HINTS = 3
 
----Workspace name -> session name, remembered from the last save or restore in
----this GUI process. Lost on config reload; `resolve_attached` below recovers
----from the session files themselves, so losing it only costs a prompt.
+---Workspace name -> session name, for this GUI process only. Lost on config
+---reload; `resolve_attached` recovers it from the session files, so losing it
+---only costs a prompt.
 local attached = {}
 
 -- ---------------------------------------------------------------------------
@@ -60,8 +50,8 @@ local function ensure_dir()
 end
 
 ---Fold a user-supplied name into something safe as a Windows filename.
----Strict on purpose: this sidesteps reserved names, trailing dots and every
----illegal character in one rule rather than enumerating them.
+---Deliberately strict: an allowlist sidesteps reserved names, trailing dots and
+---every illegal character at once.
 ---@param name string
 ---@return string sanitized may be empty, which callers must reject
 local function sanitize(name)
@@ -112,10 +102,8 @@ local function write_json(path, tbl)
    return true
 end
 
----Read and parse one session file.
----A corrupt file is moved aside rather than silently treated as "no session",
----which is how the previous implementation managed to lose every saved session
----to a single parse error.
+---Read and parse one session file. A corrupt file is moved aside rather than
+---treated as "no session", so one parse error cannot wipe the whole set.
 ---@param path string
 ---@return table? session
 ---@return string? err
@@ -191,15 +179,10 @@ local function is_wsl_domain(domain)
 end
 
 ---Turn whatever `get_current_working_dir()` hands back into a path the spawn
----APIs will accept.
----
----Two broken shapes show up on Windows and both have been seen in real saved
----data from the previous implementation:
----   /C:/Users/hassa  -- a Windows path with a slash bolted on, which is what
----                      WezTerm falls back to when a pane never sent OSC 7
+---APIs will accept. Two invalid shapes show up on Windows:
+---   /C:/Users/hassa  -- WezTerm's fallback when a pane never sent OSC 7
 ---   /c/Users/hassa   -- the MSYS form the zsh/bash/pwsh integrations emit
----Neither is a valid Windows path. WSL panes are left alone: their cwd really
----is a Linux path and rewriting it would break them.
+---WSL panes are left alone: their cwd really is a Linux path.
 ---@param cwd any result of pane:get_current_working_dir()
 ---@param domain string?
 ---@return string?
@@ -233,12 +216,9 @@ local function path_exists(path, domain)
    end
    -- `wezterm.glob` on a literal path yields one hit when it exists and none
    -- when it does not, for directories as well as files, and never raises.
-   --
-   -- Two tempting alternatives are both wrong here. `os.rename(p, p)` -- the
-   -- usual Lua existence idiom -- returns "Permission denied" for a directory
-   -- that is non-empty or in use, so it reports C:/Users/hassa as missing.
-   -- `wezterm.read_dir` works but throws on a missing path, which pcall catches
-   -- at the cost of a stack traceback in the log on every absent directory.
+   -- `os.rename(p, p)` -- the usual Lua idiom -- reports a busy directory as
+   -- missing, and `wezterm.read_dir` throws on absent paths (traceback per
+   -- call). Neither works here.
    local ok, hits = pcall(wezterm.glob, path)
    if not ok then
       -- Never block a restore on a failed check; let the spawn decide.
@@ -264,17 +244,12 @@ end
 -- ---------------------------------------------------------------------------
 --
 -- WezTerm exposes no split tree -- `panes_with_info()` returns a flat list of
--- rectangles -- so the hierarchy has to be inferred from geometry.
+-- rectangles -- so the hierarchy is inferred from geometry.
 --
--- Every WezTerm layout is a guillotine layout, because every pane is produced
--- by bisecting an existing one. So at each level there must exist a single
--- straight cut, vertical or horizontal, that no pane straddles. Finding that
--- cut is exact.
---
--- The previous implementation instead grouped panes by "smallest left edge",
--- which silently mis-parsed any T-shaped layout: with a full-width pane along
--- the bottom, that pane shares its left edge with the top-left pane and got
--- filed into the left column, so the layout came back wrong.
+-- Every WezTerm layout is a guillotine layout, since every pane comes from
+-- bisecting another. So at each level there is exactly one straight cut,
+-- vertical or horizontal, that no pane straddles, and finding it is exact.
+-- Grouping by "smallest left edge" instead mis-parses T-shaped layouts.
 
 ---@param panes table[]
 ---@return number minL, number minT, number maxR, number maxB
@@ -461,9 +436,8 @@ local function capture_window(mux_win)
          end
 
          table.insert(tabs, {
-            -- Empty for every tab in this config today, since nothing calls
-            -- MuxTab:set_title(). Captured anyway so the feature is correct the
-            -- day titles start being set.
+            -- Always empty today (nothing calls MuxTab:set_title), but captured
+            -- so the feature is correct once titles are set.
             title = tab:get_title() or '',
             active_pane = active_pane,
             tree = build_tree(panes),
@@ -938,10 +912,8 @@ function M.restore(window, pane, name, target_workspace)
       return
    end
 
-   -- No "close the existing windows first" option: WezTerm's Lua API has no way
-   -- to kill a pane, tab or window (confirmed against the Pane and MuxWindow
-   -- method lists), so a replace action could only be faked. Close unwanted
-   -- tabs by hand with Alt+Ctrl+W and restore again.
+   -- No "replace existing windows" option: WezTerm's Lua API cannot kill a
+   -- pane, tab or window. Close them by hand with Alt+Ctrl+W and restore again.
    window:perform_action(
       act.InputSelector({
          title = 'Workspace "' .. workspace .. '" is already open',
@@ -1096,9 +1068,8 @@ function M.restore_as(window, pane)
    end)
 end
 
--- There is deliberately no session-only manager menu here any more. Sessions
--- and workspaces are the same concept at two lifetimes, so the single entry
--- point is `utils/workspaces.lua`'s hub on F5, which drives the functions
--- above. F9 still quick-saves without opening anything.
+-- No session-only manager menu: sessions and workspaces are one concept at two
+-- lifetimes, so the single entry point is the F5 hub in `utils/workspaces.lua`,
+-- which drives the functions above. F6 quick-saves without opening anything.
 
 return M

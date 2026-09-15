@@ -1,27 +1,18 @@
--- The single source of truth for every color in this config.
+-- The single source of truth for every color in this config. Anything needing a
+-- color should require this file rather than inline a hex literal.
 --
--- Anything that needs a color (`colors/custom.lua`, `config/appearance.lua`,
--- the `events/*` status modules) should require this file instead of inlining a
--- hex literal. Retheming is then a matter of swapping the values below.
+-- Two independent halves:
+--   * The NEUTRAL RAMP is true greyscale. Catppuccin's own surface/overlay greys
+--     are purple-tinted, which reads as a colour cast against a neutral black
+--     background and makes a dark theme look muddy. These are flat greys.
+--   * The ACCENTS are Catppuccin Mocha, unchanged. Pastels carry further against
+--     near-black, so they gained contrast for free when the ramp went neutral.
 --
--- Two independent halves, deliberately:
---
---   * The NEUTRAL RAMP is true greyscale, anchored on a near-black `base` and
---     an off-white `text`. Catppuccin's own surface/overlay greys are
---     purple-tinted, which reads as a faint colour cast next to a neutral
---     black background — the thing that makes a dark theme look muddy rather
---     than clean. These are flat greys instead.
---   * The ACCENTS are still Catppuccin Mocha, unchanged. Pastels carry further
---     against near-black than they did against Catppuccin's own `#1e1e2e`, so
---     they gained contrast for free when the ramp went neutral.
---
--- The ramp keeps Catppuccin's key names (`base`, `surface1`, `subtext0`, ...)
--- so every consumer keeps working and the theme stays swappable.
+-- The ramp keeps Catppuccin's key names, so consumers keep working.
 
--- Neutral ramp, darkest to lightest.
--- `text` on `base` is ~16:1. Deliberately short of pure #000/#fff: that pairing
--- is ~21:1 and makes glyphs bloom against absolute black, which is tiring over
--- a long session and worse on OLED.
+-- Neutral ramp, darkest to lightest. `text` on `base` is ~16:1 -- deliberately
+-- short of pure #000/#fff (~21:1), which makes glyphs bloom against absolute
+-- black and is worse on OLED.
 -- stylua: ignore
 local palette = {
    crust     = '#000000', -- true black: dark text on light accents

@@ -65,11 +65,9 @@ if [[ -z "$CLAUDECODE" ]]; then
    # `starship init zsh` wraps its own path in '' inside an already
    # single-quoted PROMPT:
    #     PROMPT='$(''/c/Program Files/.../starship.exe'' prompt ...)'
-   # zsh reads '' as end-quote + start-quote, so those inner quotes are
-   # consumed while parsing the assignment and the default "C:\Program Files"
-   # install path ends up unquoted -- every prompt then fails with
-   # "no such file or directory: /c/Program". Re-quote with " before caching.
-   # bash is unaffected: its init quotes the path inside a double-quoted eval.
+   # zsh reads '' as end-quote + start-quote, leaving the "C:\Program Files"
+   # path unquoted, so every prompt fails with "no such file or directory:
+   # /c/Program". Re-quote with " before caching. bash is unaffected.
    _starship_cache="$_zc/starship.zsh"
    if [[ ! -s $_starship_cache || ${commands[starship]} -nt $_starship_cache ]]; then
       _starship_init="$(starship init zsh)"
@@ -81,20 +79,11 @@ if [[ -z "$CLAUDECODE" ]]; then
    source $_starship_cache
    unset _starship_cache
 
-   # `starship init zsh` sets RPROMPT as well as PROMPT, so zsh spawns a SECOND
-   # starship process on every single prompt to render the right-hand side.
-   # ~/.config/starship.toml deliberately has no `right_format`, so that process
-   # returns zero bytes -- measured at 31ms median, against a 28ms floor for
-   # merely starting the binary. It is pure overhead on roughly a third of the
-   # prompt's total cost.
-   #
-   # bash and powershell are unaffected: neither of their inits passes --right.
-   # That asymmetry is also why right_format stays unset rather than being put
-   # to use here -- anything in it would be invisible in two of the three shells.
-   #
-   # If a right-hand prompt is ever wanted in zsh specifically, delete this line
-   # and set `right_format` in starship.toml; the process is being paid for
-   # either way.
+   # `starship init zsh` also sets RPROMPT, so zsh spawns a SECOND starship
+   # process per prompt. starship.toml has no `right_format`, so it returns zero
+   # bytes for 31ms median -- about a third of the prompt's cost, for nothing.
+   # bash and powershell do not pass --right, which is also why `right_format`
+   # stays unset: anything there would be invisible in two of three shells.
    unset RPROMPT
 fi
 
@@ -109,20 +98,15 @@ else
 fi
 
 # ---- carapace ----
-# One binary supplying completions for ~500 commands, so per-tool completion
-# files never have to be generated or kept in step with installed versions.
-# Covers docker, kubectl, aws, gh, cargo, rustup, just, npm, pnpm, yarn, helm,
-# terraform, git, eza, delta, bat, zoxide, lazygit, winget... `uv` is the one
-# tool here it does not know about.
+# One binary supplying completions for ~500 commands (docker, kubectl, gh,
+# cargo, git, eza, winget...), so per-tool completion files never need
+# generating. `uv` is the one tool here it does not know.
 #
 # Must come after compinit: the init is one big `compdef` call.
 #
-# The generated init opens by prepending carapace's shim directory to PATH as a
-# Windows path with a ';' separator:
-#     export PATH="C:/Users/.../carapace/bin;$PATH"
-# zsh splits PATH on ':', so that single entry lands as two broken ones -- `C`
-# and `/Users/.../carapace/bin;/c/Users/hassa/bin`. That directory is not even
-# created by this install, so the line is dropped rather than translated.
+# Its first line prepends carapace's shim dir as a Windows path with a ';'
+# separator, which zsh splits on ':' into two broken PATH entries. That dir is
+# never created by this install, so the line is dropped rather than translated.
 if (( $+commands[carapace] )); then
    _cara="$_zc/carapace.zsh"
    if [[ ! -s $_cara || ${commands[carapace]} -nt $_cara ]]; then
@@ -191,16 +175,13 @@ bindkey '\e[13;2u' __insert_newline
 # file is left on disk; it was imported once (`atuin import zsh`, alongside
 # `atuin import bash`), after which it is inert and safe to delete.
 #
-# SHARE_HISTORY went with it. It synchronised sessions by appending to and
-# re-reading HISTFILE, which no longer exists -- and atuin covers that case
-# better anyway: every shell reads the same DB live, not just zsh talking to zsh.
-#
-# EXTENDED_HISTORY went too. It only ever controlled the on-disk timestamp
-# format of a file that is no longer written; atuin timestamps natively.
+# SHARE_HISTORY and EXTENDED_HISTORY went with it: both only acted on a HISTFILE
+# that is no longer written, and atuin covers sharing better -- every shell reads
+# the same DB live.
 #
 # HIST_IGNORE_SPACE stays. atuin honours the leading-space convention itself on
-# zsh (the bash-preexec path notably does not), so a space-prefixed command
-# stays out of BOTH the in-memory ring and the atuin DB.
+# zsh (the bash-preexec path does not), so a space-prefixed command stays out of
+# BOTH the in-memory ring and the atuin DB.
 HISTSIZE=10000
 SAVEHIST=0
 unset HISTFILE
@@ -273,15 +254,13 @@ alias ff='fastfetch'
 # with diff), and the session id is a literal `$(atuin uuid)` in that output,
 # evaluated when the cache is sourced rather than baked in at generation time.
 #
-# Cost note: _atuin_precmd backgrounds its `history end` call, but _atuin_preexec
-# must run `history start` synchronously to capture the row id -- measured at
-# ~50ms here, against a ~35ms floor for any native-binary fork under MSYS. That
-# lands between pressing Enter and the command starting, not on prompt render.
-# The daemon that would avoid it is still marked *Experimental* upstream.
+# Cost: _atuin_preexec must run `history start` synchronously to capture the row
+# id -- ~50ms, against a ~35ms floor for any native fork under MSYS. It lands
+# between Enter and the command starting, not on prompt render. The daemon that
+# would avoid it is still Experimental upstream.
 #
-# This also defines _zsh_autosuggest_strategy_atuin and prepends `atuin` to
-# ZSH_AUTOSUGGEST_STRATEGY -- which the autosuggestions block below then
-# overwrites, so that block sets the strategy explicitly instead.
+# This also prepends `atuin` to ZSH_AUTOSUGGEST_STRATEGY, which the
+# autosuggestions block below overwrites explicitly.
 (( $+commands[atuin] )) && _cached_init atuin atuin init zsh
 
 # ---- zoxide (smart cd) ----
@@ -293,14 +272,10 @@ _cached_init zoxide zoxide init zsh
 # zoxide 0.10.0 emits a broken __zoxide_pwd on Windows -- the command
 # substitution is missing:
 #     \command cygpath -w "\builtin pwd -L"
-# so cygpath converts that literal text instead of the current directory, and
-# the chpwd hook then runs `zoxide add -- "C:\builtin pwd -L"`. Every directory
-# change prints "zoxide: not a directory: C:\builtin pwd -L" and nothing is
-# ever recorded, so the database silently stops learning.
-#
-# `zoxide init bash` emits the identical line, so this is not zsh-specific.
-# Redefine the function after sourcing, rather than patching the cached text,
-# so it keeps working when the cache is regenerated.
+# so every cd prints "zoxide: not a directory: C:\builtin pwd -L" and the DB
+# silently stops learning. `zoxide init bash` is identical, so not zsh-specific.
+# Redefined after sourcing rather than patching the cache, so it survives
+# regeneration.
 __zoxide_pwd() {
    \command cygpath -w "$(\builtin pwd -L)"
 }
@@ -349,33 +324,20 @@ command_not_found_handler() {
 # ---- zsh-autosuggestions ----
 # overlay0 from Catppuccin Macchiato — the same dim tone the cheatsheet uses.
 ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#6e738d'
-# Ghost text comes from atuin's DB, not zsh's ring -- the ring now holds only
-# the current session (see the History block above), so leaving this on
-# `history` would silently shrink suggestions to commands typed since this pane
-# opened. `atuin init zsh` defines _zsh_autosuggest_strategy_atuin for exactly
-# this. Assigning the variable here rather than letting atuin prepend to it
-# keeps one authoritative assignment; atuin's injection runs earlier in the file
-# and would be clobbered by this line regardless.
+# Ghost text comes from atuin's DB, not zsh's ring -- the ring holds only this
+# session (see History above), so `history` would shrink suggestions to commands
+# typed since this pane opened. The `$+commands` guard matters: listing `atuin`
+# without its strategy function defined prints "command not found:
+# _zsh_autosuggest_strategy_atuin" on every prompt.
 #
-# The `$+commands` guard matters: leaving `atuin` in this list without the
-# function defined prints "command not found: _zsh_autosuggest_strategy_atuin"
-# on every prompt. Falling back to session-only ghost text is the right
-# degraded state.
-#
-# The `completion` strategy is deliberately absent from both branches: in async mode
-# (the default) it fetches its suggestion by forking a zpty, writing a literal
-# Tab into it, then doing an uncapped blocking read --
+# The `completion` strategy is deliberately absent. In async mode it forks a
+# zpty, writes a literal Tab, then does an uncapped blocking read:
 #     zpty -r $PTY line '*'$'\0''*'$'\0'
-# -- which accumulates everything the child writes into a single variable until
-# it sees null-delimited output. That Tab lands in a shell where fzf-tab owns
-# ^I, so the child launches an interactive fzf picker that has no user to answer
-# it and never emits the terminating null. The read never returns and $line
-# grows without bound: measured here at 11.5GB resident / 35.7GB commit before
-# the shell deadlocked outright, twice within four minutes.
-#
-# It only ever fired when history had no match, which is why it looked fine for
-# days. Little is lost by dropping it -- it supplied ghost text for commands
-# with no history entry, and fzf-tab already covers that discovery on Tab.
+# That Tab lands in a shell where fzf-tab owns ^I, so the child opens an
+# interactive picker nobody can answer and never emits the terminating null.
+# $line then grows without bound -- 11.5GB resident before the shell deadlocked,
+# twice in four minutes. It only fired when history had no match, and fzf-tab
+# already covers that discovery on Tab.
 if (( $+commands[atuin] )); then
    ZSH_AUTOSUGGEST_STRATEGY=(atuin)
 else

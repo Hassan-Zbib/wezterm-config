@@ -8,12 +8,9 @@ local colorscheme = {
    cursor_bg = p.rosewater,
    cursor_fg = p.crust,
 
-   -- Deliberately NOT `cursor_bg`. WezTerm forces the cursor in every inactive
-   -- pane to a hollow, non-blinking outline box drawn in `cursor_border` — any
-   -- shape, no config needed. While both were rosewater that built-in cue was
-   -- wasted: filled-rosewater vs hollow-rosewater is a weak read at a glance.
-   -- A neutral grey outline makes the active pane the only place a bright
-   -- rosewater block appears. Set back to `p.rosewater` to undo.
+   -- Deliberately NOT `cursor_bg`. WezTerm draws every inactive pane's cursor as
+   -- a hollow box in `cursor_border`, so a neutral grey here makes the active
+   -- pane the only place a bright rosewater block appears. `p.rosewater` undoes.
    cursor_border = p.overlay2,
 
    -- Inverted highlight: dark text on a light accent. Much easier to spot than
@@ -22,14 +19,12 @@ local colorscheme = {
    selection_bg = p.lavender,
    selection_fg = p.crust,
 
-   -- The 16 ANSI slots every colored CLI draws from — eza, git, starship, fzf,
-   -- bat, delta, yazi, lazygit, and any TUI. Catppuccin Mocha accents; the
-   -- black and white slots come from the neutral ramp.
+   -- The 16 ANSI slots every colored CLI draws from. Catppuccin Mocha accents;
+   -- black and white come from the neutral ramp.
    --
-   -- NOTE: one deliberate deviation from upstream Catppuccin, which maps white
-   -- to `subtext1` and bright white to the *darker* `subtext0`. Tools use
-   -- bright white for emphasis, so that ordering makes emphasised text recede.
-   -- Bright white is the brightest value here instead.
+   -- One deliberate deviation from upstream Catppuccin, which maps bright white
+   -- to the *darker* `subtext0` -- tools use bright white for emphasis, so that
+   -- ordering makes emphasised text recede. Here it is the brightest value.
    -- stylua: ignore
    ansi = {
       p.surface1, -- black
@@ -102,15 +97,11 @@ local colorscheme = {
       [16] = p.peach,
       [17] = p.rosewater,
    },
-   -- The pane divider. WezTerm has no per-pane borders and no active/inactive
-   -- divider variant — this is one global colour for every split line in the
-   -- tab — so the job here is just to make the boundaries themselves obvious,
-   -- and let the dimming/cursor cues say which side is live.
-   --
-   -- Grey (`overlay1`) reads as chrome and disappears into the text. Sapphire
-   -- is already the active-tab colour, so pane edges and the active tab pill
-   -- speak the same language. Its thickness is `underline_thickness` (see
-   -- config/appearance.lua) — there is no separate knob for it.
+   -- The pane divider: one global colour for every split line, with no
+   -- active/inactive variant, so its job is just to make boundaries obvious and
+   -- let the dimming and cursor cues say which side is live. Sapphire matches
+   -- the active-tab colour; grey would disappear into the text. Thickness is
+   -- `underline_thickness` in config/appearance.lua -- there is no separate knob.
    split = p.sapphire,
    compose_cursor = p.flamingo,
 }

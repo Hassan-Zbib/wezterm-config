@@ -6,26 +6,21 @@
 # already bundles every DLL zsh needs (msys-2.0, msys-ncursesw6, msys-pcre2-8-0,
 # msys-iconv-2), so the msys/zsh package can simply be unpacked and run.
 #
-# The package is unpacked into C:\Program Files\Git, so zsh.exe lands in
-# /usr/bin beside msys-2.0.dll and shares Git's MSYS root, mount table and
-# /etc. That makes zsh's compiled-in prefix of /usr point at the real thing:
-# modules (zle, complete, ...) and completion functions are found with no help,
-# and any Win32 parent can spawn zsh.exe directly.
+# Unpacking into C:\Program Files\Git puts zsh.exe in /usr/bin beside
+# msys-2.0.dll, sharing Git's MSYS root, mount table and /etc. zsh's compiled-in
+# /usr prefix then points at the real thing: modules and completion functions
+# are found with no help, and any Win32 parent can spawn zsh.exe directly.
 #
-# This needs admin, and a Git for Windows upgrade can wipe files added under
-# C:\Program Files\Git. Both are accepted deliberately. The script is
-# idempotent and ./install runs it, so recovering from an upgrade is a matter
-# of running the installer again.
+# The costs are accepted deliberately: it needs admin, and a Git for Windows
+# upgrade can wipe it. The script is idempotent and ./install runs it, so
+# recovery is just running the installer again.
 #
-# It used to default to a portable install under ~/.local/zsh -- no admin, and
-# immune to Git upgrades. That was dropped because zsh's compiled-in /usr then
-# points into a tree zsh is not installed in, and everything downstream has to
-# compensate: ~/.zshenv had to redirect module_path and splice a cached,
-# recursively-globbed functions tree onto fpath; nothing under /etc was ever
-# read; and any Win32 process that spawned zsh.exe without first putting Git's
-# usr/bin on PATH got exit code 0xC0000135 (STATUS_DLL_NOT_FOUND) with no
-# message -- which is exactly how it failed under herdr. See git history for
-# the portable code path if it is ever needed again.
+# A portable install under ~/.local/zsh avoided both, but left the compiled-in
+# /usr pointing into a tree zsh was not in: ~/.zshenv had to redirect
+# module_path and fpath, nothing under /etc was read, and any Win32 parent that
+# spawned zsh.exe without Git's usr/bin on PATH got 0xC0000135
+# (STATUS_DLL_NOT_FOUND) with no message -- exactly how it failed under herdr.
+# See git history if that path is ever needed again.
 #
 # Usage:
 #   ./install-zsh.sh           # install into C:\Program Files\Git (needs admin)
@@ -81,17 +76,14 @@ echo "==> unpacking into $DEST"
 "$TAR" -xf "$tmp/$PKG" -C "$DEST" \
    --exclude .BUILDINFO --exclude .INSTALL --exclude .MTREE --exclude .PKGINFO
 
-# The package ships /etc/zsh/zprofile containing nothing but
+# The package ships /etc/zsh/zprofile containing only
 #     emulate sh -c 'source /etc/profile'
-# and zsh reads the GLOBAL zprofile before ~/.zprofile. home/.zprofile already
-# does that job from a cache -- /etc/profile measured at ~101ms, the single
-# largest item in startup -- so leaving this file in place would pay the full
-# cost on every login shell and then consult the cache for nothing. Removing it
-# is safe: ~/.zprofile sources /etc/profile directly whenever its cache is
-# missing, stale or bad.
+# and zsh reads the GLOBAL zprofile before ~/.zprofile, which already does that
+# job from a cache. Leaving it would pay the full ~101ms on every login shell and
+# then consult the cache for nothing. Safe to remove: ~/.zprofile sources
+# /etc/profile directly whenever its cache is missing or stale.
 #
-# Done after extraction rather than with --exclude so that a --force reinstall
-# over an existing tree removes it too.
+# After extraction rather than via --exclude, so a --force reinstall drops it too.
 rm -f "$DEST/etc/zsh/zprofile"
 
 echo "==> installed: $("$ZSH_EXE" --version)"

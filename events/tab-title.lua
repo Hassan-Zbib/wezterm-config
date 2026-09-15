@@ -83,18 +83,17 @@ local TITLE_INSET = {
    ICON = 8,
 }
 
--- Panes that have rung the bell since their tab was last focused, keyed by
--- pane id. Populated by the `bell` event, drained when the owning tab becomes
--- active. Agent CLIs ring the bell when they finish or need a decision, so this
--- is what makes a backgrounded agent tab announce itself.
+-- Panes that rang the bell since their tab was last focused, keyed by pane id.
+-- Drained when the owning tab becomes active. Agent CLIs ring the bell when
+-- they finish or need a decision, so this is what makes a backgrounded agent
+-- tab announce itself.
 ---@type table<number, boolean>
 local bell_panes = {}
 
 
--- Inactive tabs are light-on-dark (subtext1 over surface1/2); the active tab
--- inverts to dark-on-sapphire so it reads as the selected pill. The `scircle_*`
--- entries are the pill end-caps, so their fg must match the corresponding
--- text bg.
+-- Inactive tabs are light-on-dark; the active tab inverts to dark-on-sapphire
+-- so it reads as the selected pill. `scircle_*` are the end-caps, so their fg
+-- must match the corresponding text bg.
 ---@type table<string, Cells.SegmentColors>
 -- stylua: ignore
 local colors = {
@@ -224,17 +223,11 @@ end
 function Tab:set_info(event_opts, tab, max_width)
    local process_name = clean_process_name(tab.active_pane.foreground_process_name)
 
-   -- `foreground_process_name` is documented as "the path to the executable
-   -- image, or an empty string if unavailable", and it is ALWAYS unavailable
-   -- here: this config is mux-first, and WezTerm reports process info only for
-   -- local panes -- the mux wire protocol carries no process field at all. So
-   -- the old `process_name:match('^wsl')` test could never fire and WSL tabs
-   -- never got their glyph.
-   --
-   -- `domain_name` does cross the mux boundary, and WSL tabs are spawned into
-   -- the `WSL:Ubuntu` domain by name, so it is both reliable and exact. The
-   -- process-name test is kept as a fallback for a genuinely local pane that
-   -- ran wsl.exe directly.
+   -- `foreground_process_name` is ALWAYS empty here: this config is mux-first
+   -- and the mux protocol carries no process field. `domain_name` does cross
+   -- that boundary and WSL tabs are spawned into `WSL:Ubuntu` by name, so it is
+   -- exact. The process-name test remains a fallback for a genuinely local pane
+   -- that ran wsl.exe directly.
    local domain_name = tab.active_pane.domain_name or ''
    self.is_wsl = domain_name:match('^WSL') ~= nil or process_name:match('^wsl') ~= nil
    self.is_admin = (
@@ -383,11 +376,10 @@ local tab_list = {}
 ---Fetch (or lazily create) the Tab entry for a tab id.
 ---
 ---`tab_list` is only populated by `format-tab-title`, which never fires while
----the tab bar is hidden. Alt+9 hides it, so "hide the bar, then Alt+0 to rename"
----used to index a nil and raise. Creating the entry here keeps the rename, and
----`create_cells` has to run too: `format-tab-title` takes its "already known"
----branch for any id present in the table, and that branch calls `update_cells`,
----which errors on a Cells with no segments.
+---the tab bar is hidden (Alt+Ctrl+9), so renaming then would index a nil.
+---`create_cells` must run here too: `format-tab-title` takes its "already
+---known" branch for any id in the table, and that calls `update_cells`, which
+---errors on a Cells with no segments.
 ---@param id number
 ---@return Tab
 local function tab_entry(id)

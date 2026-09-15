@@ -4,38 +4,28 @@
 # Managed by dotbot — run ./install from the repo to symlink.
 #
 # Git for Windows' /etc/profile sets up PATH, MSYSTEM and the MSYS mount table.
-# It has a dedicated ZSH_VERSION branch, so it is safe to source from zsh; the
-# `emulate sh` wrapper is needed because the file is POSIX sh, not zsh.
+# It has a ZSH_VERSION branch so it is safe to source from zsh; `emulate sh` is
+# needed because the file is POSIX sh.
 #
-# This REPLACES the /etc/zsh/zprofile that the MSYS2 zsh package ships, which
-# is a single uncached `emulate sh -c 'source /etc/profile'`. zsh reads the
-# global zprofile before this file, so leaving it installed would pay the full
-# ~101ms measured below on every login shell and then consult the cache here
-# for nothing. scripts/install-zsh.sh deletes it after unpacking for exactly
-# that reason -- under the old portable install the file landed in
-# ~/.local/zsh/etc, where zsh never looked, and the clash never arose.
+# This REPLACES the /etc/zsh/zprofile the MSYS2 zsh package ships (a single
+# uncached source of the same file). zsh reads the global zprofile first, so
+# leaving it installed would pay the full ~101ms on every login shell and then
+# consult this cache for nothing. scripts/install-zsh.sh deletes it.
 # ============================================================
 # ---- Cached ----
-# /etc/profile measured at ~101ms, the largest single item in startup. There is
-# no hot spot to fix: it is ~6 forks (cygpath -Wu 25ms, hostname 17ms, which zsh
-# 14ms, a glob subshell 13ms each, profile.d 10ms) and a fork costs 13-25ms on
-# the MSYS2 runtime. Its entire observable effect is a set of exported
-# variables, so cache those and skip the forks.
+# /etc/profile costs ~101ms, the largest single item in startup, with no hot spot
+# to fix: ~6 forks at 13-25ms each on the MSYS2 runtime. Its entire observable
+# effect is a set of exported variables, so cache those and skip the forks.
 #
-# Everything it derives comes from the PATH it inherits from Windows, so that
-# PATH is the cache key: launch zsh from a context with a different PATH and the
-# cache regenerates rather than silently applying the wrong environment. The
-# cache is also dropped when /etc/profile or /etc/profile.d is touched, which is
-# what a Git for Windows upgrade does.
+# PATH is the cache key, since everything /etc/profile derives comes from it --
+# launch zsh with a different PATH and the cache regenerates rather than applying
+# the wrong environment. The cache is also dropped when /etc/profile or
+# /etc/profile.d is touched, which is what a Git for Windows upgrade does.
 #
-# An allowlist is used rather than dumping every exported variable on purpose:
-# a blanket dump would bake per-session values (WEZTERM_PANE, WEZTERM_UNIX_SOCKET,
-# SSH_AUTH_SOCK...) into the cache and re-export stale copies into later shells.
-# The list is /etc/profile's own final `export` line, plus what /etc/msystem and
-# profile.d/*.sh add.
-#
-# Aliases are deliberately not cached. profile.d/aliases.sh defines only
-# `ls` and `ll`, and ~/.zshrc replaces both with eza.
+# An allowlist, not a blanket dump: dumping every exported variable would bake
+# per-session values (WEZTERM_PANE, SSH_AUTH_SOCK...) into the cache and
+# re-export stale copies into later shells. Aliases are not cached either --
+# profile.d defines only `ls`/`ll`, which ~/.zshrc replaces with eza.
 _zc="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
 _pc="$_zc/profile-env.zsh"
 _pkey="$PATH"

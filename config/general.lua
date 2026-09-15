@@ -20,13 +20,12 @@ return {
    default_workspace = 'main',
 
    -- Must stay false. WezTerm's kitty-protocol encoder sends the SHIFTED
-   -- codepoint for non-letter keys instead of the base one (wezterm#2546), so
-   -- Shift+/ arrives as `CSI 63;..u` rather than the spec's `CSI 47;2u` and any
-   -- TUI that negotiates the protocol -- Claude Code, Neovim -- never receives a
-   -- literal `?`. A plain bash prompt is unaffected because it never requests
-   -- the protocol, which is why this looks like "Shift is broken, but only
-   -- sometimes". Shift+Enter keeps working either way: it's an explicit
-   -- SendString in config/bindings.lua, which bypasses key encoding entirely.
+   -- codepoint for non-letter keys (wezterm#2546), so Shift+/ arrives as
+   -- `CSI 63;..u` instead of `CSI 47;2u` and any TUI that negotiates the
+   -- protocol -- Claude Code, Neovim -- never receives a literal `?`. A plain
+   -- prompt never requests the protocol, which is why it looks like "Shift is
+   -- broken, but only sometimes". Shift+Enter is unaffected: it is an explicit
+   -- SendString in config/bindings.lua, bypassing key encoding.
    enable_kitty_keyboard = false,
 
    hyperlink_rules = {

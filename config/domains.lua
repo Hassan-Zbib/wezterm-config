@@ -4,11 +4,10 @@ local options = {
    -- ref: https://wezfurlong.org/wezterm/config/lua/SshDomain.html
    ssh_domains = {},
 
-   -- The persistent multiplexer. Panes spawned here are owned by a background
-   -- `wezterm-mux-server` process rather than by the GUI, so closing (or
-   -- crashing) the window leaves everything running -- which is the whole point
-   -- for long-lived CLI agents. Despite the option name this is backed by a
-   -- named pipe on Windows, not a unix socket.
+   -- The persistent multiplexer. Panes here are owned by a background
+   -- `wezterm-mux-server`, not the GUI, so closing or crashing the window leaves
+   -- long-lived agents running. Despite the option name, this is a named pipe on
+   -- Windows, not a unix socket.
    -- ref: https://wezfurlong.org/wezterm/multiplexing.html#unix-domains
    unix_domains = {
       { name = 'mux' },
@@ -18,28 +17,18 @@ local options = {
    wsl_domains = {},
 
    -- Make a bare `wezterm` behave as `wezterm connect mux`, so the GUI is a thin
-   -- client of the server above instead of hosting its own private mux.
+   -- client of the server above rather than hosting its own mux.
    --
-   -- Escape hatches, in order of severity:
-   --   `wezterm start`  -- plain local window, ignores the mux entirely
-   --   Alt+Ctrl+T       -- throwaway local tab from inside a mux window
-   --   Alt+Ctrl+M       -- domain manager, including "restart mux server"
+   -- Escape hatches: `wezterm start` (plain local window), Alt+Ctrl+T
+   -- (throwaway local tab), Alt+Ctrl+M (domain manager, incl. mux restart).
    --
-   -- Caveat worth remembering: Ctrl+Shift+R reloads the GUI's config, but the
-   -- mux server keeps the config it booted with. Changes to `default_prog`,
-   -- domains, or the mux-side startup event need the server restarted.
+   -- Ctrl+Shift+R reloads the GUI config only -- the mux server keeps the config
+   -- it booted with, so `default_prog` and domain changes need a restart.
    --
-   -- Startup geometry is left entirely to WezTerm and Windows: no `--position`,
-   -- no `initial_cols`/`initial_rows`, and nothing maximizes the window for you.
-   -- Alt+Ctrl+Enter still toggles maximize by hand.
-   --
-   -- There are also no `gui-startup` or `mux-startup` handlers anywhere in this
-   -- config. That is deliberate, and easy to get wrong: `wezterm connect` always
-   -- spawns a tab of its own and never fires `gui-startup` at all, while
-   -- `wezterm start` falls back to WezTerm's built-in default window. Both paths
-   -- already produce exactly one window, so anything spawned from a startup
-   -- event is a duplicate -- which is what once left the GUI sitting on
-   -- "Checking server version" owning two panes.
+   -- No `gui-startup`/`mux-startup` handlers, deliberately: `wezterm connect`
+   -- spawns its own tab and never fires `gui-startup`, and `wezterm start` falls
+   -- back to the default window. Both already yield exactly one window, so a
+   -- startup event would only ever duplicate it.
    default_gui_startup_args = { 'connect', 'mux' },
 }
 
