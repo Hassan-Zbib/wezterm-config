@@ -39,12 +39,25 @@ style = "compact"
 inline_height = 20
 keymap_mode = "emacs"
 
-# Enter puts the command on the prompt; it does not run it. atuin defaults this
-# to true, which would be a silent behaviour change from the fzf-history-widget
-# this replaces -- fzf fills the line and waits for a second Enter. Matching the
-# old muscle memory is worth more than saving the keystroke, given the selected
-# command may be an rm or a deploy.
-enter_accept = false
+# Hide the 1..9 jump digits beside each row. They are unreachable here: atuin
+# binds them to Alt+1..9, and config/bindings.lua binds that whole range to
+# ActivateTab (mod.SUPER is ALT on Windows), so WezTerm swallows them before the
+# shell sees them. They also renumber on every cursor move, since the digit is
+# the row's distance from the selection rather than a fixed index.
+#
+# Costs no width -- the digits share the 3-column gutter with the " > " marker.
+# Moving them to Ctrl+1..9 via ctrl_n_shortcuts is not a fix; terminals do not
+# reliably transmit Ctrl+digit.
+show_numeric_shortcuts = false
+
+# Enter runs the selected command immediately. Tab is the escape hatch: it puts
+# the command on the prompt for editing without running it, which is what to
+# reach for when the match is an rm or a deploy that wants a second look.
+#
+# This departs from the fzf-history-widget atuin replaces, which filled the line
+# and waited for a second Enter. Kept explicit because atuin's own built-in
+# default is false -- only freshly generated configs get true written in.
+enter_accept = true
 
 # ---- Filtering ----
 # Refuse to record anything that looks like a credential (AWS keys, GitHub and
@@ -60,6 +73,23 @@ secrets_filter = true
 # history_filter = [
 #   "^ls$",
 # ]
+
+# ---- Results table ----
+# Columns left to right; the " > " selection marker is always prepended.
+# atuin's default is ["duration", "time", "command"].
+#
+# directory is the reason this block exists. Ctrl+r searches globally (see
+# filter_mode above), so without it nothing on screen says where a match was
+# actually run. It elides from the left, keeping the leaf visible:
+# "…/GitHub/wezterm-config". 24 columns suits the deep paths under Desktop/.
+#
+# exit is right-aligned in 3 columns. duration is already tinted green/red by
+# success, so this adds the specific code rather than a new signal.
+#
+# Note this is [ui], not [search] -- `atuin default-config` prints these two
+# keys directly below the [search] block, but the [ui] header sits above them.
+[ui]
+columns = ["duration", "time", { type = "directory", width = 24 }, "exit", "command"]
 
 # ---- AI ----
 # Bound to `?` on an empty prompt (the widget checks $BUFFER, so `ls ?glob` is

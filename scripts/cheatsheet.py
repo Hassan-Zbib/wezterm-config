@@ -579,20 +579,20 @@ _ATUIN_SEARCH = (
         sub('Open it') +
         row('Ctrl+r',          'Search everything')     +
         row('↑',               'Search this folder')    +
-        note('Enter fills the prompt; it does') +
-        note('not run the command. That is a') +
-        note('local setting, not the default.') +
+        note('Enter runs the command right') +
+        note('away. Tab is the safe one: it') +
+        note('fills the prompt instead.') +
         blank() +
         sub('Inside the picker') +
         row('↑ / ↓',           'Move selection')        +
-        row('Enter',           'Put on prompt')         +
+        row('Enter',           'Run it immediately')    +
         row('Tab',             'Put on prompt + edit')  +
-        row('Alt+1 … Alt+7',   'Jump to result')        +
         row('Ctrl+y',          'Copy to clipboard')     +
         row('Ctrl+o',          'Inspector: runs, stats')+
         row('Esc  ·  Ctrl+g',  'Cancel, keep typing')   +
-        note('Alt+8/9/0 are WezTerm tab keys') +
-        note('and never reach atuin.')
+        note('There are no jump-to-row digits:') +
+        note('Alt+1..9 are WezTerm tab keys, so') +
+        note('they are switched off in atuin.')
 )
 
 _ATUIN_FILTER = (
