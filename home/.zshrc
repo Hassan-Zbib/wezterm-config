@@ -97,6 +97,18 @@ else
    compinit -C -d "$_zc/zcompdump"
 fi
 
+# Fall back to plain filename completion when the command's own completer came
+# up empty. zsh only runs the second completer when the first matched nothing,
+# so commands with real candidates are untouched. This covers carapace's
+# `[[ ${#valuesArr[@]} -gt 1 ]]` guard, which silently drops any group holding
+# exactly one candidate -- without the fallback, `glow R<Tab>` offers nothing
+# even though README.md is the only match.
+#
+# Only effective together with the _carapace_completer wrapper below: carapace's
+# function ends in a `while` loop, so it reports success even when it added no
+# matches, and zsh would stop before reaching _files.
+zstyle ':completion:*' completer _complete _files
+
 # ---- carapace ----
 # One binary supplying completions for ~500 commands (docker, kubectl, gh,
 # cargo, git, eza, winget...), so per-tool completion files never need
@@ -107,13 +119,38 @@ fi
 # Its first line prepends carapace's shim dir as a Windows path with a ';'
 # separator, which zsh splits on ':' into two broken PATH entries. That dir is
 # never created by this install, so the line is dropped rather than translated.
+#
+# The sed is what makes carapace work at all on Windows. Its completer exports
+# the shell's state to the binary, and CARAPACE_SHELL_FUNCTIONS is
+# `print -l ${(ok)functions}` -- evaluated *during* completion, so it lists every
+# _* function compinit has autoloaded: ~28KB on its own. CreateProcess caps the
+# whole environment block at 32767 chars, so the exec failed with
+#     xargs: environment is too large for exec
+# and every carapace-owned command (git, glow, bat, eza...) silently completed
+# to nothing. The variable only feeds specs that complete shell function names,
+# none of which are used here, so it is blanked. The other CARAPACE_SHELL_*
+# exports are a few KB together and stay.
 if (( $+commands[carapace] )); then
    _cara="$_zc/carapace.zsh"
    if [[ ! -s $_cara || ${commands[carapace]} -nt $_cara ]]; then
-      carapace _carapace zsh 2>/dev/null | grep -v '^export PATH=' >| $_cara
+      carapace _carapace zsh 2>/dev/null \
+         | grep -v '^export PATH=' \
+         | sed 's/^\([[:space:]]*declare -x CARAPACE_SHELL_FUNCTIONS=\).*/\1""/' >| $_cara
    fi
    source $_cara
    unset _cara
+
+   # carapace's completer ends in a `while` loop over its result blocks, so it
+   # returns 0 whether or not it added anything -- and zsh's completer chain
+   # stops at the first success, so the _files fallback set above could never
+   # run. Wrap it to report the truth. Idempotent: re-sourcing this file
+   # re-sources the cache first, which restores the original function.
+   functions[_carapace_unwrapped]=$functions[_carapace_completer]
+   _carapace_completer() {
+      local -i _nm=$compstate[nmatches]
+      _carapace_unwrapped "$@"
+      (( compstate[nmatches] > _nm ))
+   }
 fi
 
 # ---- Key bindings ----
