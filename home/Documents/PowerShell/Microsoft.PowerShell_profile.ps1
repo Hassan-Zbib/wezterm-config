@@ -122,3 +122,12 @@ function lt { eza --icons --tree --level=2 @args }
 
 # ---- zoxide (smart cd) ----
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
+
+# Give cd the z behaviour without giving up z. `--cmd cd` would rename z/zi to
+# cd/cdi rather than add to them, so point cd at the same functions z uses.
+# __zoxide_z only queries the database when its argument is not something cd
+# could handle itself, so a real path, `-` or no argument still behave normally.
+# AllScope + Force is what zoxide's own --cmd emits; it is needed to displace
+# PowerShell's built-in cd alias for Set-Location.
+Microsoft.PowerShell.Utility\Set-Alias -Name cd -Value __zoxide_z -Option AllScope -Scope Global -Force
+Microsoft.PowerShell.Utility\Set-Alias -Name cdi -Value __zoxide_zi -Option AllScope -Scope Global -Force

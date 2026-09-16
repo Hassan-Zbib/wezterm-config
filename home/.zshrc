@@ -307,6 +307,17 @@ alias bt='btop'
 [[ "$TERM_PROGRAM" == "WarpTerminal" ]] && export _ZO_DOCTOR=0
 _cached_init zoxide zoxide init zsh
 
+# Give cd the z behaviour without giving up z. `--cmd cd` would *rename* z/zi to
+# cd/cdi rather than add to them, so delegate instead. __zoxide_z only queries
+# the database when its argument is not something cd could handle itself -- no
+# argument, `-`, `+N`/`-N` and any real path all still change directory the
+# ordinary way -- which is what makes it safe to sit on top of cd.
+#
+# Completion is deliberately left alone: zoxide compdefs only `z`, so `cd` keeps
+# zsh's native _cd and completes directories rather than database entries.
+cd()  { __zoxide_z "$@" }
+cdi() { __zoxide_zi "$@" }
+
 # zoxide 0.10.0 emits a broken __zoxide_pwd on Windows -- the command
 # substitution is missing:
 #     \command cygpath -w "\builtin pwd -L"

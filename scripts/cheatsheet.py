@@ -383,8 +383,8 @@ _FILE_TOOLS = (
         row('lt',              'Tree view (2 levels)')  +
         blank() +
         sub('zoxide (smart cd)') +
-        row('z DIR',           'Jump to frecent dir')   +
-        row('zi',              'Interactive picker')    +
+        row('z / cd DIR',      'Jump to frecent dir')   +
+        row('zi / cdi',        'Interactive picker')    +
         blank() +
         sub('fzf') +
         row('fzf',             'Fuzzy-find files')      +

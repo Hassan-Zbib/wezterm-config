@@ -110,3 +110,10 @@ alias bt='btop'
 # zoxide still works; just silence the diagnostic under Warp.
 [[ "$TERM_PROGRAM" == "WarpTerminal" ]] && export _ZO_DOCTOR=0
 eval "$(zoxide init bash)"
+
+# Give cd the z behaviour without giving up z. `--cmd cd` would rename z/zi to
+# cd/cdi rather than add to them, so delegate instead. __zoxide_z only queries
+# the database when its argument is not something cd could handle itself: no
+# argument, `-`, `+N`/`-N` and any real path still change directory as usual.
+cd()  { __zoxide_z "$@"; }
+cdi() { __zoxide_zi "$@"; }
