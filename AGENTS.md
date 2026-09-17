@@ -1,10 +1,10 @@
-# CLAUDE.md
+# WezTerm project guidance
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents working in this repository.
 
 ## What This Is
 
-A modular WezTerm terminal configuration for Windows, themed with Catppuccin Macchiato. The repo lives at `~/Desktop/GitHub/wezterm-config` and is loaded via `~/.wezterm.lua` which adds it to Lua's `package.path`.
+A modular WezTerm terminal configuration for Windows, themed with Catppuccin Macchiato. This repository is loaded via `~/.wezterm.lua` which adds it to Lua's `package.path`.
 
 ## Architecture
 
