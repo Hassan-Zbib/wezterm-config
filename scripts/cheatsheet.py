@@ -540,8 +540,9 @@ _ZSH_GLOB = (
         sub('Helpers') +
         row('cat FILE',        'bat, syntax coloured')  +
         row('catp FILE',       'bat, no line numbers')  +
-        note('Unknown command → searches') +
-        note('winget and lists matches.')
+        note('Unknown command → plain zsh') +
+        note('error; winget search NAME') +
+        note('looks a package up by hand.')
 )
 
 _ZSH_SHELL = (

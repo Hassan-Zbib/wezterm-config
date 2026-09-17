@@ -340,29 +340,27 @@ if (( $+commands[bat] )); then
 fi
 
 # ---- command-not-found ----
-# Oh My Zsh's plugin of this name needs a distro package database (Debian's
-# command-not-found, Arch's pkgfile, Homebrew...). None of those exist on this
-# machine, so it would load and silently do nothing. winget is the package
-# manager actually in use here, and `winget search` answers in ~300-450ms --
-# a cost only paid when a command genuinely was not found.
-command_not_found_handler() {
-   local cmd=$1
-   print -u2 "zsh: command not found: $cmd"
-   (( $+commands[winget] )) || return 127
-
-   # winget prints a header and a separator first, so results start at line 3.
-   local hits
-   hits=$(winget search --query "$cmd" --disable-interactivity 2>/dev/null \
-          | tr -d '\r' | sed -n '3,6p')
-   if [[ -n $hits ]]; then
-      print -u2 ""
-      print -u2 "winget has:"
-      print -u2 "$hits"
-      print -u2 ""
-      print -u2 "  install with: winget install --id <Id>"
-   fi
-   return 127
-}
+# REMOVED: a command_not_found_handler that ran `winget search` on every miss.
+#
+# The earlier "~300-450ms" note measured the search but not what dominates it.
+# winget.exe is an MSIX app reached through the App Execution Alias in
+# WindowsApps, and that activation is the whole cost: `winget --version`, which
+# does no work at all, is ~190ms warm. The query itself is ~30ms, and the
+# `tr | sed` pipeline behind it adds two more MSYS forks. Warm total was
+# ~220-240ms; cold -- the usual case, since a miss happens far less often than
+# Windows keeps the package warm -- it ran into seconds.
+#
+# No winget flag reaches that floor: --source winget measured the same as the
+# default, so there is nothing to tune. Reading winget's own SQLite index
+# (LocalState/.../Microsoft.Winget.Source_*/index.db, which has a commands2
+# table mapping executables to packages) answers in under 1ms, but needs a
+# Python process to do it (~80-140ms) and the local index lags the real catalog
+# badly -- it still listed opencode 1.14.x four months after the fact.
+#
+# All of that was spent on the typo path. Nearly every miss is `gti` or `claer`,
+# not a package worth installing, so the lookup taxed the common case to serve
+# the rare one. zsh's builtin message covers the common case for free; when a
+# package really is wanted, `winget search <name>` is right there to type.
 
 # ============================================================
 # Plugins  (antidote — list lives in ~/.zsh_plugins.txt)
