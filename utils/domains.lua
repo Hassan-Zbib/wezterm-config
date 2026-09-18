@@ -20,11 +20,15 @@ local INTERNAL_DOMAINS = {
    TermWizTerminalDomain = true,
 }
 
+---One accent per row -- see `label`. `detached` is `overlay2` rather than the
+---dimmer `overlay0`: as a foreground it only has to beat the background, but
+---reverse video makes it the row's fill, and `overlay0` against the near-black
+---text it would then carry is close to unreadable.
 ---@type table<string, Cells.SegmentColors>
 local colors = {
    name = { fg = p.text },
    attached = { fg = p.green },
-   detached = { fg = p.overlay0 },
+   detached = { fg = p.overlay2 },
    action = { fg = p.peach },
    danger = { fg = p.red },
 }
@@ -43,18 +47,24 @@ local function domain_state(domain)
 end
 
 ---Build a single formatted InputSelector label
+---
+---One colour for the whole row, deliberately. WezTerm draws the selected row in
+---reverse video, so every segment's foreground becomes its background: a row
+---whose detail is a different colour (or uncoloured) highlights as two
+---mismatched blocks instead of one bar. Bold vs Half intensity still separates
+---the name from its detail. The row's accent is what the highlight ends up
+---being, so it doubles as the selection colour.
 ---@param text string
----@param color Cells.SegmentColors
+---@param color Cells.SegmentColors accent for the entire row
 ---@param detail? string
----@param detail_color? Cells.SegmentColors
 ---@return string
-local function label(text, color, detail, detail_color)
+local function label(text, color, detail)
    local cells = Cells:new()
    cells:add_segment('main', ' ' .. text, color, { Cells.attr.intensity('Bold') })
 
    local ids = { 'main' }
    if detail and detail ~= '' then
-      cells:add_segment('detail', '  ' .. detail, detail_color, { Cells.attr.intensity('Half') })
+      cells:add_segment('detail', '  ' .. detail, color, { Cells.attr.intensity('Half') })
       table.insert(ids, 'detail')
    end
 
@@ -72,11 +82,12 @@ function M.choices()
          local state = domain_state(domain)
          table.insert(choices, {
             id = SPAWN_PREFIX .. name,
+            -- Attach state colours the whole row, not just the state word, so
+            -- green/grey still reads at a glance once the row is highlighted.
             label = label(
                name,
-               colors.name,
-               state,
-               state == 'Attached' and colors.attached or colors.detached
+               state == 'Attached' and colors.attached or colors.detached,
+               state
             ),
          })
       end

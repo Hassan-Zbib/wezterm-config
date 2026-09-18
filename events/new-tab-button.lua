@@ -10,22 +10,31 @@ local attr = Cells.attr
 
 local M = {}
 
----@type table<string, Cells.SegmentColors>
+---Icon and accent per domain kind. The accent covers the whole row, icon and
+---text alike -- see `label`.
 -- stylua: ignore
-local colors = {
-   label_text   = { fg = p.text },
-   icon_default = { fg = p.blue },
-   icon_wsl     = { fg = p.peach },
-   icon_ssh     = { fg = p.red },
-   icon_unix    = { fg = p.mauve },
+local kinds = {
+   default = { icon = nf.oct_terminal,       color = { fg = p.blue } },
+   wsl     = { icon = nf.cod_terminal_linux, color = { fg = p.peach } },
+   ssh     = { icon = nf.md_ssh,             color = { fg = p.red } },
+   unix    = { icon = nf.dev_gnu,            color = { fg = p.mauve } },
 }
 
-local cells = Cells:new()
-   :add_segment('icon_default', ' ' .. nf.oct_terminal .. ' ', colors.icon_default)
-   :add_segment('icon_wsl', ' ' .. nf.cod_terminal_linux .. ' ', colors.icon_wsl)
-   :add_segment('icon_ssh', ' ' .. nf.md_ssh .. ' ', colors.icon_ssh)
-   :add_segment('icon_unix', ' ' .. nf.dev_gnu .. ' ', colors.icon_unix)
-   :add_segment('label_text', '', colors.label_text, attr(attr.intensity('Bold')))
+---Build a launch-menu InputSelector label
+---
+---Icon and text share one colour, deliberately. WezTerm draws the selected row
+---in reverse video, so every segment's foreground becomes its background: a
+---coloured icon beside differently-coloured text highlights as two mismatched
+---blocks instead of one bar. The glyph still distinguishes the domain kind.
+---@param kind {icon: string, color: Cells.SegmentColors}
+---@param text string
+---@return string
+local function label(kind, text)
+   local cells = Cells:new()
+      :add_segment('icon', ' ' .. kind.icon .. ' ', kind.color)
+      :add_segment('text', text, kind.color, attr(attr.intensity('Bold')))
+   return wezterm.format(cells:render({ 'icon', 'text' }))
+end
 
 local function build_choices()
    local choices = {}
@@ -34,11 +43,9 @@ local function build_choices()
 
    -- Add launch menu items (DefaultDomain)
    for _, v in ipairs(launch_menu) do
-      cells:update_segment_text('label_text', v.label)
-
       table.insert(choices, {
          id = tostring(idx),
-         label = wezterm.format(cells:render({ 'icon_default', 'label_text' })),
+         label = label(kinds.default, v.label),
       })
       table.insert(choices_data, {
          args = v.args,
@@ -49,11 +56,9 @@ local function build_choices()
 
    -- Add WSL domains
    for _, v in ipairs(domains.wsl_domains) do
-      cells:update_segment_text('label_text', v.name)
-
       table.insert(choices, {
          id = tostring(idx),
-         label = wezterm.format(cells:render({ 'icon_wsl', 'label_text' })),
+         label = label(kinds.wsl, v.name),
       })
       table.insert(choices_data, {
          domain = { DomainName = v.name },
@@ -63,10 +68,9 @@ local function build_choices()
 
    -- Add SSH domains
    for _, v in ipairs(domains.ssh_domains) do
-      cells:update_segment_text('label_text', v.name)
       table.insert(choices, {
          id = tostring(idx),
-         label = wezterm.format(cells:render({ 'icon_ssh', 'label_text' })),
+         label = label(kinds.ssh, v.name),
       })
       table.insert(choices_data, {
          domain = { DomainName = v.name },
@@ -76,10 +80,9 @@ local function build_choices()
 
    -- Add Unix domains
    for _, v in ipairs(domains.unix_domains) do
-      cells:update_segment_text('label_text', v.name)
       table.insert(choices, {
          id = tostring(idx),
-         label = wezterm.format(cells:render({ 'icon_unix', 'label_text' })),
+         label = label(kinds.unix, v.name),
       })
       table.insert(choices_data, {
          domain = { DomainName = v.name },

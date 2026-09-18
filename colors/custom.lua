@@ -81,9 +81,15 @@ local colorscheme = {
    quick_select_label_fg = { Color = p.crust },
    quick_select_match_bg = { Color = p.surface1 },
    quick_select_match_fg = { Color = p.lavender },
-   -- InputSelector (session restore, backdrop picker, ssh hosts)
-   input_selector_label_bg = { Color = p.sapphire },
-   input_selector_label_fg = { Color = p.crust },
+   -- InputSelector (session restore, backdrop picker, ssh hosts, domain manager)
+   -- Deliberately not a coloured chip. WezTerm draws the SELECTED row in reverse
+   -- video -- each label segment's foreground becomes its background -- but this
+   -- badge keeps its own colour and is never reversed, so a coloured badge always
+   -- clashes with the highlight sitting right beside it. Painting it in the
+   -- terminal background leaves a plain dim number, which makes the highlighted
+   -- row the only coloured thing on the line.
+   input_selector_label_bg = { Color = p.base },
+   input_selector_label_fg = { Color = p.subtext0 },
    -- Launcher (right-click the new-tab button)
    launcher_label_bg = { Color = p.mauve },
    launcher_label_fg = { Color = p.crust },
