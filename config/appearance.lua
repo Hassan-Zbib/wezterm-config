@@ -5,9 +5,13 @@ local colors = require('colors.custom')
 local p = require('colors.palette')
 
 return {
-   -- Half-rate cap on a 240Hz panel; 60 would be a visible downgrade when
-   -- scrolling. Only costs anything while the screen is actually changing.
-   max_fps = 120,
+   -- Quarter-rate on a 240Hz panel. Was 120; dropped while chasing the text
+   -- drift that turned out to be `unicode_version` (see config/general.lua), and
+   -- kept here by choice -- the renderer was never at fault. The earlier note
+   -- claimed 60 was a visible downgrade when scrolling; that was never measured,
+   -- so put 120 back if it turns out to be true.
+   -- Only costs anything while the screen is actually changing.
+   max_fps = 60,
    -- TESTING: WebGpu pinned to the Dx12 dGPU. Known failure modes: WebGpu on the
    -- iGPU stalls on every backdrop swap (it rebuilds the background texture per
    -- set_config_overrides), and on the dGPU it crashed when GHelper powered that

@@ -9,6 +9,19 @@ return {
    status_update_interval = 1000,
    audible_bell = 'SystemBeep',
 
+   -- WezTerm defaults to 9, where an emoji-presentation sequence such as
+   -- U+27A1 U+FE0F measures ONE cell. Ink's string-width -- so Claude Code, and
+   -- every modern TUI -- measures it as two. Each one left WezTerm's cursor a
+   -- column behind the app's, and the error accumulated down the buffer until
+   -- text slid off the left edge; a resize "fixed" it only because the app then
+   -- repainted from its own model. Verified with a CSI 6n probe: that sequence
+   -- is width 1 at version 9 and width 2 at 14, with every other character
+   -- tested (·, §, →, …, CJK) identical across both.
+   --
+   -- Applies to every pane, so a TUI still built against Unicode 9 tables would
+   -- now disagree in the other direction.
+   unicode_version = 14,
+
    -- Per-pane, so this multiplies across every split. 50k lines held roughly
    -- five times the memory of this for no practical gain -- searching back that
    -- far is what the shell's own history is for.
