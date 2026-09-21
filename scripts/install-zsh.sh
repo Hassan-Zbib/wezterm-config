@@ -35,6 +35,22 @@ ZSH_VER="5.9.2"
 PKG="zsh-${ZSH_VER}-1-x86_64.pkg.tar.zst"
 URL="https://mirror.msys2.org/msys/x86_64/${PKG}"
 
+# This package is unpacked into C:\Program Files\Git from an ELEVATED shell, so
+# whatever the mirror hands back runs as admin. mirror.msys2.org is a redirector
+# to community mirrors and pacman is not here to check the package signature, so
+# the hash below is the only thing standing between a bad mirror and SYSTEM.
+# Never skip it, and never "fix" a mismatch by updating the constant to whatever
+# arrived -- that hands the decision straight back to the mirror.
+#
+# Taken from %SHA256SUM% in the canonical package database, NOT from a local
+# download of the package itself (hashing the file you are trying to verify
+# proves nothing). To re-derive when bumping ZSH_VER:
+#
+#   curl -fsSL -o msys.db https://repo.msys2.org/msys/x86_64/msys.db
+#   tar -xf msys.db -C dbx          # Windows' bsdtar; msys.db is zstd
+#   grep -A1 %SHA256SUM% dbx/zsh-<ver>/desc
+PKG_SHA256="9a134200a152d90a0f1820d6aa74c3369d8539c068b523852549d74b16739fa8"
+
 # Windows' bundled bsdtar understands .zst; Git's GNU tar shells out to a zstd
 # binary that Git for Windows does not ship.
 TAR="/c/Windows/System32/tar.exe"
@@ -71,6 +87,30 @@ trap 'rm -rf "$tmp"' EXIT
 
 echo "==> downloading $PKG"
 curl -fsSL -o "$tmp/$PKG" "$URL"
+
+# Hard-fail rather than degrade: a missing sha256sum must not silently turn into
+# an unverified install. It ships with Git for Windows, same as the curl above.
+if ! command -v sha256sum >/dev/null 2>&1; then
+   echo "error: sha256sum not found -- cannot verify $PKG, refusing to unpack." >&2
+   exit 1
+fi
+
+echo "==> verifying checksum"
+# Fed on stdin, not by path: given a filename containing backslashes -- which is
+# what mktemp hands back when TMPDIR is a Windows-style path -- sha256sum
+# switches to its escaped-filename form and prefixes the whole line with '\',
+# which lands in the hash field and fails the compare on a perfectly good file.
+# Reading stdin prints no filename, so there is nothing to escape.
+got="$(sha256sum < "$tmp/$PKG" | cut -d' ' -f1)"
+if [[ "$got" != "$PKG_SHA256" ]]; then
+   echo "error: checksum mismatch for $PKG -- REFUSING to unpack into $DEST." >&2
+   echo "  expected: $PKG_SHA256" >&2
+   echo "  got:      $got" >&2
+   echo "This is either a tampered mirror or an upstream rebuild. Re-derive the" >&2
+   echo "hash from repo.msys2.org (see the comment beside PKG_SHA256) before" >&2
+   echo "touching the constant." >&2
+   exit 1
+fi
 
 echo "==> unpacking into $DEST"
 "$TAR" -xf "$tmp/$PKG" -C "$DEST" \

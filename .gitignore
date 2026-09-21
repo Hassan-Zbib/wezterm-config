@@ -6,6 +6,12 @@
 backdrops/
 backdrops-optimized/
 scripts/optimize-backdrops/
+# Both agent settings files are local-only, deliberately. This repo is public,
+# and a permission allowlist is a personal trust decision about one machine --
+# publishing it silently lowers the guardrails for anyone who clones the repo
+# and opens it in Claude Code. `.claude/commands/` stays tracked; those are
+# genuinely shareable.
+.claude/settings.json
 .claude/settings.local.json
 /state.json
 

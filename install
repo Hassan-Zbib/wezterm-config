@@ -4,12 +4,20 @@ set -e
 BASEDIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$BASEDIR"
 
-git -C dotbot pull origin master || true
-
-# dotbot vendors PyYAML as a nested submodule and puts lib/pyyaml/lib on
-# sys.path itself. The pull above moves the pin, and a fresh clone never had it,
-# so without this dotbot dies with `ModuleNotFoundError: No module named 'yaml'`.
-git -C dotbot submodule update --init --recursive || true
+# Check out dotbot at the commit this repo pins, and no further.
+#
+# There was a `git -C dotbot pull origin master` here. It was removed
+# deliberately: it fast-forwarded the submodule to whatever upstream HEAD
+# happened to be and then executed it as Python, on every install, which is
+# exactly the compromise that pinning a submodule exists to prevent. To take a
+# newer dotbot, move the pin explicitly and commit it:
+#
+#   git -C dotbot fetch origin && git -C dotbot checkout <rev> && git add dotbot
+#
+# dotbot also vendors PyYAML as a nested submodule and puts lib/pyyaml/lib on
+# sys.path itself, and a fresh clone never has it, so without --recursive dotbot
+# dies with `ModuleNotFoundError: No module named 'yaml'`.
+git submodule update --init --recursive || true
 
 # dotbot/bin/dotbot is a polyglot shim that re-execs itself under an
 # interpreter it finds by probing for `python3` then `python`. Neither exists on

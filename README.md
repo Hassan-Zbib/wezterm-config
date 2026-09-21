@@ -78,6 +78,28 @@ git clone --recursive https://github.com/Hassan-Zbib/wezterm-config ~/Desktop/Gi
 
 ### 3. Install (symlink all configs)
 
+> [!WARNING]
+> **`./install` replaces your existing dotfiles, and does not back them up.**
+> Dotbot runs with `force: true`, so every target in the table below is deleted
+> and replaced with a symlink into this repo — including `~/.gitconfig` (which
+> carries **someone else's** name and email), `~/.bashrc`, `~/.zshrc`,
+> `~/.vimrc`, and your PowerShell profile. The `force` is deliberate: it is what
+> lets a re-run repair a link that another tool overwrote with a real file.
+>
+> If you have dotfiles you care about, back them up first:
+>
+> ```bash
+> mkdir -p ~/dotfiles-backup
+> for f in .wezterm.lua .bashrc .bash_profile .zshrc .zprofile .zshenv \
+>          .zsh_plugins.txt .inputrc .gitconfig .vimrc; do
+>    [ -e "$HOME/$f" ] && cp -L "$HOME/$f" ~/dotfiles-backup/
+> done
+> cp -rL ~/.config ~/dotfiles-backup/.config 2>/dev/null
+> ```
+>
+> To preview what would change without touching anything, dry-run it:
+> `./install --only link --dry-run`
+
 ```bash
 cd ~/Desktop/GitHub/wezterm-config
 ./install
