@@ -12,11 +12,25 @@ return {
    -- so put 120 back if it turns out to be true.
    -- Only costs anything while the screen is actually changing.
    max_fps = 60,
-   -- TESTING: WebGpu pinned to the Dx12 dGPU. Known failure modes: WebGpu on the
-   -- iGPU stalls on every backdrop swap (it rebuilds the background texture per
-   -- set_config_overrides), and on the dGPU it crashed when GHelper powered that
-   -- off on battery. Set front_end back to 'OpenGL' if either reappears.
-   front_end = 'WebGpu', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   -- OpenGL, not WebGpu. On nightly 20260917-114457-b09b56c2 WebGpu leaked
+   -- committed memory at ~100MB/s until the GUI hung (AppHangB1): 67GB of
+   -- private bytes with the system commit limit at 99%, past which Windows
+   -- refuses to create processes at all. The symptoms did not look like a
+   -- renderer bug -- every command a shell ran died with `permission denied`
+   -- (MSYS maps the failed CreateProcess to EACCES), and the status bar RAM
+   -- segment went blank because run_child_process could not spawn `ramload.exe`
+   -- or the PowerShell fallback either.
+   --
+   -- Growth was smooth, not stepped every `auto_rotate_interval`, so this is a
+   -- per-frame reallocation of the background texture rather than the backdrop
+   -- swap in utils/backdrops.lua -- ~100MB/s over max_fps 60 is ~1.7MB a frame.
+   --
+   -- Two older WebGpu failures, still relevant if this is ever reverted: on the
+   -- iGPU it stalls on every backdrop swap (it rebuilds the background texture
+   -- per set_config_overrides), and on the dGPU it crashed when GHelper powered
+   -- that off on battery.
+   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   -- Both inert under OpenGL, kept so switching back is a one-word change.
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),

@@ -38,7 +38,15 @@ __wezterm_command_finished() {
 }
 
 # ---- Skip heavy init when running inside Claude Code ----
-if [[ -z "$CLAUDECODE" ]]; then
+# The `$-` test is not redundant with the CLAUDECODE one. Claude Code builds a
+# shell snapshot by sourcing this file in a NON-interactive bash before it sets
+# CLAUDECODE, so the guard below was open at that moment and the DEBUG trap got
+# installed. Every command the snapshot then ran fired it, and those OSC 133;C
+# bytes were captured into the recorded value -- producing a snapshot line of
+# `export PATH='<28x ESC]133;C ESC\>/c/Users/hassa/bin:...'` that every later
+# bash inherited. Nothing in here (starship, bind, PROMPT_COMMAND, the trap) has
+# any meaning without a tty, so require interactivity too.
+if [[ -z "$CLAUDECODE" && $- == *i* ]]; then
    # ---- Starship Prompt ----
    eval "$(starship init bash)"
 
