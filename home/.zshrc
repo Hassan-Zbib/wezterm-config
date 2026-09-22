@@ -23,6 +23,14 @@ _cached_init() {
    source $cache
 }
 
+# ---- SHELL ----
+# The MSYS runtime sets SHELL from /etc/passwd (bash), and .zprofile's cached
+# /etc/profile environment carries that over, so tools that open "your shell"
+# (lazygit, vim's :sh, fzf previews outside fzf-tab) started bash. The POSIX
+# path is fine for native programs: MSYS rewrites SHELL to the Windows path
+# when it spawns them. Set here rather than .zshenv so scripts are unaffected.
+[[ -x /usr/bin/zsh ]] && export SHELL=/usr/bin/zsh
+
 # ---- WezTerm Shell Integration ----
 # OSC 7: Tracks current directory so WezTerm tab title updates automatically.
 # This runs on every prompt, so the percent-encoding is done with parameter
@@ -152,6 +160,12 @@ if (( $+commands[carapace] )); then
       (( compstate[nmatches] > _nm ))
    }
 fi
+
+# ---- herdr ----
+# carapace has no spec for herdr, so Tab fell back to filenames. herdr ships
+# its own clap-generated completion; like the carapace init it ends in a
+# `compdef`, so it must come after compinit.
+(( $+commands[herdr] )) && _cached_init herdr herdr completion zsh
 
 # ---- Key bindings ----
 # zsh uses ZLE, not GNU Readline, so it reads neither ~/.inputrc nor Git's
@@ -404,6 +418,21 @@ ZSH_HIGHLIGHT_MAXLENGTH=512
 # fzf-tab needs zsh's own menu off so it can capture the completion list.
 zstyle ':completion:*' menu no
 zstyle ':fzf-tab:*' switch-group ',' '.'
+# fzf-tab launches fzf with SHELL=$ZSH_NAME, i.e. the bare word `zsh`. The
+# native Windows fzf resolves that against the cwd, not PATH, so every preview
+# failed with `exec: "<cwd>\zsh": executable file not found`. --with-shell
+# overrides it, but fzf splits the value on whitespace without honouring
+# quotes, so "C:/Program Files/..." breaks too -- hence the 8.3 short path.
+# zstyle -e defers the cygpath fork to the first Tab instead of every startup.
+if [[ $OSTYPE == (msys|cygwin)* ]]; then
+   zstyle -e ':fzf-tab:*' fzf-flags '
+      (( ${+_ftb_zsh} )) || _ftb_zsh=$(\command cygpath -m -s $commands[zsh] 2>/dev/null)
+      if [[ -n $_ftb_zsh && $_ftb_zsh != *" "* ]]; then
+         reply=(--with-shell "$_ftb_zsh -c")
+      else
+         reply=()
+      fi'
+fi
 # Directories preview through eza, files through bat.
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza --icons --color=always -1 -- $realpath'
 zstyle ':fzf-tab:complete:z:*'  fzf-preview 'eza --icons --color=always -1 -- $realpath'
