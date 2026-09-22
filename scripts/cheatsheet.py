@@ -9,8 +9,13 @@ which is also how the layout is regression-checked (`--all`).
 import os
 import re
 import sys
+import json
+import time
 import shutil
+import threading
+import subprocess
 import unicodedata
+import urllib.request
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 BLU = '\033[38;2;138;173;244m'
@@ -20,6 +25,7 @@ GRN = '\033[38;2;166;218;149m'
 DIM = '\033[38;2;110;115;141m'
 TXT = '\033[38;2;202;211;245m'
 BLD = '\033[1m'
+UND = '\033[4m'
 RST = '\033[0m'
 
 COL_W   = 46
@@ -62,6 +68,18 @@ def wlen(s):
             i += 1
     return w
 
+
+def trunc(text, width):
+    """Cut to `width` display columns, with an ellipsis when it does not fit."""
+    if wlen(text) <= width:
+        return text
+    out = ''
+    for ch in text:
+        if wlen(out) + wlen(ch) > width - 1:
+            break
+        out += ch
+    return out + '…'
+
 # ── Builders ──────────────────────────────────────────────────────────────────
 # Panels are pre-coloured lines, which throws away the (key, desc) pair search
 # needs, so row() records each pair as a side effect while panels are built.
@@ -73,18 +91,28 @@ _NOTES    = {}         # panel title -> [note text]; searched as a fallback only
 _PANEL    = [None]
 _SUB      = [None]
 
+# The home page is re-composed whenever the version check advances, which runs
+# row()/note() again long after INDEX was built. Recording is switched off after
+# the import pass so those rebuilds do not append duplicates to _ROWS/_NOTES.
+_RECORD   = [True]
 
-def header(title):
+
+def header(title, width=COL_W):
+    """Panel title and its rule. `width` only varies for single-panel pages,
+    where the rule can be drawn to match content wider than a column."""
     _PANEL[0] = title
     _SUB[0] = None
     return [
         f'{BLD}{CYN}  {title}{RST}',
-        f'{DIM}  {"─" * COL_W}{RST}',
+        f'{DIM}  {"─" * width}{RST}',
     ]
 
 def row(key, desc):
-    _ROWS.append((_PANEL[0], _SUB[0], key, desc))
-    pad = max(22 - wlen(key), 0)
+    if _RECORD[0]:
+        _ROWS.append((_PANEL[0], _SUB[0], key, desc))
+    # At least one space: a key of 22 columns or more would otherwise run
+    # straight into its description with no gap at all.
+    pad = max(22 - wlen(key), 1)
     return [f'  {BLD}{YLW}{key}{RST}{" " * pad}{TXT}{desc}{RST}']
 
 def sub(label):
@@ -95,7 +123,8 @@ def blank():
     return ['']
 
 def note(text):
-    _NOTES.setdefault(_PANEL[0], []).append(text)
+    if _RECORD[0]:
+        _NOTES.setdefault(_PANEL[0], []).append(text)
     return [f'  {DIM}{text}{RST}']
 
 def compose_cols(cols):
@@ -938,6 +967,322 @@ _HERDR_SERVER = (
         note('only needed for shell changes.')
 )
 
+# ── Nightly version check ─────────────────────────────────────────────────────
+# The home page answers "am I current, and what would I get if I upgraded?".
+# `wezterm --version` prints "<build stamp>-<commit>", and that trailing commit
+# is what makes the rest possible. Two API calls, because neither half of the
+# answer is available on its own:
+#
+#   1. the rolling `nightly` release, for when the installer was last rebuilt.
+#      The tag itself tells us nothing -- `published_at` is frozen in 2019 and
+#      no asset name carries a version -- so the asset mtime is the only signal.
+#   2. compare/<local commit>...main, for everything that landed since.
+#
+# Commits newer than that mtime are then dropped, so the changelog describes the
+# build you would actually install rather than whatever is on main this second.
+# Skipping that filter overstates the gap by a day or two of commits.
+#
+# All of it is best-effort. The check runs on a daemon thread so the pager opens
+# instantly, the panels render from whatever state has arrived so far, and any
+# failure falls back to the cached answer or a one-line reason. `--selftest`
+# drives the states synthetically and never touches the network.
+_API     = 'https://api.github.com/repos/wezterm/wezterm'
+_ASSET   = 'WezTerm-nightly-setup.exe'
+_TTL     = 6 * 3600        # the nightly rebuilds daily; 6h stays well inside
+_TIMEOUT = 8
+
+_HOME    = 0               # index of the home page in PAGES
+_HOME_H  = 26              # the home panel is pinned to this many lines
+
+# The compare URL is the widest thing on the page, and the panel rule is drawn
+# to match it so the panel reads as one deliberate block rather than a
+# 46-column panel with a URL hanging off the side. Written as the template it
+# measures, since the sha is always abbreviated to 8.
+_COMPARE = 'https://github.com/wezterm/wezterm/compare/{}...main'
+_HOME_W  = len(_COMPARE.format('0' * 8))
+
+# Mutated by the worker thread, read by the renderer. _GEN lets run() notice a
+# result arrived without diffing the composed frame.
+_VER      = {'state': 'checking'}
+_VER_LOCK = threading.Lock()
+_GEN      = [0]
+
+
+def _ver_state():
+    with _VER_LOCK:
+        return dict(_VER)
+
+
+_BUILD_RE = re.compile(r'(\d{8}-\d{6})-([0-9a-f]{7,40})')
+
+
+def _version_candidates():
+    """Binaries to ask for a version, best first.
+
+    Not $WEZTERM_EXECUTABLE. That points at whichever binary owns the pane,
+    and in a normal window it is wezterm-gui.exe -- which answers --version
+    with "wezterm-gui someone forgot to call assign_version_info" and no
+    version at all. Its directory is still the right place to look, because
+    wezterm.exe sits beside it and reports properly; only under the mux server
+    does $WEZTERM_EXECUTABLE happen to answer for itself.
+    """
+    exe = 'wezterm.exe' if os.name == 'nt' else 'wezterm'
+    here = (os.environ.get('WEZTERM_EXECUTABLE_DIR')
+            or os.path.dirname(os.environ.get('WEZTERM_EXECUTABLE') or ''))
+    return ([os.path.join(here, exe)] if here else []) + ['wezterm']
+
+
+def installed_build():
+    """(build stamp, commit) of the installed wezterm, or (None, None)."""
+    for cand in _version_candidates():
+        try:
+            out = subprocess.run([cand, '--version'], capture_output=True,
+                                 text=True, timeout=_TIMEOUT)
+        except (OSError, subprocess.SubprocessError):
+            continue
+        m = _BUILD_RE.search(out.stdout or '')
+        if m:
+            return m.group(1), m.group(2)
+    return None, None
+
+
+def _cache_file():
+    base = (os.environ.get('XDG_CACHE_HOME')
+            or os.environ.get('LOCALAPPDATA')
+            or os.path.join(os.path.expanduser('~'), '.cache'))
+    return os.path.join(base, 'wezterm-cheatsheet', 'nightly.json')
+
+
+def _cache_read():
+    try:
+        with open(_cache_file(), encoding='utf-8') as fh:
+            got = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    return got if isinstance(got, dict) and got.get('state') == 'ok' else None
+
+
+def _cache_write(data):
+    path = _cache_file()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as fh:
+            json.dump(data, fh)
+    except OSError:
+        pass                  # a cache we cannot write is not worth failing over
+
+
+def _api(path):
+    req = urllib.request.Request(f'{_API}{path}', headers={
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': 'wezterm-cheatsheet',
+    })
+    with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:
+        return json.load(resp)
+
+
+def _fetch(commit):
+    """Compare `commit` against the currently published nightly installer."""
+    assets = _api('/releases/tags/nightly').get('assets') or []
+    built = next((a.get('updated_at') for a in assets
+                  if a.get('name') == _ASSET), None)
+    diff = _api(f'/compare/{commit}...main')
+    listed = diff.get('commits') or []
+    # Both stamps are GitHub's own "...Z" ISO-8601, so they order as strings.
+    # Only the shas are kept: the page links to the compare view rather than
+    # reproducing the subjects, so there is no reason to cache them.
+    shas = [c['sha'] for c in listed
+            if not built or c['commit']['committer']['date'] <= built]
+    return {
+        'state':  'ok',
+        'built':  built,
+        'latest': shas[-1] if shas else commit,
+        'behind': len(shas),
+        # compare/ stops listing at 250 while total_commits keeps counting
+        'capped': (diff.get('total_commits') or 0) > len(listed),
+        'at':     time.time(),
+    }
+
+
+def _why(exc):
+    """A reason short enough to sit in a 46-column panel."""
+    code = getattr(exc, 'code', None)
+    if code == 403:
+        return 'github rate-limited us'
+    if code == 404:
+        return 'commit unknown to github'
+    if code:
+        return f'github returned HTTP {code}'
+    return 'offline, or github unreachable'
+
+
+def _check():
+    build, commit = installed_build()
+    if not commit:
+        _publish({'state': 'error', 'msg': 'cannot read the local version'})
+        return
+    # The local build needs no network, so show it before going out to github
+    # rather than leaving "Installed: unknown" on screen for the round trip.
+    _publish({'state': 'checking', 'build': build, 'base': commit})
+    cached = _cache_read()
+    fresh = (cached and cached.get('base') == commit
+             and time.time() - (cached.get('at') or 0) < _TTL)
+    if fresh:
+        _publish(dict(cached, build=build))
+        return
+    try:
+        got = _fetch(commit)
+    except Exception as exc:          # noqa: BLE001 -- URLError, HTTPError,
+        # socket timeouts, malformed JSON and any future schema drift all land
+        # here. A cheat sheet showing a stale version is fine; one that dies on
+        # a flaky network is not.
+        if cached and cached.get('base') == commit:
+            _publish(dict(cached, build=build, stale=True))
+        else:
+            _publish({'state': 'error', 'msg': _why(exc),
+                      'build': build, 'base': commit})
+        return
+    got['base'] = commit
+    _cache_write(got)
+    _publish(dict(got, build=build))
+
+
+def _publish(state):
+    """Swap in a new home page. Called from the worker thread.
+
+    Order matters: the panels go in, then their memoised bodies are dropped,
+    and only then does _GEN move. run() watches _GEN, so by the time it sees a
+    change both the panels and the cache are already consistent.
+    """
+    with _VER_LOCK:
+        _VER.clear()
+        _VER.update(state)
+    PAGES[_HOME] = PAGES[_HOME][:2] + (_home_panels(),)
+    for key in [k for k in _BODY_CACHE if k[0] == _HOME]:
+        del _BODY_CACHE[key]
+    _GEN[0] += 1
+
+
+def start_check():
+    """Kick the check off in the background. Never raises."""
+    threading.Thread(target=_check, daemon=True).start()
+
+
+def load_cached():
+    """Synchronous, cache-only refresh, for the non-interactive dump."""
+    cached = _cache_read()
+    build, commit = installed_build()
+    if cached and cached.get('base') == commit:
+        stale = time.time() - (cached.get('at') or 0) >= _TTL
+        _publish(dict(cached, build=build, stale=stale))
+    elif commit:
+        _publish({'state': 'error', 'msg': 'not checked yet',
+                  'build': build, 'base': commit})
+
+
+# ── Home page ─────────────────────────────────────────────────────────────────
+def _stamp(build):
+    """20260823-230148 -> 2026-08-23 23:01, to line up with the API's stamps."""
+    if not build or len(build) < 13:
+        return 'unknown'
+    return f'{build[0:4]}-{build[4:6]}-{build[6:8]} {build[9:11]}:{build[11:13]}'
+
+
+def _utc(iso):
+    return f'{iso[0:10]} {iso[11:16]}' if iso and len(iso) >= 16 else 'unknown'
+
+
+def _verdict(st):
+    """The one line that answers the question, coloured by the answer."""
+    state = st.get('state')
+    if state == 'checking':
+        return [f'  {DIM}checking github…{RST}']
+    if state != 'ok':
+        return [f'  {BLD}{DIM}✗ {trunc(st.get("msg") or "check failed", 44)}{RST}']
+    behind = st.get('behind') or 0
+    if not behind:
+        return [f'  {BLD}{GRN}✔ up to date{RST}']
+    plural = '' if behind == 1 else 's'
+    return [f'  {BLD}{YLW}▲ {behind}{"+" if st.get("capped") else ""} '
+            f'commit{plural} behind{RST}']
+
+
+def _fix(lines):
+    """Pin a home panel to exactly _HOME_H lines.
+
+    The masthead is sized off the tallest page, so a page that grew when the
+    check landed would pop the banner in and out. _HOME_H is chosen to stay
+    under the tallest static page at every column count -- see --selftest.
+    """
+    return (lines + [''] * _HOME_H)[:_HOME_H]
+
+
+def _ver_row(stamp, commit):
+    """A build line, shaped like row() but kept out of the search index.
+
+    Both values are dynamic, so indexing them would put whatever the check
+    happened to return at import -- "unknown", an empty commit -- into INDEX.
+    """
+    return [f'  {BLD}{YLW}{stamp}{RST}{" " * max(22 - wlen(stamp), 1)}'
+            f'{TXT}{commit}{RST}']
+
+
+def _changelog_lines(st):
+    """Where to read what landed, rather than a copy of it.
+
+    The URL is written out in full, scheme and all, because that is what makes
+    it clickable: the bare-URL rule in config/general.lua needs the `\\w+://`
+    to fire, and a shortened host would just be text. It is the one line on the
+    page allowed past COL_W -- the home page is a single panel, so there is no
+    neighbouring column for it to run into. See _check_panel_widths().
+    """
+    if st.get('state') != 'ok' or not st.get('behind'):
+        return []
+    plural = '' if st.get('behind') == 1 else 's'
+    count = f'{st.get("behind")}{"+" if st.get("capped") else ""}'
+    url = _COMPARE.format((st.get('base') or '')[:8])
+    return (
+        sub(f'Changelog · {count} commit{plural}') +
+        [f'  {UND}{BLU}{url}{RST}'] +
+        blank()
+    )
+
+
+def _status_panel(st):
+    stale = st.get('stale') and st.get('state') == 'ok'
+    return (
+        header('📦 Nightly Build', _HOME_W) +
+        _verdict(st) +
+        ([f'  {DIM}(from cache — may be out of date){RST}'] if stale else []) +
+        blank() +
+        sub('Installed') +
+        _ver_row(_stamp(st.get('build')), (st.get('base') or '')[:8]) +
+        blank() +
+        sub('Latest nightly') +
+        _ver_row(_utc(st.get('built')), (st.get('latest') or '')[:8]) +
+        blank() +
+        _changelog_lines(st) +
+        sub('Upgrade') +
+        # Whole path as the key, empty description: row() would otherwise pad
+        # the key column and split "scripts/" from the filename.
+        row('scripts/wezterm-upgrade.sh', '') +
+        blank() +
+        note('Downloads the installer, checks it') +
+        note('against the .sha256 published beside') +
+        note('it, and tells you when to close') +
+        note('WezTerm. --install runs it for you.') +
+        blank() +
+        note('winget cannot upgrade the nightly: the') +
+        note('rolling tag leaves its recorded hash') +
+        note('stale, so the upgrade always fails the') +
+        note('hash check.')
+    )
+
+
+def _home_panels():
+    return [_fix(_status_panel(_ver_state()))]
+
+
 # ── Pages ─────────────────────────────────────────────────────────────────────
 # (group, tab label, panels). One page is one screen. Groups are only a label
 # on the tab strip -- navigation is flat, 1..N.
@@ -945,7 +1290,12 @@ _HERDR_SERVER = (
 # Pages are capped at three panels so a page is a single row at 3 AND 4 columns.
 # A fourth wraps below 209 columns and forces scrolling. `--selftest` guards
 # this, since the repo has no test runner.
+#
+# Home is index 0 (_HOME) and is the only page rebuilt after import: _publish()
+# swaps its panels in as the version check advances. Its panel titles must stay
+# constant across every state, because INDEX joins rows to pages by title.
 PAGES = [
+    ('WEZTERM', 'Home',      _home_panels()),
     ('WEZTERM', 'Core',      [_QUICK_ACTIONS, _TABS, _PANES]),
     ('WEZTERM', 'Workspace', [_WORKSPACES, _SESSIONS, _MUX]),
     ('WEZTERM', 'Editing',   [_CURSOR, _COPY_MODE, _SCROLLING]),
@@ -988,6 +1338,7 @@ def _build_panel_text():
 
 INDEX = _build_index()
 PANEL_TEXT = _build_panel_text()
+_RECORD[0] = False        # import pass over; later home rebuilds must not record
 
 
 def search(query):
@@ -1145,20 +1496,11 @@ def frame(active, scroll, size):
     """Build the full screen as a list of lines, plus the clamped scroll offset."""
     cols = num_cols(size.columns)
     head = _masthead(size, cols) + [tab_strip(active, size.columns), '']
-    hints = f'←/→ page  ·  1-{len(PAGES)} jump  ·  / search  ·  q quit'
+    # Jumping reads one keypress, so it only ever reaches page 9 however many
+    # pages there are. Claim what actually works.
+    hints = (f'←/→ page  ·  1-{min(9, len(PAGES))} jump  ·  '
+             f'/ search  ·  q quit')
     return _fit(head, page_body(active, cols), hints, size, scroll)
-
-
-def trunc(text, width):
-    """Cut to `width` display columns, with an ellipsis when it does not fit."""
-    if wlen(text) <= width:
-        return text
-    out = ''
-    for ch in text:
-        if wlen(out) + wlen(ch) > width - 1:
-            break
-        out += ch
-    return out + '…'
 
 
 def search_body(results, tokens, sel, width):
@@ -1279,7 +1621,12 @@ else:
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
 def dump():
-    """Non-interactive fallback: every page, top to bottom."""
+    """Non-interactive fallback: every page, top to bottom.
+
+    Cache-only: a dump piped into a pager or a diff must not stall on the
+    network. `--selftest` is what actually pins the layout down.
+    """
+    load_cached()
     cols = num_cols(shutil.get_terminal_size((160, 40)).columns)
     for i, (group, label, _) in enumerate(PAGES):
         print(f'\n  {BLD}{BLU}{"═" * 60}{RST}')
@@ -1311,11 +1658,112 @@ def _screen_width(line):
     return rightmost
 
 
+# Synthetic version-check results, so --selftest covers every home-page state
+# without a network call.
+_DEMO = [
+    # _check() publishes up to three times: before it knows anything, once the
+    # local build is read, then the result. All three render.
+    ('opening',  {'state': 'checking'}),
+    ('probed',   {'state': 'checking', 'build': '20260823-230148',
+                  'base': 'f93d9035'}),
+    ('error',    {'state': 'error', 'msg': 'offline, or github unreachable',
+                  'build': '20260823-230148', 'base': 'f93d9035'}),
+    ('noversion', {'state': 'error', 'msg': 'cannot read the local version'}),
+    ('current',  {'state': 'ok', 'build': '20260921-040521', 'base': 'b09b56c2',
+                  'built': '2026-09-21T04:05:21Z', 'latest': 'b09b56c2',
+                  'behind': 0, 'capped': False}),
+    ('behind',   {'state': 'ok', 'build': '20260823-230148', 'base': 'f93d9035',
+                  'built': '2026-09-21T04:05:21Z', 'latest': 'b09b56c2',
+                  'behind': 40, 'capped': False}),
+    ('one',      {'state': 'ok', 'build': '20260823-230148', 'base': 'f93d9035',
+                  'built': '2026-09-21T04:05:21Z', 'latest': 'b09b56c2',
+                  'behind': 1, 'capped': False}),
+    ('stale',    {'state': 'ok', 'build': '20260823-230148', 'base': 'f93d9035',
+                  'built': '2026-09-21T04:05:21Z', 'latest': 'b09b56c2',
+                  'behind': 2, 'capped': False, 'stale': True}),
+    ('capped',   {'state': 'ok', 'build': '20260101-000000', 'base': 'deadbeef',
+                  'built': '2026-09-21T04:05:21Z', 'latest': 'b09b56c2',
+                  'behind': 250, 'capped': True}),
+]
+
+
+def _check_frames(label, pages, sizes, bad):
+    """Assert every frame in `pages` exactly fills the screen and fits it."""
+    import types
+    for w, h in sizes:
+        size = types.SimpleNamespace(columns=w, lines=h)
+        for i in pages:
+            lines, _ = frame(i, 0, size)
+            if len(lines) != h:
+                print(f'  FAIL {label} {w}x{h} page {i + 1}: '
+                      f'{len(lines)} lines, want {h}')
+                bad += 1
+            for n, ln in enumerate(lines):
+                if _screen_width(ln) > w:
+                    print(f'  FAIL {label} {w}x{h} page {i + 1} line {n}: '
+                          f'{_screen_width(ln)} cols, want <= {w}')
+                    bad += 1
+                    break
+    return bad
+
+
+def _check_panel_widths(bad):
+    """Assert no panel overruns its own column, on every multi-panel page.
+
+    Composed lines jump columns with CSI G, so a panel that runs past its 48
+    columns is invisible to _screen_width -- it silently overwrites the next
+    separator instead of making the line longer. Measure before composing.
+
+    Pages with a single panel are exempt, because there is no next column to
+    overwrite: compose_cols() emits the panel alone, with no CSI G at all. The
+    only bound there is the terminal itself, which _check_frames already
+    enforces at every size down to 80 columns. That is what lets the home page
+    print a full clickable URL.
+    """
+    for _, label, panels in PAGES:
+        if len(panels) < 2:
+            continue
+        for panel in panels:
+            for n, ln in enumerate(panel):
+                if wlen(ln) > COL_W + 2:
+                    print(f'  FAIL panel width {label} line {n}: '
+                          f'{wlen(ln)} cols, want <= {COL_W + 2}: {ANSI.sub("", ln)!r}')
+                    bad += 1
+                    break
+    return bad
+
+
 def selftest():
     """Check the layout invariants the panel content is easy to break."""
     import types
     bad = 0
-    for w, h in ((230, 62), (209, 60), (208, 50), (156, 40), (120, 30), (80, 20)):
+    sizes = ((230, 62), (209, 60), (208, 50), (156, 40), (120, 30), (80, 20))
+
+    # The home page is rebuilt at runtime, so each state it can reach has to
+    # obey the same contract as the static pages.
+    for name, st in _DEMO:
+        _publish(st)
+        for panel in PAGES[_HOME][2]:
+            if len(panel) != _HOME_H:
+                print(f'  FAIL home/{name}: panel is {len(panel)} lines, '
+                      f'want _HOME_H={_HOME_H}')
+                bad += 1
+        # The masthead is sized off the tallest page. If home ever becomes the
+        # tallest, the banner starts popping in and out as the check lands.
+        for cols in (1, 2, 3, 4):
+            home = len(page_body(_HOME, cols))
+            other = max(len(page_body(i, cols)) for i in range(1, len(PAGES)))
+            if home > other:
+                print(f'  FAIL home/{name}: cols={cols} home is {home} lines, '
+                      f'taller than the tallest static page ({other})')
+                bad += 1
+        was = bad
+        bad = _check_frames(f'home/{name}', [_HOME], sizes, bad)
+        bad = _check_panel_widths(bad)
+        print(f'  home/{name:8s}  {"ok" if bad == was else "FAILED"}')
+
+    _publish(dict(dict(_DEMO)['behind']))   # a realistic state for the sweep
+    for w, h in sizes:
         size = types.SimpleNamespace(columns=w, lines=h)
         cols = num_cols(w)
         tallest = max(len(page_body(i, cols)) for i in range(len(PAGES)))
@@ -1333,17 +1781,7 @@ def selftest():
                               f'{_screen_width(ln)} cols, want <= {w}')
                         bad += 1
                         break
-        for i in range(len(PAGES)):
-            lines, _ = frame(i, 0, size)
-            if len(lines) != h:
-                print(f'  FAIL {w}x{h} page {i + 1}: {len(lines)} lines, want {h}')
-                bad += 1
-            for n, ln in enumerate(lines):
-                if _screen_width(ln) > w:
-                    print(f'  FAIL {w}x{h} page {i + 1} line {n}: '
-                          f'{_screen_width(ln)} cols, want <= {w}')
-                    bad += 1
-                    break
+        bad = _check_frames('page', range(len(PAGES)), ((w, h),), bad)
         print(f'  {w}x{h}  cols={cols}  tallest page={tallest} lines')
     print('FAILED' if bad else 'OK')
     return 1 if bad else 0
@@ -1353,14 +1791,17 @@ BKSP = ('\x08', '\x7f')
 
 
 def run():
-    active, scroll, last = 0, 0, None
+    active, scroll, last = _HOME, 0, None
     searching, query, sel, results = False, '', 0, []
+    start_check()
     sys.stdout.write('\033[?1049h\033[?25l\033]0;WezTerm Cheat Sheet\007')
     try:
         with Keys() as keys:
             while True:
                 size = shutil.get_terminal_size((160, 40))
-                state = (active, scroll, size, searching, query, sel)
+                # _GEN advances when the version check lands, which changes the
+                # home page underneath us without any keypress.
+                state = (active, scroll, size, searching, query, sel, _GEN[0])
                 if state != last:
                     if searching:
                         lines, scroll = search_frame(query, results, sel, scroll, size)
@@ -1369,7 +1810,7 @@ def run():
                     sys.stdout.write('\033[H' + '\r\n'.join(
                         '\033[2K' + ln for ln in lines) + '\033[J')
                     sys.stdout.flush()
-                    last = (active, scroll, size, searching, query, sel)
+                    last = (active, scroll, size, searching, query, sel, _GEN[0])
 
                 k = keys.poll(0.1)
                 if k is None:
