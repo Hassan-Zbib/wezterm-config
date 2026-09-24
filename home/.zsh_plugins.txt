@@ -52,6 +52,12 @@ zsh-users/zsh-syntax-highlighting
 # zcompile was tried first and made no measurable difference -- the cost is the
 # widget wrapping itself, not parsing the file.
 #
+# Re-measured since: sourcing is ~3ms and one bind pass ~25ms. Most of the
+# deferred cost was zsh-defer's own follow-up (precmd hooks + reset-prompt, i.e.
+# a second starship fork) while keys waited. ~/.zshrc turns that off with the
+# `defer-options` zstyle, which antidote reads only when it regenerates the
+# bundle -- touch this file after changing it.
+#
 # Loading it after zsh-syntax-highlighting is the order its README warns about,
 # but it was verified working here; if suggestions ever stop appearing, drop
 # the `kind:defer` and it goes back to eager loading.

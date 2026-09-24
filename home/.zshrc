@@ -76,16 +76,26 @@ if [[ -z "$CLAUDECODE" ]]; then
    # zsh reads '' as end-quote + start-quote, leaving the "C:\Program Files"
    # path unquoted, so every prompt fails with "no such file or directory:
    # /c/Program". Re-quote with " before caching. bash is unaffected.
+   #
+   # The init also ends in PROMPT2="$(starship prompt --continuation)", a fork
+   # on every startup (~40ms, far more when the machine is busy) for a string
+   # that only changes with starship.toml. Bake the rendered value into the
+   # cache instead, and regenerate when the config changes too.
    _starship_cache="$_zc/starship.zsh"
-   if [[ ! -s $_starship_cache || ${commands[starship]} -nt $_starship_cache ]]; then
+   _starship_toml="${STARSHIP_CONFIG:-$HOME/.config/starship.toml}"
+   if [[ ! -s $_starship_cache || ${commands[starship]} -nt $_starship_cache \
+         || $_starship_toml -nt $_starship_cache ]]; then
       _starship_init="$(starship init zsh)"
       _starship_init=${_starship_init//\$\(\'\'/\$\(\"}
       _starship_init=${_starship_init//\'\' prompt/\" prompt}
-      print -r -- "$_starship_init" >| $_starship_cache
+      {
+         print -rl -- "${(@)${(@f)_starship_init}:#PROMPT2=*}"
+         print -r -- "PROMPT2=${(qq)$(starship prompt --continuation)}"
+      } >| $_starship_cache
       unset _starship_init
    fi
    source $_starship_cache
-   unset _starship_cache
+   unset _starship_cache _starship_toml
 
    # `starship init zsh` also sets RPROMPT, so zsh spawns a SECOND starship
    # process per prompt. starship.toml has no `right_format`, so it returns zero
@@ -98,12 +108,25 @@ fi
 # ---- Completion ----
 # compaudit (the insecure-directory scan) is the slow half of compinit. Run the
 # full check at most once a day; otherwise -C trusts the existing dump.
+#
+# The glob sits in an array assignment on purpose. Inside [[ ]] a (#q...)
+# qualifier only globs under EXTENDED_GLOB, which is off here, so the old
+# `-n $dump(#qN.mh+24)` test was a non-empty string -- always true, and
+# compaudit ran on every tab (~80ms, more under load).
+#
+# The age is read off a stamp written after each full check, not the dump:
+# compinit only rewrites the dump when fpath changes, so once the dump is a day
+# old its mtime would keep the full check running every time anyway.
 autoload -Uz compinit
-if [[ ! -s $_zc/zcompdump || -n $_zc/zcompdump(#qN.mh+24) ]]; then
+_cstamp=$_zc/compaudit.stamp
+_cstale=($_cstamp(N.mh+24))
+if [[ ! -s $_zc/zcompdump || ! -e $_cstamp || -n $_cstale ]]; then
    compinit -d "$_zc/zcompdump"
+   print -r -- ok >| $_cstamp
 else
    compinit -C -d "$_zc/zcompdump"
 fi
+unset _cstamp _cstale
 
 # Fall back to plain filename completion when the command's own completer came
 # up empty. zsh only runs the second completer when the first matched nothing,
@@ -313,7 +336,23 @@ alias bt='btop'
 #
 # This also prepends `atuin` to ZSH_AUTOSUGGEST_STRATEGY, which the
 # autosuggestions block below overwrites explicitly.
-(( $+commands[atuin] )) && _cached_init atuin atuin init zsh
+#
+# The init mints its session id with `$(atuin uuid)` whenever ATUIN_SESSION is
+# unset or belongs to another SHLVL -- i.e. on every new tab. That fork measured
+# 40-270ms, all of it before the first prompt. Mint the same thing here with
+# builtins and the init's guard skips its fork: a UUIDv7 in atuin's unhyphenated
+# form, from the millisecond clock, the version and variant nibbles, and 60 bits
+# from $$ and $RANDOM (zsh/random, and so $SRANDOM, is not built for MSYS).
+if (( $+commands[atuin] )); then
+   if [[ -z $ATUIN_SESSION || $ATUIN_SHLVL != $SHLVL ]]; then
+      zmodload zsh/datetime
+      printf -v ATUIN_SESSION '%012x7%03x%x%03x%04x%08x' \
+         $(( EPOCHREALTIME * 1000 )) $(( RANDOM & 0xfff )) $(( 8 | RANDOM & 3 )) \
+         $(( RANDOM & 0xfff )) $RANDOM $(( ($$ << 15 | RANDOM) & 0xffffffff ))
+      export ATUIN_SESSION ATUIN_SHLVL=$SHLVL
+   fi
+   _cached_init atuin atuin init zsh
+fi
 
 # ---- zoxide (smart cd) ----
 # Warp manages its own prompt integration and drops zoxide's hook, tripping the
@@ -406,6 +445,19 @@ else
 fi
 # Stop suggesting on very long lines; not worth the work per keystroke.
 ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=20
+# Bind the widgets once instead of on every precmd. The rebind forks
+# (`$(zle -la)`) and rewraps ~640 widgets: ~25ms added to every prompt. Safe
+# because the plugin loads last (deferred): every widget already exists by
+# then, so there is nothing a later rebind would pick up.
+ZSH_AUTOSUGGEST_MANUAL_REBIND=1
+# How the deferred load behaves. zsh-defer's defaults re-run every precmd hook
+# and `zle reset-prompt` after the plugin is sourced -- a second starship fork
+# to redraw the prompt already on screen, plus duplicate OSC 133 marks -- and
+# zle cannot read keys meanwhile, so the first keystrokes lagged the prompt by
+# 100-400ms. -m and -p drop both; the one precmd hook the plugin needs is run
+# by hand right after (see Load). antidote bakes this into the bundle, so it
+# only takes effect when ~/.zsh_plugins.txt is next touched.
+zstyle ':antidote:bundle:zsh-users/zsh-autosuggestions' defer-options '-mp'
 
 # ---- zsh-syntax-highlighting ----
 # `main` covers the common cases and `brackets` matches pairs. The remaining
@@ -442,6 +494,12 @@ zstyle ':fzf-tab:complete:*:*'  fzf-preview '[[ -d $realpath ]] && eza --icons -
 # Static bundling: antidote flattens the plugin list into a single sourceable
 # file, and only that file is read on a normal startup. antidote itself is
 # loaded just to regenerate the bundle when the plugin list changes.
+#
+# zsh-syntax-highlighting checks that add-zle-hook-widget is callable, and while
+# it is still an autoload stub it proves that with `( autoload +X ... )` -- a
+# subshell, so a ~20ms fork. Loading the definition up front (no fork, it is
+# just read in) turns the check into a lookup.
+autoload -Uz +X add-zle-hook-widget
 _antidote="$HOME/.local/antidote/antidote.zsh"
 if [[ -r $_antidote ]]; then
    _plugins_txt="$HOME/.zsh_plugins.txt"
@@ -452,6 +510,12 @@ if [[ -r $_antidote ]]; then
    fi
    source $_plugins_zsh
    unset _plugins_txt _plugins_zsh
+
+   # The deferred autosuggestions load skips precmd hooks (defer-options
+   # above), so start it here: queued after it, this runs as soon as it lands.
+   # -a: nothing to redraw, since binding widgets changes nothing on screen.
+   (( $+functions[zsh-defer] )) && zsh-defer -a -c \
+      '(( $+functions[_zsh_autosuggest_start] )) && _zsh_autosuggest_start'
 fi
 unset _antidote
 
