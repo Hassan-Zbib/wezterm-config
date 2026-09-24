@@ -4,6 +4,8 @@ local backdrops = require('utils.backdrops')
 local colors = require('colors.custom')
 local p = require('colors.palette')
 
+local vulkan_dgpu = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu')
+
 return {
    -- Quarter-rate on a 240Hz panel. Was 120; dropped while chasing the text
    -- drift that turned out to be `unicode_version` (see config/general.lua), and
@@ -12,27 +14,38 @@ return {
    -- so put 120 back if it turns out to be true.
    -- Only costs anything while the screen is actually changing.
    max_fps = 60,
-   -- OpenGL, not WebGpu. On nightly 20260917-114457-b09b56c2 WebGpu leaked
-   -- committed memory at ~100MB/s until the GUI hung (AppHangB1): 67GB of
-   -- private bytes with the system commit limit at 99%, past which Windows
-   -- refuses to create processes at all. The symptoms did not look like a
-   -- renderer bug -- every command a shell ran died with `permission denied`
-   -- (MSYS maps the failed CreateProcess to EACCES), and the status bar RAM
-   -- segment went blank because run_child_process could not spawn `ramload.exe`
-   -- or the PowerShell fallback either.
+   -- TESTING: WebGpu on the Vulkan dGPU. OpenGL was tried after the Dx12 leak
+   -- below and rejected: the renderers do not blend alike (wezterm#3625, WebGpu
+   -- composites in sRGB, OpenGL in native values), so the whole backdrop
+   -- pipeline read markedly darker. Vulkan is a separate wgpu backend, so the
+   -- Dx12 leak may not follow it -- watch commit charge in Task Manager for the
+   -- first session. If it climbs steadily, set front_end back to 'OpenGL'.
    --
-   -- Growth was smooth, not stepped every `auto_rotate_interval`, so this is a
-   -- per-frame reallocation of the background texture rather than the backdrop
-   -- swap in utils/backdrops.lua -- ~100MB/s over max_fps 60 is ~1.7MB a frame.
+   -- Dx12 history, on nightly 20260917-114457-b09b56c2: WebGpu leaked committed
+   -- memory at ~100MB/s until the GUI hung (AppHangB1): 67GB of private bytes
+   -- with the system commit limit at 99%, past which Windows refuses to create
+   -- processes at all. The symptoms did not look like a renderer bug -- every
+   -- command a shell ran died with `permission denied` (MSYS maps the failed
+   -- CreateProcess to EACCES), and the status bar RAM segment went blank
+   -- because run_child_process could not spawn `ramload.exe` or the PowerShell
+   -- fallback either. Growth was smooth, not stepped every
+   -- `auto_rotate_interval`, so this is a per-frame reallocation of the
+   -- background texture rather than the backdrop swap in utils/backdrops.lua --
+   -- ~100MB/s over max_fps 60 is ~1.7MB a frame.
    --
-   -- Two older WebGpu failures, still relevant if this is ever reverted: on the
-   -- iGPU it stalls on every backdrop swap (it rebuilds the background texture
-   -- per set_config_overrides), and on the dGPU it crashed when GHelper powered
+   -- Two older WebGpu failures, still relevant: on the iGPU it stalls on every
+   -- backdrop swap (it rebuilds the background texture per
+   -- set_config_overrides), and on the dGPU it crashed when GHelper powered
    -- that off on battery.
-   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
-   -- Both inert under OpenGL, kept so switching back is a one-word change.
+   --
+   -- Guarded: `pick_manual` returns nil when the adapter is not enumerated, and
+   -- WezGpu then chooses for itself -- which on Windows means Dx12, the path
+   -- that leaked. Fall back to OpenGL instead. Under the mux server (no
+   -- `wezterm.gui`, nothing enumerated) this also lands on OpenGL, harmlessly.
+   front_end = vulkan_dgpu and 'WebGpu' or 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
-   webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
+   webgpu_preferred_adapter = vulkan_dgpu,
+   -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'IntegratedGpu'),
    -- Doubles as the pane split-line thickness: WezTerm draws dividers at
    -- `underline_height` with no separate setting. Raised from 1.5pt so the
