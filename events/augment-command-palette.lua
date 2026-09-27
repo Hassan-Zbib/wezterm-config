@@ -1,11 +1,9 @@
 local wezterm = require('wezterm')
 local act = wezterm.action
 local platform = require('utils.platform')
-local backdrops = require('utils.backdrops')
-local cull = require('utils.cull')
+local actions = require('utils.actions')
 local sessions = require('utils.sessions')
 local workspaces = require('utils.workspaces')
-local ssh_hosts = require('utils.ssh-hosts')
 
 local mod = {}
 local key = {}
@@ -32,15 +30,7 @@ M.setup = function()
          {
             brief = 'Cheatsheet / Help  [F1]',
             icon = 'md_help_circle_outline',
-            action = wezterm.action_callback(function(win, p)
-               local home = wezterm.home_dir:gsub('\\', '/')
-               local drive = home:sub(1, 1):lower()
-               local unix_home = '/' .. drive .. home:sub(3)
-               local script = unix_home .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/scripts/cheatsheet.py'
-               win:perform_action(act.SpawnCommandInNewTab({
-                  args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', 'uv run python "' .. script .. '"' },
-               }), p)
-            end),
+            action = actions.cheatsheet,
          },
          {
             brief = 'Show Launcher  [F3]',
@@ -55,9 +45,7 @@ M.setup = function()
          {
             brief = 'Workspaces & Sessions  [F5]',
             icon = 'cod_window',
-            action = wezterm.action_callback(function(win, p)
-               workspaces.hub(win, p)
-            end),
+            action = actions.workspace_hub,
          },
          {
             brief = 'Fuzzy Workspace Search',
@@ -81,19 +69,7 @@ M.setup = function()
          {
             brief = 'SSH Host Connect  [F7]',
             icon = 'md_ssh',
-            action = wezterm.action_callback(function(win, p)
-               win:perform_action(act.InputSelector({
-                  title = 'SSH Hosts',
-                  choices = ssh_hosts.choices(),
-                  fuzzy = true,
-                  fuzzy_description = 'Connect to SSH Host: ',
-                  action = wezterm.action_callback(function(inner_win, inner_pane, id)
-                     if id then
-                        ssh_hosts.connect(inner_pane, id)
-                     end
-                  end),
-               }), p)
-            end),
+            action = actions.ssh_picker,
          },
          {
             brief = 'Copy Mode  [F2]',
@@ -103,16 +79,12 @@ M.setup = function()
          {
             brief = 'Toggle Background Auto-Rotate  [' .. key.S .. '+R]',
             icon = 'md_rotate_right',
-            action = wezterm.action_callback(function(_win, _p)
-               backdrops:toggle_auto_rotate()
-            end),
+            action = actions.toggle_auto_rotate,
          },
          {
             brief = 'Save Session  [F6]',
             icon = 'md_content_save',
-            action = wezterm.action_callback(function(win, p)
-               sessions.save(win, p)
-            end),
+            action = actions.save_session,
          },
          {
             brief = 'Save Session (Named)',
@@ -167,21 +139,7 @@ M.setup = function()
          {
             brief = 'Quick URL Select  [' .. key.SR .. '+U]',
             icon = 'md_link',
-            action = wezterm.action.QuickSelectArgs({
-               label = 'open url',
-               patterns = {
-                  '\\((https?://\\S+)\\)',
-                  '\\[(https?://\\S+)\\]',
-                  '\\{(https?://\\S+)\\}',
-                  '<(https?://\\S+)>',
-                  '\\bhttps?://\\S+[)/a-zA-Z0-9-]+'
-               },
-               action = wezterm.action_callback(function(win, p)
-                  local url = win:get_selection_text_for_pane(p)
-                  wezterm.log_info('opening: ' .. url)
-                  wezterm.open_with(url)
-               end),
-            }),
+            action = actions.open_url,
          },
 
          -- tabs
@@ -220,66 +178,44 @@ M.setup = function()
          {
             brief = 'New Window  [' .. key.S .. '+N]',
             icon = 'md_window_open',
-            action = act.SpawnWindow,
+            action = actions.new_window,
          },
 
          -- background
          {
             brief = 'Random Background  [' .. key.S .. '+/]',
             icon = 'md_image_multiple',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:random(win)
-            end),
+            action = actions.random_backdrop,
          },
          {
             brief = 'Previous Category  [' .. key.SR .. '+,]',
             icon = 'md_arrow_left',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:prev_category(win)
-            end),
+            action = actions.prev_category,
          },
          {
             brief = 'Next Category  [' .. key.SR .. '+.]',
             icon = 'md_arrow_right',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:next_category(win)
-            end),
+            action = actions.next_category,
          },
          {
             brief = 'Browse / Cull Backgrounds (Live Preview)  [' .. key.SR .. '+/]',
             icon = 'md_image_search',
-            action = wezterm.action_callback(function(win, pane)
-               if backdrops.focus_on then return end
-               if win:active_key_table() == 'browse_backdrop' then return end
-               backdrops:enter_browse_mode(win)
-               cull:begin()
-               win:perform_action(act.ActivateKeyTable({
-                  name = 'browse_backdrop',
-                  one_shot = false,
-                  timeout_milliseconds = backdrops.BROWSE_TIMEOUT,
-               }), pane)
-            end),
+            action = actions.browse_backdrops,
          },
          {
             brief = 'Toggle Focus Mode (Hide Background)  [' .. key.S .. '+B]',
             icon = 'md_eye',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:toggle_focus(win)
-            end),
+            action = actions.toggle_focus,
          },
          {
             brief = 'Decrease Background Overlay Opacity  [' .. key.S .. '+,]',
             icon = 'md_brightness_4',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:adjust_overlay_opacity(win, -0.05)
-            end),
+            action = actions.overlay_opacity_down,
          },
          {
             brief = 'Increase Background Overlay Opacity  [' .. key.S .. '+.]',
             icon = 'md_brightness_7',
-            action = wezterm.action_callback(function(win, _p)
-               backdrops:adjust_overlay_opacity(win, 0.05)
-            end),
+            action = actions.overlay_opacity_up,
          },
 
          -- panes

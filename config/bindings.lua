@@ -2,14 +2,14 @@ local wezterm = require('wezterm')
 local platform = require('utils.platform')
 local backdrops = require('utils.backdrops')
 local cull = require('utils.cull')
-local ssh_hosts = require('utils.ssh-hosts')
 local domain_manager = require('utils.domains')
-local sessions = require('utils.sessions')
-local workspaces = require('utils.workspaces')
+local actions = require('utils.actions')
 local act = wezterm.action
 
 local mod = {}
-local is_maximized = false
+-- window id -> true while Alt+Ctrl+Enter holds it maximized. Per window, so
+-- maximizing one window does not flip the toggle or freeze Alt+-/= in another.
+local maximized = {}
 
 if platform.is_mac then
    mod.SUPER = 'SUPER'
@@ -22,82 +22,24 @@ end
 -- stylua: ignore
 local keys = {
    -- misc/useful --
-   {
-      key = 'F1',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         local home = wezterm.home_dir:gsub('\\', '/')
-         local drive = home:sub(1, 1):lower()
-         local unix_home = '/' .. drive .. home:sub(3)
-         local script = unix_home .. '/Desktop/GitHub/Hassan-Zbib/wezterm-config/scripts/cheatsheet.py'
-         window:perform_action(act.SpawnCommandInNewTab({
-            args = { 'C:\\Program Files\\Git\\bin\\bash.exe', '--login', '-c', 'uv run python "' .. script .. '"' },
-         }), pane)
-      end),
-   },
-   { key = 'F2', mods = 'NONE', action = 'ActivateCopyMode' },
+   { key = 'F1', mods = 'NONE', action = actions.cheatsheet },
+   { key = 'F2', mods = 'NONE', action = act.ActivateCopyMode },
    { key = 'F3', mods = 'NONE', action = act.ShowLauncher },
    { key = 'F4', mods = 'NONE', action = act.ShowLauncherArgs({ flags = 'FUZZY|TABS' }) },
    -- F5 opens the Workspaces & Sessions hub. A workspace is live state and a
    -- session is a saved snapshot of one, so both live in one menu.
-   {
-      key = 'F5',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         workspaces.hub(window, pane)
-      end),
-   },
+   { key = 'F5', mods = 'NONE', action = actions.workspace_hub },
    -- F6 quick-saves over the attached session, prompting for a name only the
    -- first time. Everything else is behind F5.
-   {
-      key = 'F6',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         sessions.save(window, pane)
-      end),
-   },
-   {
-      key = 'F7',
-      mods = 'NONE',
-      action = wezterm.action_callback(function(window, pane)
-         window:perform_action(act.InputSelector({
-            title = 'SSH Hosts',
-            choices = ssh_hosts.choices(),
-            fuzzy = true,
-            fuzzy_description = 'Connect to SSH Host: ',
-            action = wezterm.action_callback(function(inner_window, inner_pane, id)
-               if id then
-                  ssh_hosts.connect(inner_pane, id)
-               end
-            end),
-         }), pane)
-      end),
-   },
+   { key = 'F6', mods = 'NONE', action = actions.save_session },
+   { key = 'F7', mods = 'NONE', action = actions.ssh_picker },
    { key = 'F8', mods = 'NONE', action = act.ActivateCommandPalette },
    -- F9 and F10 are unbound. F9 was the session quick-save (now F6, next to the
    -- F5 hub); F10 was the session manager, now folded into that hub.
    { key = 'F11', mods = 'NONE',    action = act.ToggleFullScreen },
    { key = 'F12', mods = 'NONE',    action = act.ShowDebugOverlay },
    { key = 'f',   mods = mod.SUPER, action = act.Search({ CaseInSensitiveString = '' }) },
-   {
-      key = 'u',
-      mods = mod.SUPER_REV,
-      action = wezterm.action.QuickSelectArgs({
-         label = 'open url',
-         patterns = {
-            '\\((https?://\\S+)\\)',
-            '\\[(https?://\\S+)\\]',
-            '\\{(https?://\\S+)\\}',
-            '<(https?://\\S+)>',
-            '\\bhttps?://\\S+[)/a-zA-Z0-9-]+'
-         },
-         action = wezterm.action_callback(function(window, pane)
-            local url = window:get_selection_text_for_pane(pane)
-            wezterm.log_info('opening: ' .. url)
-            wezterm.open_with(url)
-         end),
-      }),
-   },
+   { key = 'u', mods = mod.SUPER_REV, action = actions.open_url },
 
    -- cursor movement --
    -- Alt+Left/Right send SS3 Home/End; readline maps \eOH/\eOF to
@@ -167,14 +109,7 @@ local keys = {
 
    -- window --
    -- window: spawn windows
-   -- Spawns a plain window -- deliberately no shell alias, so the binding does
-   -- not depend on a shell definition this repo never declares.
-   {
-      key = 'n', mods = mod.SUPER,
-      action = wezterm.action_callback(function(_window, _pane)
-         wezterm.mux.spawn_window({})
-      end),
-   },
+   { key = 'n', mods = mod.SUPER, action = actions.new_window },
 
    -- window: zoom window
    {
@@ -182,7 +117,7 @@ local keys = {
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          local dimensions = window:get_dimensions()
-         if dimensions.is_full_screen or is_maximized then
+         if dimensions.is_full_screen or maximized[window:window_id()] then
             return
          end
          local new_width = dimensions.pixel_width - 50
@@ -195,7 +130,7 @@ local keys = {
       mods = mod.SUPER,
       action = wezterm.action_callback(function(window, _pane)
          local dimensions = window:get_dimensions()
-         if dimensions.is_full_screen or is_maximized then
+         if dimensions.is_full_screen or maximized[window:window_id()] then
             return
          end
          local new_width = dimensions.pixel_width + 50
@@ -207,12 +142,13 @@ local keys = {
       key = 'Enter',
       mods = mod.SUPER_REV,
       action = wezterm.action_callback(function(window, _pane)
-         if is_maximized then
+         local id = window:window_id()
+         if maximized[id] then
             window:restore()
-            is_maximized = false
+            maximized[id] = nil
          else
             window:maximize()
-            is_maximized = true
+            maximized[id] = true
          end
       end)
    },
@@ -243,70 +179,14 @@ local keys = {
    },
 
    -- background controls --
-   {
-      key = [[/]],
-      mods = mod.SUPER,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:random(window)
-      end),
-   },
-   {
-      key = [[,]],
-      mods = mod.SUPER_REV,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:prev_category(window)
-      end),
-   },
-   {
-      key = [[.]],
-      mods = mod.SUPER_REV,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:next_category(window)
-      end),
-   },
-   {
-      key = [[/]],
-      mods = mod.SUPER_REV,
-      action = wezterm.action_callback(function(window, pane)
-         if backdrops.focus_on then return end
-         if window:active_key_table() == 'browse_backdrop' then return end
-         backdrops:enter_browse_mode(window)
-         cull:begin()
-         window:perform_action(act.ActivateKeyTable({
-            name = 'browse_backdrop',
-            one_shot = false,
-            timeout_milliseconds = backdrops.BROWSE_TIMEOUT,
-         }), pane)
-      end),
-   },
-   {
-      key = 'b',
-      mods = mod.SUPER,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:toggle_focus(window)
-      end)
-   },
-   {
-      key = 'r',
-      mods = mod.SUPER,
-      action = wezterm.action_callback(function(_window, _pane)
-         backdrops:toggle_auto_rotate()
-      end),
-   },
-   {
-      key = ',',
-      mods = mod.SUPER,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:adjust_overlay_opacity(window, -0.05)
-      end),
-   },
-   {
-      key = '.',
-      mods = mod.SUPER,
-      action = wezterm.action_callback(function(window, _pane)
-         backdrops:adjust_overlay_opacity(window, 0.05)
-      end),
-   },
+   { key = [[/]], mods = mod.SUPER,     action = actions.random_backdrop },
+   { key = [[,]], mods = mod.SUPER_REV, action = actions.prev_category },
+   { key = [[.]], mods = mod.SUPER_REV, action = actions.next_category },
+   { key = [[/]], mods = mod.SUPER_REV, action = actions.browse_backdrops },
+   { key = 'b',   mods = mod.SUPER,     action = actions.toggle_focus },
+   { key = 'r',   mods = mod.SUPER,     action = actions.toggle_auto_rotate },
+   { key = ',',   mods = mod.SUPER,     action = actions.overlay_opacity_down },
+   { key = '.',   mods = mod.SUPER,     action = actions.overlay_opacity_up },
 
    -- panes --
    -- panes: split panes

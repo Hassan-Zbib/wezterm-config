@@ -169,6 +169,7 @@ wezterm-config/
 │   └── window-title.lua            # Window title (active pane name)
 │
 ├── utils/
+│   ├── actions.lua                 # Actions shared by key bindings and the palette
 │   ├── backdrops.lua               # Background image manager
 │   ├── cells.lua                   # Status bar segment builder
 │   ├── gpu-adapter.lua             # GPU auto-selection for WebGPU

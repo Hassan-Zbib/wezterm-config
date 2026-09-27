@@ -35,6 +35,7 @@ Events use `OptsValidator` for schema validation and register handlers via `wezt
 
 ### Key Utilities
 
+- **`utils/actions.lua`** — Actions shared by a key binding and its command-palette entry. When an action has both, define it here and reference it from `config/bindings.lua` and `events/augment-command-palette.lua`; two copies of the same callback drift apart, and a palette label cannot be checked against a callback.
 - **`utils/cells.lua`** — Segment-based formatter for `wezterm.format()`. Used by all status bar and tab title events. Create with `Cells:new()`, add segments with `:add_segment(id, text, colors, attrs)`, render with `:render(ids)`.
 - **`utils/backdrops.lua`** — Singleton background image manager. **Important:** `:set_images()` must be called in the entry point (uses `wezterm.glob` which requires the main coroutine).
 - **`utils/platform.lua`** — Returns `{ is_win, is_linux, is_mac }` for platform branching.

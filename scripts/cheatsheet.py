@@ -431,8 +431,8 @@ _VIEWERS = (
         blank() +
         sub('btop (system monitor)') +
         row('btop · bt',       'CPU · RAM · disk · net')+
-        row('F1 · h',          'Help — every key')      +
-        row('F2 · o',          'Options menu')          +
+        row('h',               'Help — every key')      +
+        row('o',               'Options menu')          +
         row('Esc · m',         'Main menu')             +
         row('1 2 3 4',         'Toggle the four boxes') +
         row('p / shift+p',     'Cycle view presets')    +
