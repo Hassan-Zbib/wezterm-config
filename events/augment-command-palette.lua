@@ -96,7 +96,7 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Copy Mode  [F8]',
+            brief = 'Copy Mode  [F2]',
             icon = 'md_content_copy',
             action = act.ActivateCopyMode,
          },
@@ -104,11 +104,7 @@ M.setup = function()
             brief = 'Toggle Background Auto-Rotate  [' .. key.S .. '+R]',
             icon = 'md_rotate_right',
             action = wezterm.action_callback(function(_win, _p)
-               if backdrops.auto_rotate_enabled then
-                  backdrops:stop_auto_rotate()
-               else
-                  backdrops:start_auto_rotate()
-               end
+               backdrops:toggle_auto_rotate()
             end),
          },
          {
@@ -215,7 +211,7 @@ M.setup = function()
             action = act.EmitEvent('tabs.reset-tab-title'),
          },
          {
-            brief = 'Toggle Tab Bar  [' .. key.S .. '+9]',
+            brief = 'Toggle Tab Bar  [' .. key.SR .. '+9]',
             icon = 'md_eye_off',
             action = act.EmitEvent('tabs.toggle-tab-bar'),
          },
@@ -236,14 +232,14 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Previous Category  [' .. key.S .. '+,]',
+            brief = 'Previous Category  [' .. key.SR .. '+,]',
             icon = 'md_arrow_left',
             action = wezterm.action_callback(function(win, _p)
                backdrops:prev_category(win)
             end),
          },
          {
-            brief = 'Next Category  [' .. key.S .. '+.]',
+            brief = 'Next Category  [' .. key.SR .. '+.]',
             icon = 'md_arrow_right',
             action = wezterm.action_callback(function(win, _p)
                backdrops:next_category(win)
@@ -253,6 +249,8 @@ M.setup = function()
             brief = 'Browse / Cull Backgrounds (Live Preview)  [' .. key.SR .. '+/]',
             icon = 'md_image_search',
             action = wezterm.action_callback(function(win, pane)
+               if backdrops.focus_on then return end
+               if win:active_key_table() == 'browse_backdrop' then return end
                backdrops:enter_browse_mode(win)
                cull:begin()
                win:perform_action(act.ActivateKeyTable({
@@ -270,14 +268,14 @@ M.setup = function()
             end),
          },
          {
-            brief = 'Decrease Background Overlay Opacity  [' .. key.SR .. '+,]',
+            brief = 'Decrease Background Overlay Opacity  [' .. key.S .. '+,]',
             icon = 'md_brightness_4',
             action = wezterm.action_callback(function(win, _p)
                backdrops:adjust_overlay_opacity(win, -0.05)
             end),
          },
          {
-            brief = 'Increase Background Overlay Opacity  [' .. key.SR .. '+.]',
+            brief = 'Increase Background Overlay Opacity  [' .. key.S .. '+.]',
             icon = 'md_brightness_7',
             action = wezterm.action_callback(function(win, _p)
                backdrops:adjust_overlay_opacity(win, 0.05)
@@ -309,18 +307,6 @@ M.setup = function()
             brief = 'Swap Pane (Select)  [' .. key.SR .. '+P]',
             icon = 'md_swap_horizontal',
             action = act.PaneSelect({ alphabet = '1234567890', mode = 'SwapWithActiveKeepFocus' }),
-         },
-
-         -- scrolling
-         {
-            brief = 'Jump to Previous Prompt  [Shift+Up]',
-            icon = 'md_arrow_up_bold',
-            action = act.ScrollToPrompt(-1),
-         },
-         {
-            brief = 'Jump to Next Prompt  [Shift+Down]',
-            icon = 'md_arrow_down_bold',
-            action = act.ScrollToPrompt(1),
          },
 
          -- tools

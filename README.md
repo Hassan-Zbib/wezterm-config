@@ -2,7 +2,7 @@
 
 A modular WezTerm configuration for Windows, built on top of [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config).
 
-Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startup panel.
+Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and status bar.
 
 ---
 
@@ -10,10 +10,9 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and startu
 
 - **Background image carousel** (16 included) — toggle to solid dark background with `Alt+b`
 - **Powerline Starship prompt** — git status, language versions, command duration
-- **Fastfetch system info** on shell startup — categorized with bordered labels, Catppuccin colors
-- **AI agent status bar** — live Claude Code working/waiting/idle indicator
-- **Command palette** with all custom commands — search any action by name (F2)
-- **Shell integration** (OSC 7 + OSC 133) for Git Bash, pwsh, and WSL — CWD tracking and prompt jump with `Shift+Up/Down`
+- **Fastfetch system info** on demand (`ff`) — categorized with bordered labels, Catppuccin colors
+- **Command palette** with all custom commands — search any action by name (F8)
+- **Shell integration** (OSC 7 + OSC 133) for Git Bash, pwsh, and WSL — CWD tracking
 - **Kitty keyboard protocol** — Shift+Enter for multi-line input
 - **Yazi file manager** integrated with auto-cd on quit
 - **Session persistence** — save/restore pane splits, directories, sub-shells (pwsh, wsl), and TUI apps (claude, lazygit, lazyssh, yazi, btop)
@@ -128,7 +127,7 @@ Edits to any file (from either path) take effect immediately — there's only on
 
 ### 4. Restart WezTerm
 
-WezTerm auto-loads `~/.wezterm.lua` on startup. Open a new tab to see the system info panel appear.
+WezTerm auto-loads `~/.wezterm.lua` on startup. Run `ff` in a new tab to see the system info panel.
 
 ---
 
@@ -162,10 +161,9 @@ wezterm-config/
 │   └── launch.lua                  # Default shell (Git Bash)
 │
 ├── events/
-│   ├── augment-command-palette.lua # Custom commands in Command Palette (F2)
-│   ├── gui-startup.lua             # Window position on startup
+│   ├── augment-command-palette.lua # Custom commands in Command Palette (F8)
 │   ├── left-status.lua             # Leader key / key-table indicator
-│   ├── right-status.lua            # Agent status, clock, battery
+│   ├── right-status.lua            # Workspace, background state, clock, RAM, battery
 │   ├── tab-title.lua               # Tab title formatting
 │   ├── new-tab-button.lua          # Custom new-tab button
 │   └── window-title.lua            # Window title (active pane name)
@@ -241,7 +239,7 @@ Press `/` to search every shortcut at once. Results are filtered as you type and
 | `Alt+Ctrl+Shift+t` | New Tab (WSL Ubuntu) | `Ctrl+Shift+←` | Move Tab Left |
 | `Alt+Ctrl+w` | Close Tab | `Ctrl+Shift+→` | Move Tab Right |
 | `Alt+0` | Rename Tab | `Alt+Ctrl+0` | Reset Tab Title |
-| `Alt+9` | Toggle Tab Bar | `Alt+8` | Flip Tab Bar (top/bottom) |
+| `Alt+Ctrl+9` | Toggle Tab Bar | `Alt+Ctrl+8` | Flip Tab Bar (top/bottom) |
 
 ### Workspaces
 
@@ -399,9 +397,9 @@ All `ls`/`la`/`ll`/`lt` aliases accept extra flags, e.g. `ll -s size` or `lt --l
 
 ---
 
-## Startup System Info Panel
+## System Info Panel
 
-When a new WezTerm window opens, [Fastfetch](https://github.com/fastfetch-cli/fastfetch) displays a categorized system info panel in the first pane (driven by `events/gui-startup.lua` and the `Alt+n` binding — splits and new tabs stay clean). Run `ff` (alias for `fastfetch`) any time to show it manually.
+Run `ff` (alias for `fastfetch`) to show a categorized system info panel from [Fastfetch](https://github.com/fastfetch-cli/fastfetch). Nothing runs it automatically — new windows, tabs and splits all start clean.
 
 ```
 ╭───────────────╮
@@ -429,7 +427,6 @@ When a new WezTerm window opens, [Fastfetch](https://github.com/fastfetch-cli/fa
 ╰───────────────╯
 ```
 
-- Only appears in the first pane of a new **WezTerm** window (sent by WezTerm itself, not the shell)
 - Themed with **Catppuccin Macchiato** colors and bordered label boxes
 - Custom Berserk Brand of Sacrifice ASCII logo
 - Config symlinked to `~/.config/fastfetch/config.jsonc`
@@ -440,11 +437,11 @@ When a new WezTerm window opens, [Fastfetch](https://github.com/fastfetch-cli/fa
 
 **Left status** — shows the active key-table name or a leader key indicator when pressed. Shows `F1:help` hint otherwise.
 
-**Right status** — powered by [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck):
+**Right status** — rendered by `events/right-status.lua`:
 - Active workspace name
-- AI agent activity counts (working / waiting / idle)
-- Notification toggle indicator
+- Background category (focus mode off, more than one category)
 - Focus mode indicator
+- Overlay opacity and auto-rotate state (focus mode off)
 - 12-hour clock
 - RAM usage
 - Battery level
@@ -529,7 +526,6 @@ To track a new config file:
 - Base config: [KevinSilvester/wezterm-config](https://github.com/KevinSilvester/wezterm-config)
 - Dotfile management: [Dotbot](https://github.com/anishathalye/dotbot)
 - Theme: [Catppuccin](https://github.com/catppuccin/catppuccin)
-- Agent status bar: [wezterm-agent-deck](https://github.com/Eric162/wezterm-agent-deck)
 - System info: [Fastfetch](https://github.com/fastfetch-cli/fastfetch)
 - Prompt: [Starship](https://starship.rs/)
 - File manager: [Yazi](https://yazi-rs.github.io/)

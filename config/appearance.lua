@@ -70,8 +70,10 @@ return {
    -- background: pass in `true` if you want wezterm to start with focus mode on (no bg images)
    background = backdrops:initial_options(true),
 
-   -- Visual bell. Agent CLIs ring on completion and permission prompts, so this
-   -- fires often -- a short dim pulse, not a strobe. If a busy backdrop swallows
+   -- Visual bell. Shells ring on a no-match Tab or a Backspace on an empty line,
+   -- so this fires often -- a short dim pulse, not a strobe. Claude Code rings
+   -- no bell here: its `ghostty` notification channel sends OSC 777, which
+   -- WezTerm turns straight into a Windows toast. If a busy backdrop swallows
    -- the flash, switch `target` to 'CursorColor', which cannot be washed out.
    visual_bell = {
       fade_in_function = 'EaseOut',

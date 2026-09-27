@@ -84,9 +84,9 @@ local TITLE_INSET = {
 }
 
 -- Panes that rang the bell since their tab was last focused, keyed by pane id.
--- Drained when the owning tab becomes active. Agent CLIs ring the bell when
--- they finish or need a decision, so this is what makes a backgrounded agent
--- tab announce itself.
+-- Drained when the owning tab becomes active, so a backgrounded tab that rang
+-- announces itself. Claude Code never lights this: its notifications are OSC
+-- 777 toasts, which go to Windows and never raise a Lua `bell` event.
 ---@type table<number, boolean>
 local bell_panes = {}
 
