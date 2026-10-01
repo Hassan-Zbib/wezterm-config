@@ -6,6 +6,11 @@ local p = require('colors.palette')
 
 local vulkan_dgpu = gpu_adapters:pick_manual('Vulkan', 'DiscreteGpu')
 
+-- Start in focus mode (no backdrop image); pass `false` to start on a backdrop.
+-- Built before the table so `win32_system_backdrop` below reads the focus state
+-- this call sets -- glass is on by default, so focus mode starts as Acrylic.
+local initial_background = backdrops:initial_options(true)
+
 return {
    -- Quarter-rate on a 240Hz panel. Was 120; dropped while chasing the text
    -- drift that turned out to be `unicode_version` (see config/general.lua), and
@@ -67,8 +72,7 @@ return {
    -- color scheme
    colors = colors,
 
-   -- background: pass in `true` if you want wezterm to start with focus mode on (no bg images)
-   background = backdrops:initial_options(true),
+   background = initial_background,
 
    -- Visual bell. Shells ring on a no-match Tab or a Backspace on an empty line,
    -- so this fires often -- a short dim pulse, not a strobe. Claude Code rings
@@ -126,7 +130,9 @@ return {
       bottom = 7.5,
    },
    window_background_opacity = 1.0,
-   win32_system_backdrop = 'Disable',
+   -- Acrylic while focus-mode glass is on (Alt+Ctrl+b), otherwise off. The
+   -- glass needs an NVIDIA profile to render cleanly: see utils/backdrops.lua.
+   win32_system_backdrop = backdrops:system_backdrop(),
    window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
    integrated_title_button_alignment = 'Right',
    integrated_title_button_style = 'Windows',

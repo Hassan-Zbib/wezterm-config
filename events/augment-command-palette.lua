@@ -208,12 +208,17 @@ M.setup = function()
             action = actions.toggle_focus,
          },
          {
-            brief = 'Decrease Background Overlay Opacity  [' .. key.S .. '+,]',
+            brief = 'Toggle Glass in Focus Mode (Acrylic Blur)  [' .. key.SR .. '+B]',
+            icon = 'md_blur',
+            action = actions.toggle_glass,
+         },
+         {
+            brief = 'Decrease Overlay Opacity / Glass Tint  [' .. key.S .. '+,]',
             icon = 'md_brightness_4',
             action = actions.overlay_opacity_down,
          },
          {
-            brief = 'Increase Background Overlay Opacity  [' .. key.S .. '+.]',
+            brief = 'Increase Overlay Opacity / Glass Tint  [' .. key.S .. '+.]',
             icon = 'md_brightness_7',
             action = actions.overlay_opacity_up,
          },

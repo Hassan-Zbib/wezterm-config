@@ -27,12 +27,60 @@ local IMAGE_HSB = {
    brightness = 0.8,
 }
 
+-- Glass: an optional see-through look for focus mode. The focus layer drops to
+-- this opacity and Windows paints Acrylic (a blur of whatever is behind the
+-- window) through the gap. Lower is clearer and less legible.
+--
+-- Three things make this work, and all are easy to break:
+--   * The tint lives on the background LAYER, not `window_background_opacity`.
+--     Once any `background` layer exists, WezTerm skips every paint that reads
+--     window opacity (render/paint.rs, render/pane.rs), so lowering it does
+--     nothing here.
+--   * WebGpu must run on Vulkan. Dx12 cannot hand DWM per-pixel alpha
+--     (wezterm#6359), so the window stays opaque.
+--   * NVIDIA's "Vulkan/OpenGL present method" must be "Prefer native" for
+--     wezterm-gui.exe (a program profile in NVIDIA Control Panel). The default,
+--     Auto, presents through a DXGI layer, and the translucent window then shows
+--     a white box the size and position of the window when it was created.
+--     WezTerm never paints that initial surface; native presents over it.
+--   The Intel iGPU offers only opaque output, so there the toggle shows a
+--   dimmer solid colour instead.
+local GLASS_TINT = 0.7 -- default tint, used until Alt+, / Alt+. save another
+local GLASS_STEP = 0.1 -- tint change per key press
+local GLASS_FLASH = 2 -- seconds the tint level shows beside the glass icon
+-- The chosen tint survives reloads and restarts. Same directory as the saved
+-- sessions (utils/sessions.lua). A plain number, so a missing, unreadable or
+-- out-of-range file just means the default.
+local GLASS_TINT_FILE = (wezterm.home_dir .. '/.config/wezterm/glass-tint'):gsub('\\', '/')
+
+local function load_glass_tint()
+   local file = io.open(GLASS_TINT_FILE, 'r')
+   if not file then return GLASS_TINT end
+   local value = tonumber(file:read('*l'))
+   file:close()
+   if value and value >= 0 and value <= 1 then return value end
+   return GLASS_TINT
+end
+
+local function save_glass_tint(value)
+   local file = io.open(GLASS_TINT_FILE, 'w')
+   if not file then
+      wezterm.log_warn('backdrops: cannot save glass tint to ' .. GLASS_TINT_FILE)
+      return
+   end
+   file:write(string.format('%.2f\n', value))
+   file:close()
+end
+
 ---@class BackDrops
 ---@field current_idx number index of current image
 ---@field images string[] background images
 ---@field images_dir string directory of background images. Default is `wezterm.config_dir .. '/backdrops/'`
 ---@field focus_color string background color when in focus mode. Default is `colors.custom.background`
 ---@field focus_on boolean focus mode on or off
+---@field glass_on boolean glass look requested (default on); only drawn while focus mode is on
+---@field glass_tint number opacity of the focus layer over the blur, 0.0-1.0
+---@field glass_flash boolean true for `GLASS_FLASH` seconds after the tint changes
 ---@field auto_rotate_enabled boolean whether auto-rotation is active
 ---@field auto_rotate_interval number auto-rotation interval in seconds
 ---@field _rotate_generation number generation counter to invalidate stale timer chains
@@ -48,6 +96,10 @@ function BackDrops:init()
       images_dir = wezterm.config_dir .. '/backdrops/',
       focus_color = colors.background,
       focus_on = false,
+      glass_on = true,
+      glass_tint = load_glass_tint(),
+      glass_flash = false,
+      _glass_flash_gen = 0,
       auto_rotate_enabled = true,
       -- Each DISTINCT image touched costs a decoded RGBA frame (~18.7MB at
       -- 2880x1620) in WezTerm's uncapped `wezterm-blob-lease-*` cache, only
@@ -158,9 +210,26 @@ function BackDrops:_create_opts()
    }
 end
 
----Create the `background` options for focus mode. Always fully opaque so the
----theme base color paints as a solid background — no DWM backdrop to blend
----against now that Acrylic/Mica are off (incompatible with dGPU rendering).
+---Whether the glass look is on screen right now. Glass is a focus-mode look,
+---so a stale `glass_on` must never thin out the layer outside focus mode.
+---@private
+---@return boolean
+function BackDrops:_glass_active()
+   return self.focus_on and self.glass_on
+end
+
+---The Windows system backdrop for the current state: Acrylic only while the
+---glass look is on screen. config/appearance.lua uses it for the startup
+---window and `_set_opt` for every change after, so the two cannot disagree --
+---a translucent layer with the backdrop off shows the desktop unblurred.
+---@return 'Acrylic'|'Disable'
+function BackDrops:system_backdrop()
+   return self:_glass_active() and 'Acrylic' or 'Disable'
+end
+
+---Create the `background` options for focus mode. Fully opaque, so the theme
+---base color paints as a solid background, unless glass is on: then the layer
+---becomes a `glass_tint` scrim over the Acrylic blur `_set_opt` turns on.
 ---@private
 ---@return table
 function BackDrops:_create_focus_opts()
@@ -171,7 +240,7 @@ function BackDrops:_create_focus_opts()
          width = '120%',
          vertical_offset = '-10%',
          horizontal_offset = '-10%',
-         opacity = 1.0,
+         opacity = self:_glass_active() and self.glass_tint or 1.0,
       },
    }
 end
@@ -191,9 +260,9 @@ function BackDrops:initial_options(focus_on)
 end
 
 ---Override the current window options for background.
----The window itself is always fully opaque — the backdrop image and its scrim
----are drawn as background layers, so there is no reason to let the desktop
----bleed through on top of that.
+---`window_background_opacity` stays 1.0: with background layers set, WezTerm
+---ignores it, and the glass look gets its transparency from the focus layer.
+---The system backdrop is Acrylic only while glass is on screen.
 ---@private
 ---@param window any WezTerm Window see: https://wezfurlong.org/wezterm/config/lua/window/index.html
 ---@param background_opts table background option
@@ -204,14 +273,19 @@ function BackDrops:_set_opt(window, background_opts)
       enable_tab_bar = effective.enable_tab_bar,
       tab_bar_at_bottom = effective.tab_bar_at_bottom,
       window_background_opacity = 1.0,
+      win32_system_backdrop = self:system_backdrop(),
    }
    -- Memoize per-window: set_config_overrides triggers a config reload that
-   -- can disrupt key-table dispatch. Skip the call when nothing changed.
+   -- can disrupt key-table dispatch. Skip the call when nothing changed. The
+   -- system backdrop is in the signature because glass changes nothing else:
+   -- same focus color, same image slot.
    local img = (background_opts[1] and background_opts[1].source) or {}
    local sig = string.format(
-      '%s|%s|%s|%s',
+      '%s|%s|%s|%s|%s|%s',
       tostring(img.File or img.Color or ''),
+      override.win32_system_backdrop,
       tostring(self.overlay_opacity),
+      tostring(self.glass_tint),
       tostring(override.enable_tab_bar),
       tostring(override.tab_bar_at_bottom)
    )
@@ -371,12 +445,27 @@ function BackDrops:toggle_focus(window)
       self._auto_rotate_before_focus = nil
    else
       self._auto_rotate_before_focus = self.auto_rotate_enabled
-      background_opts = self:_create_focus_opts()
+      -- Flip the flag BEFORE building the layer: `_create_focus_opts` reads it
+      -- through `_glass_active`, and built first it returns the opaque layer
+      -- while `_set_opt` still turns Acrylic on behind it -- glass looks gone.
       self.focus_on = true
+      background_opts = self:_create_focus_opts()
       self:stop_auto_rotate()
    end
 
    self:_set_opt(window, background_opts)
+end
+
+---Toggle the glass look for focus mode. On by default. No-ops when focus mode
+---is off: glass replaces the solid focus background, and a backdrop image
+---already fills the window. The choice survives leaving and re-entering focus
+---mode, but not a config reload, which re-creates this module.
+---@param window any WezTerm `Window` see: https://wezfurlong.org/wezterm/config/lua/window/index.html
+function BackDrops:toggle_glass(window)
+   if not self.focus_on then return end
+   self.glass_on = not self.glass_on
+   self:_set_opt(window, self:_create_focus_opts())
+   self:_trigger_status_update()
 end
 
 ---Schedule the next auto-rotation tick
@@ -560,6 +649,31 @@ function BackDrops:browse_cancel(window, pane)
 
    self:_set_opt(window, self:_create_opts())
    window:perform_action(wezterm.action.PopKeyTable, pane)
+end
+
+---Step the glass tint (the focus layer's opacity over the Acrylic blur) by
+---`GLASS_STEP`, save it, and re-apply. Higher is darker and easier to read;
+---lower shows more of the blur. Flashes the level beside the glass icon.
+---No-ops unless glass is on screen.
+---@param window any WezTerm Window
+---@param direction number positive to darken, negative to clear
+function BackDrops:adjust_glass_tint(window, direction)
+   if not self:_glass_active() then return end
+   local delta = direction > 0 and GLASS_STEP or -GLASS_STEP
+   self.glass_tint = math.floor(math.max(0.0, math.min(1.0, self.glass_tint + delta)) * 100 + 0.5) / 100
+   save_glass_tint(self.glass_tint)
+   self:_set_opt(window, self:_create_focus_opts())
+
+   -- Each press restarts the flash; only the newest timer may clear it.
+   self._glass_flash_gen = self._glass_flash_gen + 1
+   local gen = self._glass_flash_gen
+   self.glass_flash = true
+   self:_trigger_status_update()
+   wezterm.time.call_after(GLASS_FLASH, function()
+      if self._glass_flash_gen ~= gen then return end
+      self.glass_flash = false
+      self:_trigger_status_update()
+   end)
 end
 
 ---Adjust the overlay opacity by a delta and re-apply to the window.

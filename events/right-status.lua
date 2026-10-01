@@ -66,6 +66,7 @@ local colors = {
    separator     = { fg = p.sapphire, bg = p.ui.status_bg },
    focus_on      = { fg = p.mauve,    bg = p.ui.status_bg },
    focus_off     = { fg = p.overlay0, bg = p.ui.status_bg },
+   glass         = { fg = p.sky,      bg = p.ui.status_bg },
    overlay       = { fg = p.sky,      bg = p.ui.status_bg },
    rotate_on     = { fg = p.green,    bg = p.ui.status_bg },
    rotate_off    = { fg = p.overlay0, bg = p.ui.status_bg },
@@ -82,6 +83,7 @@ cells
    :add_segment('focus_on', nf.md_eye .. ' Focus', colors.focus_on, attr(attr.intensity('Bold')))
    :add_segment('focus_off', nf.md_eye_off .. ' Focus', colors.focus_off)
    :add_segment('focus_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
+   :add_segment('glass', nf.md_blur .. ' ', colors.glass)
    :add_segment('overlay_text', '', colors.overlay)
    :add_segment('overlay_sep', ' ' .. ICON_SEPARATOR .. '  ', colors.separator)
    :add_segment('rotate_on', nf.md_rotate_right .. ' ON', colors.rotate_on, attr(attr.intensity('Bold')))
@@ -222,6 +224,15 @@ M.setup = function(opts)
       if show_category then
          table.insert(segments, 'category_text')
          table.insert(segments, 'category_sep')
+      end
+      -- Glass: a bare icon just left of the focus indicator, no separator,
+      -- present only while the glass look is on screen
+      if backdrops.focus_on and backdrops.glass_on then
+         local tint = backdrops.glass_flash
+            and string.format('%d%% ', math.floor(backdrops.glass_tint * 100 + 0.5))
+            or ''
+         cells:update_segment_text('glass', nf.md_blur .. ' ' .. tint)
+         table.insert(segments, 'glass')
       end
       if backdrops.focus_on then
          table.insert(segments, 'focus_on')

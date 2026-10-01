@@ -184,6 +184,7 @@ local keys = {
    { key = [[.]], mods = mod.SUPER_REV, action = actions.next_category },
    { key = [[/]], mods = mod.SUPER_REV, action = actions.browse_backdrops },
    { key = 'b',   mods = mod.SUPER,     action = actions.toggle_focus },
+   { key = 'b',   mods = mod.SUPER_REV, action = actions.toggle_glass },
    { key = 'r',   mods = mod.SUPER,     action = actions.toggle_auto_rotate },
    { key = ',',   mods = mod.SUPER,     action = actions.overlay_opacity_down },
    { key = '.',   mods = mod.SUPER,     action = actions.overlay_opacity_up },

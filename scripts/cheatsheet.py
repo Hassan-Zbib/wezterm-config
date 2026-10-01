@@ -350,9 +350,11 @@ _BACKGROUND = (
         blank() +
         sub('Display') +
         row('Alt+b',           'Toggle focus mode')     +
-        row('Alt+,',           'Overlay opacity −')     +
-        row('Alt+.',           'Overlay opacity +')     +
+        row('Alt+Ctrl+b',      'Toggle glass (focus)')  +
+        row('Alt+,',           'Overlay / glass tint −') +
+        row('Alt+.',           'Overlay / glass tint +') +
         blank() +
+        note('Glass: 70% tint, ±10% per press, saved') +
         note('Browse: ←/→/k next  ·  Enter keep') +
         note('        Esc/q revert') +
         note('Cull:   d/x recycle-bin  ·  u undo') +

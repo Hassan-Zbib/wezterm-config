@@ -8,7 +8,7 @@ Themed with **Catppuccin Macchiato** throughout — terminal, prompt, and status
 
 ## Features
 
-- **Background image carousel** (16 included) — toggle to solid dark background with `Alt+b`
+- **Background image carousel** (16 included) — `Alt+b` toggles focus mode (no image), which shows Acrylic glass by default (`Alt+Ctrl+b` switches to a solid dark background)
 - **Powerline Starship prompt** — git status, language versions, command duration
 - **Fastfetch system info** on demand (`ff`) — categorized with bordered labels, Catppuccin colors
 - **Command palette** with all custom commands — search any action by name (F8)
@@ -288,8 +288,18 @@ Press `/` to search every shortcut at once. Results are filtered as you type and
 |-----|--------|-----|--------|
 | `Alt+/` | Random Image | `Alt+Ctrl+/` | Browse & Select (live preview) |
 | `Alt+Ctrl+,` | Previous Category | `Alt+Ctrl+.` | Next Category |
-| `Alt+,` | Overlay Opacity − | `Alt+.` | Overlay Opacity + |
-| `Alt+b` | Toggle Focus Mode (solid bg) | `Alt+r` | Toggle Auto-Rotate |
+| `Alt+,` | Overlay Opacity − (glass tint −10% in focus) | `Alt+.` | Overlay Opacity + (glass tint +10% in focus) |
+| `Alt+b` | Toggle Focus Mode (no image) | `Alt+r` | Toggle Auto-Rotate |
+| `Alt+Ctrl+b` | Toggle Glass / Solid (focus mode, glass by default) | | |
+
+> **Glass needs an NVIDIA program profile.** In NVIDIA Control Panel → Manage 3D
+> settings → Program Settings, add `wezterm-gui.exe` and set **Vulkan/OpenGL
+> present method** to **Prefer native**. On the default (Auto) the glass shows a
+> grey box the size of the window when it was first opened. The profile lives in
+> the driver, not in these dotfiles, so a new machine needs it set again.
+>
+> The glass tint starts at 70%. `Alt+,` / `Alt+.` step it by 10% in focus mode,
+> and the level is saved to `~/.config/wezterm/glass-tint`.
 
 ### Font & Window
 
@@ -442,6 +452,7 @@ Run `ff` (alias for `fastfetch`) to show a categorized system info panel from [F
 - Active workspace name
 - Background category (focus mode off, more than one category)
 - Focus mode indicator
+- Glass icon, just left of the focus indicator (only while glass is on); shows the tint level for 2s after `Alt+,` / `Alt+.`
 - Overlay opacity and auto-rotate state (focus mode off)
 - 12-hour clock
 - RAM usage

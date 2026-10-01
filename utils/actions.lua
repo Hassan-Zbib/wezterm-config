@@ -105,16 +105,31 @@ M.toggle_focus = wezterm.action_callback(function(window, _pane)
    backdrops:toggle_focus(window)
 end)
 
+M.toggle_glass = wezterm.action_callback(function(window, _pane)
+   backdrops:toggle_glass(window)
+end)
+
 M.toggle_auto_rotate = wezterm.action_callback(function(_window, _pane)
    backdrops:toggle_auto_rotate()
 end)
 
+-- One pair of keys for "how much shows through behind the text": the backdrop
+-- scrim normally (5% steps), the glass tint in focus mode, where no scrim is
+-- drawn (10% steps, saved -- backdrops owns that step size).
+local function adjust_opacity(window, delta)
+   if backdrops.focus_on then
+      backdrops:adjust_glass_tint(window, delta)
+   else
+      backdrops:adjust_overlay_opacity(window, delta)
+   end
+end
+
 M.overlay_opacity_down = wezterm.action_callback(function(window, _pane)
-   backdrops:adjust_overlay_opacity(window, -0.05)
+   adjust_opacity(window, -0.05)
 end)
 
 M.overlay_opacity_up = wezterm.action_callback(function(window, _pane)
-   backdrops:adjust_overlay_opacity(window, 0.05)
+   adjust_opacity(window, 0.05)
 end)
 
 return M
