@@ -162,6 +162,7 @@ wezterm-config/
 │
 ├── events/
 │   ├── augment-command-palette.lua # Custom commands in Command Palette (F8)
+│   ├── gui-attached.lua            # Size and centre the startup window on the primary screen
 │   ├── left-status.lua             # Leader key / key-table indicator
 │   ├── right-status.lua            # Workspace, background state, clock, RAM, battery
 │   ├── tab-title.lua               # Tab title formatting
