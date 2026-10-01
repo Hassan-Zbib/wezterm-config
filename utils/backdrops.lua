@@ -36,13 +36,12 @@ local IMAGE_HSB = {
 --     Once any `background` layer exists, WezTerm skips every paint that reads
 --     window opacity (render/paint.rs, render/pane.rs), so lowering it does
 --     nothing here.
---   * WebGpu must run on Vulkan. Dx12 cannot hand DWM per-pixel alpha
---     (wezterm#6359), so the window stays opaque.
---   * NVIDIA's "Vulkan/OpenGL present method" must be "Prefer native" for
---     wezterm-gui.exe (a program profile in NVIDIA Control Panel). The default,
---     Auto, presents through a DXGI layer, and the translucent window then shows
---     a white box the size and position of the window when it was created.
---     WezTerm never paints that initial surface; native presents over it.
+--   * The front end must be OpenGL (config/appearance.lua). WebGpu on Dx12
+--     cannot hand DWM per-pixel alpha (wezterm#6359), and on Vulkan or Gl it
+--     stays opaque while NVIDIA's "Vulkan/OpenGL present method" is Auto.
+--   * That present method must stay Auto for wezterm-gui.exe. "Prefer native"
+--     does let WebGpu/Vulkan go translucent, but it made the tab bar flash and
+--     broke double-click-to-maximize.
 --   The Intel iGPU offers only opaque output, so there the toggle shows a
 --   dimmer solid colour instead.
 local GLASS_TINT = 0.7 -- default tint, used until Alt+, / Alt+. save another

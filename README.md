@@ -292,11 +292,10 @@ Press `/` to search every shortcut at once. Results are filtered as you type and
 | `Alt+b` | Toggle Focus Mode (no image) | `Alt+r` | Toggle Auto-Rotate |
 | `Alt+Ctrl+b` | Toggle Glass / Solid (focus mode, glass by default) | | |
 
-> **Glass needs an NVIDIA program profile.** In NVIDIA Control Panel → Manage 3D
-> settings → Program Settings, add `wezterm-gui.exe` and set **Vulkan/OpenGL
-> present method** to **Prefer native**. On the default (Auto) the glass shows a
-> grey box the size of the window when it was first opened. The profile lives in
-> the driver, not in these dotfiles, so a new machine needs it set again.
+> **Glass needs the OpenGL front end** (`config/appearance.lua`). WebGpu stays
+> opaque. Leave NVIDIA's **Vulkan/OpenGL present method** for `wezterm-gui.exe`
+> on **Auto**: "Prefer native" makes WebGpu translucent too, but it also makes
+> the tab bar flash and breaks double-click-to-maximize.
 >
 > The glass tint starts at 70%. `Alt+,` / `Alt+.` step it by 10% in focus mode,
 > and the level is saved to `~/.config/wezterm/glass-tint`.

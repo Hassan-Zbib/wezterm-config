@@ -19,12 +19,22 @@ return {
    -- so put 120 back if it turns out to be true.
    -- Only costs anything while the screen is actually changing.
    max_fps = 60,
-   -- TESTING: WebGpu on the Vulkan dGPU. OpenGL was tried after the Dx12 leak
-   -- below and rejected: the renderers do not blend alike (wezterm#3625, WebGpu
-   -- composites in sRGB, OpenGL in native values), so the whole backdrop
-   -- pipeline read markedly darker. Vulkan is a separate wgpu backend, so the
-   -- Dx12 leak may not follow it -- watch commit charge in Task Manager for the
-   -- first session. If it climbs steadily, set front_end back to 'OpenGL'.
+   -- OpenGL, for the focus-mode glass (utils/backdrops.lua). With NVIDIA's
+   -- "Vulkan/OpenGL present method" on its default, Auto, it is the only
+   -- renderer here that hands DWM a translucent window:
+   --   * WebGpu on Dx12 cannot do per-pixel alpha at all (wezterm#6359).
+   --   * WebGpu on Vulkan or wgpu's Gl stays opaque on Auto. Setting
+   --     wezterm-gui.exe's NVIDIA profile to "Prefer native" makes it
+   --     translucent, but it also made the tab bar flash and broke
+   --     double-click-to-maximize. Keep that profile on Auto.
+   -- The cost is blending (wezterm#3625: WebGpu composites in sRGB, OpenGL in
+   -- native values): text renders thinner, hence SemiBold in config/fonts.lua,
+   -- and the backdrop pipeline reads darker. OpenGL cannot choose an adapter;
+   -- Optimus puts it on the dGPU here (nvidia-smi lists wezterm-gui).
+   --
+   -- To drop glass for WebGpu, set front_end to 'WebGpu': it picks up the
+   -- Vulkan dGPU below. Vulkan ran 2h at ~750MB private bytes without the Dx12
+   -- leak described next.
    --
    -- Dx12 history, on nightly 20260917-114457-b09b56c2: WebGpu leaked committed
    -- memory at ~100MB/s until the GUI hung (AppHangB1): 67GB of private bytes
@@ -43,11 +53,11 @@ return {
    -- set_config_overrides), and on the dGPU it crashed when GHelper powered
    -- that off on battery.
    --
-   -- Guarded: `pick_manual` returns nil when the adapter is not enumerated, and
-   -- WezGpu then chooses for itself -- which on Windows means Dx12, the path
-   -- that leaked. Fall back to OpenGL instead. Under the mux server (no
-   -- `wezterm.gui`, nothing enumerated) this also lands on OpenGL, harmlessly.
-   front_end = vulkan_dgpu and 'WebGpu' or 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
+   -- When switching back, guard it as `vulkan_dgpu and 'WebGpu' or 'OpenGL'`:
+   -- `pick_manual` returns nil when the adapter is not enumerated, and WebGpu
+   -- then chooses for itself -- which on Windows means Dx12, the path that
+   -- leaked.
+   front_end = 'OpenGL', ---@type 'WebGpu' | 'OpenGL' | 'Software'
    webgpu_power_preference = 'HighPerformance',
    webgpu_preferred_adapter = vulkan_dgpu,
    -- webgpu_preferred_adapter = gpu_adapters:pick_manual('Dx12', 'DiscreteGpu'),
@@ -131,7 +141,7 @@ return {
    },
    window_background_opacity = 1.0,
    -- Acrylic while focus-mode glass is on (Alt+Ctrl+b), otherwise off. The
-   -- glass needs an NVIDIA profile to render cleanly: see utils/backdrops.lua.
+   -- glass needs the OpenGL front end above: see utils/backdrops.lua.
    win32_system_backdrop = backdrops:system_backdrop(),
    window_decorations = 'INTEGRATED_BUTTONS|RESIZE',
    integrated_title_button_alignment = 'Right',
