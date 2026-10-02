@@ -19,7 +19,7 @@
 # /usr pointing into a tree zsh was not in: ~/.zshenv had to redirect
 # module_path and fpath, nothing under /etc was read, and any Win32 parent that
 # spawned zsh.exe without Git's usr/bin on PATH got 0xC0000135
-# (STATUS_DLL_NOT_FOUND) with no message -- exactly how it failed under herdr.
+# (STATUS_DLL_NOT_FOUND) with no message.
 # See git history if that path is ever needed again.
 #
 # Usage:

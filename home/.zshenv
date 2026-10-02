@@ -13,13 +13,10 @@
 # ------------------------------------------------------------
 # MSYS PATH guard
 # ------------------------------------------------------------
-# A zsh spawned by a Win32 parent -- herdr, a scheduler, anything that is not
+# A zsh spawned by a Win32 parent -- a scheduler, anything that is not
 # WezTerm's `zsh -l` -- never runs /etc/profile, which is what puts the MSYS
 # directories on PATH. Without them there are no coreutils at all: compinit dies
 # on its first `mv` and every plugin that shells out fails.
-#
-# herdr cannot fix this from its side: its `shell_mode = "login"` silently spawns
-# cmd.exe on native Windows (0.9.0), so a login shell is not available there.
 #
 # Prepended, matching /etc/profile's own order. A login shell already has
 # /usr/bin on PATH, so this is a no-op there. Two builtin tests, no forks.

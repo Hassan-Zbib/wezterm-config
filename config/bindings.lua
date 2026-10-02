@@ -265,9 +265,8 @@ local keys = {
    -- it, and two gestures for one job means remembering neither.
 }
 
--- tabs: jump to index. Mirrors herdr's `prefix+1..9`, so the digit is the same
--- gesture at both layers. Appended in a loop rather than nine literal rows,
--- which is why it sits outside the hand-aligned table above.
+-- tabs: jump to index. Appended in a loop rather than nine literal rows, which
+-- is why it sits outside the hand-aligned table above.
 for i = 1, 9 do
    table.insert(keys, { key = tostring(i), mods = mod.SUPER, action = act.ActivateTab(i - 1) })
 end

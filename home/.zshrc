@@ -184,12 +184,6 @@ if (( $+commands[carapace] )); then
    }
 fi
 
-# ---- herdr ----
-# carapace has no spec for herdr, so Tab fell back to filenames. herdr ships
-# its own clap-generated completion; like the carapace init it ends in a
-# `compdef`, so it must come after compinit.
-(( $+commands[herdr] )) && _cached_init herdr herdr completion zsh
-
 # ---- Key bindings ----
 # zsh uses ZLE, not GNU Readline, so it reads neither ~/.inputrc nor Git's
 # /etc/inputrc. Everything bash got from those two files plus readline's
