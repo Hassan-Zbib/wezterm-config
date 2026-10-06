@@ -29,8 +29,10 @@ return {
    --     double-click-to-maximize. Keep that profile on Auto.
    -- The cost is blending (wezterm#3625: WebGpu composites in sRGB, OpenGL in
    -- native values): text renders thinner, hence SemiBold in config/fonts.lua,
-   -- and the backdrop pipeline reads darker. OpenGL cannot choose an adapter;
-   -- Optimus puts it on the dGPU here (nvidia-smi lists wezterm-gui).
+   -- and the backdrop pipeline reads darker (retuned for OpenGL in
+   -- utils/backdrops.lua; inactive_pane_hsb below is not). OpenGL cannot
+   -- choose an adapter; Optimus puts it on the dGPU here (nvidia-smi lists
+   -- wezterm-gui).
    --
    -- To drop glass for WebGpu, set front_end to 'WebGpu': it picks up the
    -- Vulkan dGPU below. Vulkan ran 2h at ~750MB private bytes without the Dx12

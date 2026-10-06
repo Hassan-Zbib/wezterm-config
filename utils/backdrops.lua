@@ -21,10 +21,18 @@ local GLOB_PATTERN = '*.{jpg,jpeg,png,gif,bmp,ico,tiff,pnm,dds,tga}'
 --   2. `overlay_opacity` then flattens the rest under a `focus_color` scrim --
 --      the near-black focus mode paints, not the lighter terminal `background`,
 --      which reads as a grey wash. Live-adjustable via config/bindings.lua.
+--
+-- Both are tuned for the OpenGL front end (config/appearance.lua), which blends
+-- in gamma-encoded values; the originals (brightness 0.8, overlay 0.85) were
+-- tuned under WebGpu, which blends in linear light, and read ~3x darker here.
+-- Converted with a 2.2 gamma: brightness 0.8^(1/2.2) ~= 0.9, and the scrim's
+-- pass-through 0.15^(1/2.2) ~= 0.42, so overlay 1 - 0.42 ~= 0.6. That exact
+-- match let whites pop, so both sit darker by eye: brightness 0.75, overlay
+-- 0.65. Switching back to WebGpu means putting 0.8 / 0.85 back.
 local IMAGE_HSB = {
    hue = 1.0,
    saturation = 0.7,
-   brightness = 0.8,
+   brightness = 0.75,
 }
 
 -- Glass: an optional see-through look for focus mode. The focus layer drops to
@@ -106,7 +114,7 @@ function BackDrops:init()
       -- ~6.7GB. The interval is the only dial.
       auto_rotate_interval = 120,
       _rotate_generation = 0,
-      overlay_opacity = 0.85,
+      overlay_opacity = 0.65, -- OpenGL value; see IMAGE_HSB above
       _browse_gen = 0,
       _browse_active = false,
       categories = {},
