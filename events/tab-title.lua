@@ -128,6 +128,17 @@ local function clean_process_name(proc)
    return a:gsub('%.exe$', '')
 end
 
+---A Windows program that never sets its own title leaves the pane titled after
+---its executable, either bare (`delta.exe`) or as a full `C:\...\cmd.exe` path.
+---Reduce each such reference to the program name; the rest stays untouched.
+---@param title string
+local function clean_title(title)
+   local cleaned = title
+      :gsub('%a:[/\\][^:]*[/\\]([^/\\]-%.[eE][xX][eE])%f[^%w]', '%1')
+      :gsub('%.[eE][xX][eE]%f[^%w]', '')
+   return cleaned
+end
+
 ---@param process_name string
 ---@param base_title string
 ---@param max_width number
@@ -276,7 +287,8 @@ function Tab:set_info(event_opts, tab, max_width)
       self.title = create_title('', self.locked_title, max_width, inset) .. pane_suffix
       return
    end
-   self.title = create_title(process_name, tab.active_pane.title, max_width, inset) .. pane_suffix
+   self.title = create_title(process_name, clean_title(tab.active_pane.title), max_width, inset)
+      .. pane_suffix
 end
 
 function Tab:create_cells()
