@@ -55,6 +55,7 @@ These tools are pre-configured with aliases in `.bashrc` and `.zshrc`. Install w
 | [zoxide](https://github.com/ajeetdsouza/zoxide) | `winget install ajeetdsouza.zoxide` | `z` | Smarter `cd` — frecency-based directory jumper |
 | [fzf](https://github.com/junegunn/fzf) | `winget install junegunn.fzf` | — | General-purpose fuzzy finder for the terminal |
 | [atuin](https://atuin.sh) | `winget install Atuinsh.Atuin` | `Ctrl+R`, `↑` | Shell history in SQLite — one store for every shell, with exit code, duration and directory per command |
+| [ripgrep](https://github.com/BurntSushi/ripgrep) | `winget install BurntSushi.ripgrep.MSVC` | — | Fast recursive search that skips `.gitignore`d files; `grep` is left as-is, since their flags differ |
 | [LazySkills](https://lazyskills.xyz/) | `npm install -g lazyskills` or `scoop install alpha-innovation-labs/lazyskills` | `lazyskills` | TUI for discovering and managing coding agent skills |
 
 ---

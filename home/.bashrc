@@ -98,30 +98,40 @@ function ccp() {
 # from here with nothing added.
 export PATH="$HOME/bin:$PATH"
 
-# ---- Aliases ----
-alias lg='lazygit'
-alias lssh='lazyssh'
-alias pkgs='"/c/Users/hassa/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
-alias ls='eza --icons --group-directories-first --git-repos --color-scale=all'
-alias la='eza --icons --all --group-directories-first --git-repos --color-scale=all'
-alias ll='eza --icons -l --all --git --git-repos --header --group-directories-first --color-scale=all'
-alias lt='eza --icons --tree --level=2'
-alias cls='clear'
-alias cc='claude --allow-dangerously-skip-permissions'
-alias cca='claude agents --allow-dangerously-skip-permissions'
-alias ff='fastfetch'
-alias bt='btop'
+# ---- Interactive only: aliases and zoxide ----
+# Claude Code snapshots every alias and function this file defines and replays
+# them into each Bash tool command. There `ls` was eza (so `ls -t` failed) and
+# `cd` went through zoxide: conveniences for a human at a tty that turn an
+# agent's plain POSIX commands into something else. Same guard as the heavy
+# init above, and for the same reason: the snapshot sources this file
+# non-interactively, before CLAUDECODE is set.
+if [[ -z "$CLAUDECODE" && $- == *i* ]]; then
+   # ---- Aliases ----
+   alias lg='lazygit'
+   alias lssh='lazyssh'
+   alias pkgs='"/c/Users/hassa/AppData/Local/Programs/UniGetUI/UniGetUI.exe" &'
+   alias ls='eza --icons --group-directories-first --git-repos --color-scale=all'
+   alias la='eza --icons --all --group-directories-first --git-repos --color-scale=all'
+   alias ll='eza --icons -l --all --git --git-repos --header --group-directories-first --color-scale=all'
+   alias lt='eza --icons --tree --level=2'
+   alias cls='clear'
+   alias cc='claude --allow-dangerously-skip-permissions'
+   alias cca='claude agents --allow-dangerously-skip-permissions'
+   alias ff='fastfetch'
+   alias bt='btop'
 
-# ---- zoxide (smart cd) ----
-# Warp manages PROMPT_COMMAND itself (its Blocks/prompt integration runs after
-# this rc file) and drops zoxide's hook, tripping the doctor false-positive.
-# zoxide still works; just silence the diagnostic under Warp.
-[[ "$TERM_PROGRAM" == "WarpTerminal" ]] && export _ZO_DOCTOR=0
-eval "$(zoxide init bash)"
+   # ---- zoxide (smart cd) ----
+   # Warp manages PROMPT_COMMAND itself (its Blocks/prompt integration runs
+   # after this rc file) and drops zoxide's hook, tripping the doctor
+   # false-positive. zoxide still works; just silence the diagnostic under Warp.
+   [[ "$TERM_PROGRAM" == "WarpTerminal" ]] && export _ZO_DOCTOR=0
+   eval "$(zoxide init bash)"
 
-# Give cd the z behaviour without giving up z. `--cmd cd` would rename z/zi to
-# cd/cdi rather than add to them, so delegate instead. __zoxide_z only queries
-# the database when its argument is not something cd could handle itself: no
-# argument, `-`, `+N`/`-N` and any real path still change directory as usual.
-cd()  { __zoxide_z "$@"; }
-cdi() { __zoxide_zi "$@"; }
+   # Give cd the z behaviour without giving up z. `--cmd cd` would rename z/zi
+   # to cd/cdi rather than add to them, so delegate instead. __zoxide_z only
+   # queries the database when its argument is not something cd could handle
+   # itself: no argument, `-`, `+N`/`-N` and any real path still change
+   # directory as usual.
+   cd()  { __zoxide_z "$@"; }
+   cdi() { __zoxide_zi "$@"; }
+fi

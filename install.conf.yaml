@@ -60,6 +60,7 @@
     - ajeetdsouza.zoxide
     - junegunn.fzf
     - Atuinsh.Atuin
+    - BurntSushi.ripgrep.MSVC
 
 - shell:
     # bin/ramload.exe is committed, so this only refreshes it when a Rust

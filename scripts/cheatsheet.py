@@ -409,7 +409,16 @@ _FILE_TOOLS = (
         blank() +
         sub('fzf') +
         row('fzf',             'Fuzzy-find files')      +
-        note('Key bindings are on the Zsh page.')
+        note('Key bindings are on the Zsh page.') +
+        blank() +
+        sub('ripgrep (fast grep)') +
+        row('rg PAT [DIR]',    'Search, skips ignored') +
+        row('rg -i · -F · -w', 'Case · literal · word') +
+        row('rg -t lua PAT',   'Only one file type')    +
+        row("rg -g '*.md' PAT", 'Filter by glob')       +
+        row('rg -uuu PAT',     'Hidden + ignored too')  +
+        row('rg --files',      'List searched files')   +
+        note('Not a grep alias: -r -E -h differ.')
 )
 
 _VIEWERS = (
